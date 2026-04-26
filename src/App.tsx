@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { Dices, Printer, Download, Settings2, Sparkles } from 'lucide-react';
 
 type Range = '11-20' | '21-30' | '10-50' | '10-100';
 type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten';
@@ -268,20 +269,24 @@ export default function App() {
   const [range, setRange] = useState<Range>('11-20');
   const [mode, setMode] = useState<Mode>('number-bonds');
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [generateCount, setGenerateCount] = useState(0);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setProblems(generateProblems(range, mode));
+    setGenerateCount(c => c + 1);
   }, [mode]);
 
   const handleRegenerate = () => {
     setProblems(generateProblems(range, mode));
+    setGenerateCount(c => c + 1);
   };
 
   const handleRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newRange = e.target.value as Range;
     setRange(newRange);
     setProblems(generateProblems(newRange, mode));
+    setGenerateCount(c => c + 1);
   };
 
   const handlePrint = () => {
@@ -307,17 +312,27 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 py-8 flex flex-col items-center font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-10 flex flex-col items-center font-sans relative">
+      
+      {/* Abstract Background Decoration */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-400/10 blur-[120px]"></div>
+        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-purple-400/10 blur-[120px]"></div>
+      </div>
+
       {/* Controls */}
-      <div className="no-print w-full max-w-[794px] bg-white p-6 rounded-xl shadow-sm mb-8 flex flex-col gap-6">
+      <div className="no-print w-full max-w-[794px] glass-panel p-6 rounded-2xl mb-8 flex flex-col gap-6 relative z-10 transition-all duration-300">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <label htmlFor="mode" className="font-semibold text-gray-700">题型：</label>
+            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
+              <Settings2 size={20} />
+            </div>
+            <label htmlFor="mode" className="font-semibold text-gray-800">题型 (Mode)：</label>
             <select 
               id="mode" 
               value={mode} 
               onChange={(e) => setMode(e.target.value as Mode)}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 cursor-pointer"
+              className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
             >
               <option value="number-bonds">数字组合 (Number Bonds)</option>
               <option value="vertical-add">竖排加法 (Vertical Addition)</option>
@@ -331,13 +346,13 @@ export default function App() {
           
           {/* Only show difficulty range for modes that support it */}
           {!['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
-            <div className="flex items-center gap-3">
-              <label htmlFor="range" className="font-semibold text-gray-700">难度范围：</label>
+            <div className="flex items-center gap-3 animate-fade-in-up">
+              <label htmlFor="range" className="font-semibold text-gray-800">难度 (Range)：</label>
               <select 
                 id="range" 
                 value={range} 
                 onChange={handleRangeChange}
-                className="border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 cursor-pointer"
+                className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
               >
                 <option value="11-20">11 - 20</option>
                 <option value="21-30">21 - 30</option>
@@ -348,24 +363,29 @@ export default function App() {
           )}
         </div>
         
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+
         <div className="flex items-center justify-center gap-4">
           <button 
             onClick={handleRegenerate}
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+            className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 font-semibold transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <span className="text-xl">🎲</span> 重新生成题目
+            <Dices size={22} className="group-hover:rotate-180 transition-transform duration-500" /> 
+            重新生成题目
           </button>
           <button 
             onClick={handlePrint}
-            className="flex items-center gap-2 bg-white border-2 border-green-600 text-green-600 px-6 py-2.5 rounded-lg hover:bg-green-50 transition-colors font-semibold shadow-sm"
+            className="flex items-center gap-2 bg-white/80 border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-md transition-all duration-300 font-semibold transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <span className="text-xl">🖨️</span> 直接打印
+            <Printer size={20} /> 
+            直接打印
           </button>
           <button 
             onClick={handleDownloadPdf}
-            className="flex items-center gap-2 bg-white border-2 border-purple-600 text-purple-600 px-6 py-2.5 rounded-lg hover:bg-purple-50 transition-colors font-semibold shadow-sm"
+            className="flex items-center gap-2 bg-white/80 border border-purple-200 text-purple-700 px-6 py-3 rounded-xl hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-300 font-semibold transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <span className="text-xl">📥</span> 下载 PDF
+            <Download size={20} /> 
+            下载 PDF
           </button>
         </div>
       </div>
@@ -374,11 +394,16 @@ export default function App() {
       <div 
         ref={worksheetRef}
         id="worksheet"
-        className="print-area w-[794px] h-[1123px] bg-white shadow-2xl py-8 px-12 flex flex-col relative shrink-0 overflow-hidden"
+        className="print-area w-[794px] h-[1123px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] py-8 px-12 flex flex-col relative shrink-0 overflow-hidden z-10 transition-shadow duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
       >
-        <div className="no-print absolute top-4 right-4 text-xs text-gray-300 font-mono">A4 Preview</div>
+        {/* Subtle Paper Texture Overlay */}
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}></div>
+
+        <div className="no-print absolute top-4 right-4 text-xs text-gray-400/60 font-mono flex items-center gap-1">
+          <Sparkles size={12} /> A4 Preview
+        </div>
         
-        <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2">
+        <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
           <h1 className="text-3xl font-black tracking-widest text-black uppercase">
             {mode === 'number-bonds' ? 'NUMBER BONDS' : 
              mode === 'vertical-add' ? 'VERTICAL ADDITION' :
@@ -395,17 +420,17 @@ export default function App() {
           </div>
         </div>
         
-        <div className="flex flex-wrap w-full content-start pt-2">
+        <div key={generateCount} className="flex flex-wrap w-full content-start pt-2 relative z-10 animate-fade-in-up">
           {problems.map((problem, idx) => {
             let colClass = 'w-1/5';
-            let heightClass = 'h-[195px]';
+            let heightClass = 'h-[180px]'; // Reduced from 195px to prevent 5th row cut off
             
             if (mode === 'number-bonds') {
               colClass = 'w-1/3';
-              heightClass = 'h-[240px]';
+              heightClass = 'h-[230px]'; // Reduced from 240px
             } else if (mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten') {
               colClass = 'w-1/4';
-              heightClass = 'h-[195px]';
+              heightClass = 'h-[180px]'; // Reduced from 195px
             }
 
             return (

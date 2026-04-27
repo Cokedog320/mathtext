@@ -1,20 +1,101 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Math Text
 
-# Run and deploy your AI Studio app
+这是一个给孩子做数学口算练习的小网页，也算是我自己折腾 AI 写小工具的一个存档。
 
-This contains everything you need to run your app locally.
+功能很简单：打开网页，选一下题型和数字范围，点一下就能生成一张 A4 练习纸。可以直接打印，也可以导出 PDF。主要就是为了平时给孩子练习用，不用每次手写题或者到处找练习册。
 
-View your app in AI Studio: https://ai.studio/apps/856fef04-3534-4fd1-96ab-f12d183f2455
+在线地址：<https://mathtext.pages.dev/>
 
-## Run Locally
+## 现在能做什么
 
-**Prerequisites:**  Node.js
+目前主要支持这些题型：
 
+- 数字组合 / Number Bonds
+- 竖排加法
+- 竖排减法
+- 竖排加减混合
+- 凑十法
+- 破十法
+- 平十法
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+部分题型可以选择数字范围：
+
+- 11 - 20
+- 21 - 30
+- 10 - 50
+- 10 - 100
+
+生成出来的页面是按 A4 纸设计的，上面有姓名、日期、分数栏，比较适合直接打印出来做题。
+
+## 使用方式
+
+打开网页后：
+
+1. 选择题型。
+2. 选择数字范围。
+3. 点“重新生成题目”换一套题。
+4. 点“直接打印”打印当前练习纸。
+5. 点“下载 PDF”保存成 PDF。
+
+## 本地运行
+
+需要先装好 Node.js。
+
+```bash
+npm install
+npm run dev
+```
+
+开发服务器默认跑在 `3000` 端口。
+
+## 常用命令
+
+```bash
+npm run dev      # 本地开发
+npm run build    # 构建生产版本
+npm run preview  # 预览构建结果
+npm run lint     # TypeScript 检查
+```
+
+## 技术栈
+
+这个项目是前端小应用，没有复杂后端。
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- html2canvas
+- jsPDF
+
+`html2canvas` 和 `jsPDF` 主要用来把当前练习纸导出成 PDF。
+
+## 打印说明
+
+页面按 A4 纵向设计。打印时会自动隐藏上面的控制按钮，只留下练习纸内容。
+
+如果浏览器打印出来有点偏，可以试试这些设置：
+
+- 纸张选择 A4
+- 方向选择纵向
+- 缩放选择默认或适合页面
+- 边距用默认，或者设成无边距
+
+不同浏览器的打印效果可能不太一样。如果打印预览看着别扭，直接用“下载 PDF”会更稳一点。
+
+## 项目结构
+
+```text
+mathtext/
+├── index.html
+├── package.json
+├── vite.config.ts
+└── src/
+    ├── App.tsx
+    ├── main.tsx
+    └── index.css
+```
+
+## 备注
+
+这个库主要就是留个记录：一个给孩子生成口算练习纸的小工具。功能不复杂，但能用，够用，就先这样。

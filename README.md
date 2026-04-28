@@ -1,101 +1,29 @@
-# Math Text
+# MathText
 
-这是一个给孩子做数学口算练习的小网页，也算是我自己折腾 AI 写小工具的一个存档。
+这是一个出于个人兴趣、结合 AI 辅助开发做出来的练手小工具。
 
-功能很简单：打开网页，选一下题型和数字范围，点一下就能生成一张 A4 练习纸。可以直接打印，也可以导出 PDF。主要就是为了平时给孩子练习用，不用每次手写题或者到处找练习册。
+项目目前主要用于生成和整理基础数学练习内容，偏向给自己做功能实验和界面尝试。它不是按标准开源项目方式包装出来的产品仓库，更像是我一边研究 AI、一边把想法快速做成可运行小工具时积累下来的代码。
 
-在线地址：<https://mathtext.pages.dev/>
+## 项目目录
 
-## 现在能做什么
+- `src/` 前端源码
+- `node_modules/` 本地依赖目录
 
-目前主要支持这些题型：
+## 说明
 
-- 数字组合 / Number Bonds
-- 竖排加法
-- 竖排减法
-- 竖排加减混合
-- 凑十法
-- 破十法
-- 平十法
+这个项目主要用于个人学习、实验和功能验证。
 
-部分题型可以选择数字范围：
+---
 
-- 11 - 20
-- 21 - 30
-- 10 - 50
-- 10 - 100
+This is a small practice project built out of personal interest, with AI used as a helper during development.
 
-生成出来的页面是按 A4 纸设计的，上面有姓名、日期、分数栏，比较适合直接打印出来做题。
+At the moment, the project is mainly used to generate and organize basic math practice content. It is more of a place for feature experiments and interface ideas than a polished product repository. Instead of being packaged like a standard open-source project, it is closer to a personal codebase built while exploring AI and quickly turning ideas into working tools.
 
-## 使用方式
+## Project Structure
 
-打开网页后：
+- `src/` Frontend source code
+- `node_modules/` Local dependency directory
 
-1. 选择题型。
-2. 选择数字范围。
-3. 点“重新生成题目”换一套题。
-4. 点“直接打印”打印当前练习纸。
-5. 点“下载 PDF”保存成 PDF。
+## Notes
 
-## 本地运行
-
-需要先装好 Node.js。
-
-```bash
-npm install
-npm run dev
-```
-
-开发服务器默认跑在 `3000` 端口。
-
-## 常用命令
-
-```bash
-npm run dev      # 本地开发
-npm run build    # 构建生产版本
-npm run preview  # 预览构建结果
-npm run lint     # TypeScript 检查
-```
-
-## 技术栈
-
-这个项目是前端小应用，没有复杂后端。
-
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- html2canvas
-- jsPDF
-
-`html2canvas` 和 `jsPDF` 主要用来把当前练习纸导出成 PDF。
-
-## 打印说明
-
-页面按 A4 纵向设计。打印时会自动隐藏上面的控制按钮，只留下练习纸内容。
-
-如果浏览器打印出来有点偏，可以试试这些设置：
-
-- 纸张选择 A4
-- 方向选择纵向
-- 缩放选择默认或适合页面
-- 边距用默认，或者设成无边距
-
-不同浏览器的打印效果可能不太一样。如果打印预览看着别扭，直接用“下载 PDF”会更稳一点。
-
-## 项目结构
-
-```text
-mathtext/
-├── index.html
-├── package.json
-├── vite.config.ts
-└── src/
-    ├── App.tsx
-    ├── main.tsx
-    └── index.css
-```
-
-## 备注
-
-这个库主要就是留个记录：一个给孩子生成口算练习纸的小工具。功能不复杂，但能用，够用，就先这样。
+This project is mainly used for personal learning, experiments, and feature validation.

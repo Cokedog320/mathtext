@@ -3,15 +3,16 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Dices, Printer, Download, Settings2, Sparkles } from 'lucide-react';
 
-type Range = '11-20' | '21-30' | '10-50' | '10-100';
-type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten';
+export type Range = '11-20' | '21-30' | '10-50' | '10-100';
+export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten';
+export type RegroupOption = 'mixed' | 'none' | 'only';
 
-type Problem = 
+export type Problem = 
   | { id: number; type: 'bond'; top: number; left: number | string; right: number | string }
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
-export const generateProblems = (range: Range, mode: Mode): Problem[] => {
+export const generateProblems = (range: Range, mode: Mode, regroup: RegroupOption = 'mixed'): Problem[] => {
   let min = 11, max = 20;
   if (range === '21-30') { min = 21; max = 30; }
   else if (range === '10-50') { min = 10; max = 50; }
@@ -71,8 +72,8 @@ export const generateProblems = (range: Range, mode: Mode): Problem[] => {
     
     while (problems.length < 25) {
       let operator: '+' | '-' = '+';
-      if (mode === 'vertical-add' || mode === 'vertical-add-carry') operator = '+';
-      else if (mode === 'vertical-sub' || mode === 'vertical-sub-borrow') operator = '-';
+      if (mode === 'vertical-add') operator = '+';
+      else if (mode === 'vertical-sub') operator = '-';
       else operator = Math.random() > 0.5 ? '+' : '-';
 
       let num1 = 0, num2 = 0;
@@ -87,10 +88,20 @@ export const generateProblems = (range: Range, mode: Mode): Problem[] => {
           
           if (num1 + num2 < min) continue;
           
+          // Carry logic check
+          const isCarry = (num1 % 10) + (num2 % 10) > 9;
+          if (regroup === 'none' && isCarry) continue;
+          if (regroup === 'only' && !isCarry) continue;
+          
           isValid = true;
         } else {
           num1 = Math.floor(Math.random() * (max - min + 1)) + min;
           num2 = Math.floor(Math.random() * num1) + 1;
+          
+          // Borrow logic check
+          const isBorrow = (num1 % 10) < (num2 % 10);
+          if (regroup === 'none' && isBorrow) continue;
+          if (regroup === 'only' && !isBorrow) continue;
           
           isValid = true;
         }
@@ -263,25 +274,33 @@ const MethodDiagram: React.FC<{ problem: any; index: number }> = ({ problem, ind
 export default function App() {
   const [range, setRange] = useState<Range>('11-20');
   const [mode, setMode] = useState<Mode>('number-bonds');
+  const [regroup, setRegroup] = useState<RegroupOption>('mixed');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setProblems(generateProblems(range, mode));
+  // Helper to regenerate problems with current settings
+  const regenerate = (r = range, m = mode, rg = regroup) => {
+    setProblems(generateProblems(r, m, rg));
     setGenerateCount(c => c + 1);
-  }, [mode]);
+  };
+
+  useEffect(() => {
+    regenerate(range, mode, regroup);
+  }, [range, mode, regroup]);
 
   const handleRegenerate = () => {
-    setProblems(generateProblems(range, mode));
-    setGenerateCount(c => c + 1);
+    regenerate();
   };
 
   const handleRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newRange = e.target.value as Range;
     setRange(newRange);
-    setProblems(generateProblems(newRange, mode));
-    setGenerateCount(c => c + 1);
+  };
+
+  const handleRegroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newRegroup = e.target.value as RegroupOption;
+    setRegroup(newRegroup);
   };
 
   const handlePrint = () => {
@@ -317,7 +336,7 @@ export default function App() {
 
       {/* Controls */}
       <div className="no-print w-full max-w-[794px] glass-panel p-6 rounded-2xl mb-8 flex flex-col gap-6 relative z-10 transition-all duration-300">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
               <Settings2 size={20} />
@@ -339,23 +358,42 @@ export default function App() {
             </select>
           </div>
           
-          {/* Only show difficulty range for modes that support it */}
-          {!['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
-            <div className="flex items-center gap-3 animate-fade-in-up">
-              <label htmlFor="range" className="font-semibold text-gray-800">难度 (Range)：</label>
-              <select 
-                id="range" 
-                value={range} 
-                onChange={handleRangeChange}
-                className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-              >
-                <option value="11-20">11 - 20</option>
-                <option value="21-30">21 - 30</option>
-                <option value="10-50">10 - 50</option>
-                <option value="10-100">10 - 100</option>
-              </select>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {/* Only show difficulty range for modes that support it */}
+            {!['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
+              <div className="flex items-center gap-3 animate-fade-in-up">
+                <label htmlFor="range" className="font-semibold text-gray-800">难度 (Range)：</label>
+                <select 
+                  id="range" 
+                  value={range} 
+                  onChange={handleRangeChange}
+                  className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                >
+                  <option value="11-20">11 - 20</option>
+                  <option value="21-30">21 - 30</option>
+                  <option value="10-50">10 - 50</option>
+                  <option value="10-100">10 - 100</option>
+                </select>
+              </div>
+            )}
+
+            {/* Only show carry/borrow option for vertical arithmetic modes */}
+            {['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode) && (
+              <div className="flex items-center gap-3 animate-fade-in-up">
+                <label htmlFor="regroup" className="font-semibold text-gray-800">进退位 (Regroup)：</label>
+                <select 
+                  id="regroup" 
+                  value={regroup} 
+                  onChange={handleRegroupChange}
+                  className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                >
+                  <option value="mixed">混合 (Mixed)</option>
+                  <option value="none">无进/退位 (No Regroup)</option>
+                  <option value="only">进/退位 (Regroup Only)</option>
+                </select>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>

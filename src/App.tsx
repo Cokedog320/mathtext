@@ -11,7 +11,7 @@ type Problem =
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
-const generateProblems = (range: Range, mode: Mode): Problem[] => {
+export const generateProblems = (range: Range, mode: Mode): Problem[] => {
   let min = 11, max = 20;
   if (range === '21-30') { min = 21; max = 30; }
   else if (range === '10-50') { min = 10; max = 50; }

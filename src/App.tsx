@@ -71,8 +71,8 @@ const generateProblems = (range: Range, mode: Mode): Problem[] => {
     
     while (problems.length < 25) {
       let operator: '+' | '-' = '+';
-      if (mode === 'vertical-add') operator = '+';
-      else if (mode === 'vertical-sub') operator = '-';
+      if (mode === 'vertical-add' || mode === 'vertical-add-carry') operator = '+';
+      else if (mode === 'vertical-sub' || mode === 'vertical-sub-borrow') operator = '-';
       else operator = Math.random() > 0.5 ? '+' : '-';
 
       let num1 = 0, num2 = 0;
@@ -82,20 +82,15 @@ const generateProblems = (range: Range, mode: Mode): Problem[] => {
       while (!isValid && attempts < 100) {
         attempts++;
         if (operator === '+') {
-          // Addition: result <= max, result >= min
           num1 = Math.floor(Math.random() * (max - 1)) + 1;
           num2 = Math.floor(Math.random() * (max - num1)) + 1;
           
-          if (num1 % 10 + num2 % 10 > 9) continue; // No regrouping
-          if (num1 + num2 < min) continue; // Ensure result is at least min
+          if (num1 + num2 < min) continue;
           
           isValid = true;
         } else {
-          // Subtraction: num1 <= max, num1 >= min
           num1 = Math.floor(Math.random() * (max - min + 1)) + min;
           num2 = Math.floor(Math.random() * num1) + 1;
-          
-          if (num1 % 10 < num2 % 10) continue; // No regrouping
           
           isValid = true;
         }
@@ -406,12 +401,12 @@ export default function App() {
         <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
           <h1 className="text-3xl font-black tracking-widest text-black uppercase">
             {mode === 'number-bonds' ? 'NUMBER BONDS' : 
-             mode === 'vertical-add' ? 'VERTICAL ADDITION' :
-             mode === 'vertical-sub' ? 'VERTICAL SUBTRACTION' :
-             mode === 'vertical-mixed' ? 'VERTICAL ARITHMETIC' :
-             mode === 'make-ten' ? 'MAKE-TEN METHOD' :
-             mode === 'break-ten' ? 'BREAK-TEN METHOD' :
-             'FLAT-TEN METHOD'}
+              mode === 'vertical-add' ? 'VERTICAL ADDITION' :
+              mode === 'vertical-sub' ? 'VERTICAL SUBTRACTION' :
+              mode === 'vertical-mixed' ? 'VERTICAL ARITHMETIC' :
+              mode === 'make-ten' ? 'MAKE-TEN METHOD' :
+              mode === 'break-ten' ? 'BREAK-TEN METHOD' :
+              'FLAT-TEN METHOD'}
           </h1>
           <div className="flex gap-6 text-sm font-bold text-black">
             <span>Date: ________________</span>

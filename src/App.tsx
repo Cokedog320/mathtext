@@ -194,7 +194,7 @@ const VerticalArithmetic: React.FC<{ problem: any; index: number }> = ({ problem
   );
 };
 
-const MethodDiagram: React.FC<{ problem: any; index: number }> = ({ problem, index }) => {
+const MethodDiagram: React.FC<{ problem: any; index: number; hideTen?: boolean }> = ({ problem, index, hideTen = false }) => {
   const { num1, num2, operator, method } = problem;
   const boxSize = 28;
 
@@ -268,12 +268,16 @@ const MethodDiagram: React.FC<{ problem: any; index: number }> = ({ problem, ind
         <>
           <div className="absolute top-[60px] left-[66px] w-[28px] h-[28px] border border-black bg-white"></div>
           <div className="absolute top-[60px] left-[106px] w-[28px] h-[28px] border border-black bg-white"></div>
-          <div className="absolute top-[102px] left-[44px] w-[28px] h-[28px] border border-black bg-white flex items-center justify-center text-black text-xl">10</div>
+          <div className="absolute top-[102px] left-[44px] w-[28px] h-[28px] border border-black bg-white flex items-center justify-center text-black text-xl">
+            {hideTen ? '' : '10'}
+          </div>
         </>
       ) : method === 'break-ten' ? (
         <>
           <div className="absolute top-[60px] left-[6px] w-[28px] h-[28px] border border-black bg-white"></div>
-          <div className="absolute top-[60px] left-[46px] w-[28px] h-[28px] border border-black bg-white flex items-center justify-center text-black text-xl">10</div>
+          <div className="absolute top-[60px] left-[46px] w-[28px] h-[28px] border border-black bg-white flex items-center justify-center text-black text-xl">
+            {hideTen ? '' : '10'}
+          </div>
           <div className="absolute top-[102px] left-[66px] w-[28px] h-[28px] border border-black bg-white"></div>
         </>
       ) : (
@@ -281,7 +285,9 @@ const MethodDiagram: React.FC<{ problem: any; index: number }> = ({ problem, ind
         <>
           <div className="absolute top-[60px] left-[66px] w-[28px] h-[28px] border border-black bg-white"></div>
           <div className="absolute top-[60px] left-[106px] w-[28px] h-[28px] border border-black bg-white"></div>
-          <div className="absolute top-[102px] left-[46px] w-[28px] h-[28px] border border-black bg-white flex items-center justify-center text-black text-xl">10</div>
+          <div className="absolute top-[102px] left-[46px] w-[28px] h-[28px] border border-black bg-white flex items-center justify-center text-black text-xl">
+            {hideTen ? '' : '10'}
+          </div>
         </>
       )}
     </div>
@@ -293,6 +299,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('number-bonds');
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
+  const [hideTen, setHideTen] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -432,6 +439,20 @@ export default function App() {
                 </select>
               </div>
             )}
+
+            {/* Show hide-10 option for make-ten, break-ten, and flat-ten modes */}
+            {['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
+              <div className="flex items-center gap-2 animate-fade-in-up">
+                <input
+                  type="checkbox"
+                  id="hideTen"
+                  checked={hideTen}
+                  onChange={(e) => setHideTen(e.target.checked)}
+                  className="w-5 h-5 rounded border-white/60 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                />
+                <label htmlFor="hideTen" className="font-semibold text-gray-800 cursor-pointer select-none">隐藏“10” (Hide '10')</label>
+              </div>
+            )}
           </div>
         </div>
         
@@ -512,7 +533,7 @@ export default function App() {
                 ) : problem.type === 'arithmetic' ? (
                   <VerticalArithmetic problem={problem} index={idx} />
                 ) : (
-                  <MethodDiagram problem={problem} index={idx} />
+                  <MethodDiagram problem={problem} index={idx} hideTen={hideTen} />
                 )}
               </div>
             );

@@ -12,7 +12,12 @@ export type Problem =
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
-export const generateProblems = (range: Range, mode: Mode, regroup: RegroupOption = 'mixed'): Problem[] => {
+export const generateProblems = (
+  range: Range, 
+  mode: Mode, 
+  regroup: RegroupOption = 'mixed',
+  makeTenLeft: string = 'mixed'
+): Problem[] => {
   let min = 11, max = 20;
   if (range === '21-30') { min = 21; max = 30; }
   else if (range === '10-50') { min = 10; max = 50; }
@@ -44,12 +49,24 @@ export const generateProblems = (range: Range, mode: Mode, regroup: RegroupOptio
       }
     }
   } else if (mode === 'make-ten') {
-    while (problems.length < 20) {
-      const a = Math.floor(Math.random() * 8) + 2; // 2-9
-      const b = Math.floor(Math.random() * 8) + 2; // 2-9
-      if (a + b <= 10 || a + b >= 20) continue;
+    let attempts = 0;
+    while (problems.length < 20 && attempts < 200) {
+      attempts++;
+      let a = Math.floor(Math.random() * 8) + 2; // 2-9
+      if (makeTenLeft !== 'mixed') {
+        a = parseInt(makeTenLeft, 10);
+      }
+      
+      let minB = Math.max(2, 11 - a);
+      let maxB = Math.min(9, 19 - a);
+      if (minB > maxB) {
+        minB = 11 - a;
+        maxB = 19 - a;
+      }
+      
+      const b = Math.floor(Math.random() * (maxB - minB + 1)) + minB;
       const key = `${a}+${b}`;
-      if (!seen.has(key)) {
+      if (!seen.has(key) || attempts > 100) {
         seen.add(key);
         problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '+', method: 'make-ten' });
       }
@@ -275,20 +292,21 @@ export default function App() {
   const [range, setRange] = useState<Range>('11-20');
   const [mode, setMode] = useState<Mode>('number-bonds');
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
+  const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   // Helper to regenerate problems with current settings
-  const regenerate = (r = range, m = mode, rg = regroup) => {
-    setProblems(generateProblems(r, m, rg));
+  const regenerate = (r = range, m = mode, rg = regroup, mtl = makeTenLeft) => {
+    setProblems(generateProblems(r, m, rg, mtl));
     setGenerateCount(c => c + 1);
   };
 
   useEffect(() => {
-    regenerate(range, mode, regroup);
-  }, [range, mode, regroup]);
+    regenerate(range, mode, regroup, makeTenLeft);
+  }, [range, mode, regroup, makeTenLeft]);
 
   const handleRegenerate = () => {
     regenerate();
@@ -391,6 +409,30 @@ export default function App() {
                   <option value="mixed">混合 (Mixed)</option>
                   <option value="none">无进/退位 (No Regroup)</option>
                   <option value="only">进/退位 (Regroup Only)</option>
+                </select>
+              </div>
+            )}
+
+            {/* Only show make-ten left addend option when mode is make-ten */}
+            {mode === 'make-ten' && (
+              <div className="flex items-center gap-3 animate-fade-in-up">
+                <label htmlFor="makeTenLeft" className="font-semibold text-gray-800">左加数 (Left Addend)：</label>
+                <select 
+                  id="makeTenLeft" 
+                  value={makeTenLeft} 
+                  onChange={(e) => setMakeTenLeft(e.target.value)}
+                  className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                >
+                  <option value="mixed">随机 (Mixed)</option>
+                  <option value="9">9</option>
+                  <option value="8">8</option>
+                  <option value="7">7</option>
+                  <option value="6">6</option>
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3">3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
                 </select>
               </div>
             )}

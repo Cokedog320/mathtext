@@ -83,3 +83,26 @@ describe('generateProblems - Vertical Arithmetic', () => {
   });
 });
 
+describe('generateProblems - Make-Ten Method', () => {
+  it('should generate problems with specified left addend when provided', () => {
+    const problems9 = generateProblems('11-20', 'make-ten', 'mixed', '9');
+    expect(problems9.length).toBe(20);
+    const allNine = problems9.every(p => p.type === 'method' && p.num1 === 9);
+    expect(allNine).toBe(true);
+
+    const problems5 = generateProblems('11-20', 'make-ten', 'mixed', '5');
+    expect(problems5.length).toBe(20);
+    const allFive = problems5.every(p => p.type === 'method' && p.num1 === 5);
+    expect(allFive).toBe(true);
+  });
+
+  it('should generate mixed left addends when makeTenLeft is mixed', () => {
+    const problemsMixed = generateProblems('11-20', 'make-ten', 'mixed', 'mixed');
+    expect(problemsMixed.length).toBe(20);
+    
+    const leftAddends = new Set(problemsMixed.map(p => p.type === 'method' ? p.num1 : null));
+    leftAddends.delete(null);
+    expect(leftAddends.size).toBeGreaterThan(1);
+  });
+});
+

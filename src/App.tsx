@@ -52,7 +52,7 @@ export const generateProblems = (
     let attempts = 0;
     while (problems.length < 20 && attempts < 200) {
       attempts++;
-      let a = Math.floor(Math.random() * 8) + 2; // 2-9
+      let a = Math.floor(Math.random() * 5) + 5; // 5-9
       if (makeTenLeft !== 'mixed') {
         a = parseInt(makeTenLeft, 10);
       }
@@ -429,10 +429,6 @@ export default function App() {
                   <option value="7">7</option>
                   <option value="6">6</option>
                   <option value="5">5</option>
-                  <option value="4">4</option>
-                  <option value="3">3</option>
-                  <option value="2">2</option>
-                  <option value="1">1</option>
                 </select>
               </div>
             )}

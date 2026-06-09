@@ -96,13 +96,18 @@ describe('generateProblems - Make-Ten Method', () => {
     expect(allFive).toBe(true);
   });
 
-  it('should generate mixed left addends when makeTenLeft is mixed', () => {
+  it('should generate mixed left addends in the range 5-9 when makeTenLeft is mixed', () => {
     const problemsMixed = generateProblems('11-20', 'make-ten', 'mixed', 'mixed');
     expect(problemsMixed.length).toBe(20);
     
     const leftAddends = new Set(problemsMixed.map(p => p.type === 'method' ? p.num1 : null));
     leftAddends.delete(null);
     expect(leftAddends.size).toBeGreaterThan(1);
+    
+    for (const val of leftAddends) {
+      expect(val).toBeGreaterThanOrEqual(5);
+      expect(val).toBeLessThanOrEqual(9);
+    }
   });
 });
 

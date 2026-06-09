@@ -109,5 +109,23 @@ describe('generateProblems - Make-Ten Method', () => {
       expect(val).toBeLessThanOrEqual(9);
     }
   });
+
+  it('should generate a perfectly uniform distribution of make-ten problems when candidates are limited', () => {
+    const problems9 = generateProblems('11-20', 'make-ten', 'mixed', '9');
+    expect(problems9.length).toBe(20);
+    
+    const frequencies: { [key: number]: number } = {};
+    for (const p of problems9) {
+      if (p.type === 'method') {
+        frequencies[p.num2] = (frequencies[p.num2] || 0) + 1;
+      }
+    }
+    
+    expect(Object.keys(frequencies).length).toBe(8);
+    for (const b in frequencies) {
+      expect(frequencies[b]).toBeGreaterThanOrEqual(2);
+      expect(frequencies[b]).toBeLessThanOrEqual(3);
+    }
+  });
 });
 

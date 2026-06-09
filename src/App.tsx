@@ -12,6 +12,15 @@ export type Problem =
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
+function shuffle<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export const generateProblems = (
   range: Range, 
   mode: Mode, 
@@ -49,27 +58,37 @@ export const generateProblems = (
       }
     }
   } else if (mode === 'make-ten') {
-    let attempts = 0;
-    while (problems.length < 20 && attempts < 200) {
-      attempts++;
-      let a = Math.floor(Math.random() * 5) + 5; // 5-9
-      if (makeTenLeft !== 'mixed') {
-        a = parseInt(makeTenLeft, 10);
+    const candidates: { a: number; b: number }[] = [];
+    const aValues: number[] = [];
+    if (makeTenLeft === 'mixed') {
+      for (let val = 5; val <= 9; val++) {
+        aValues.push(val);
       }
-      
+    } else {
+      aValues.push(parseInt(makeTenLeft, 10));
+    }
+
+    for (const a of aValues) {
       let minB = Math.max(2, 11 - a);
       let maxB = Math.min(9, 19 - a);
       if (minB > maxB) {
         minB = 11 - a;
         maxB = 19 - a;
       }
-      
-      const b = Math.floor(Math.random() * (maxB - minB + 1)) + minB;
-      const key = `${a}+${b}`;
-      if (!seen.has(key) || attempts > 100) {
-        seen.add(key);
-        problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '+', method: 'make-ten' });
+      for (let b = minB; b <= maxB; b++) {
+        candidates.push({ a, b });
       }
+    }
+
+    let shuffled = shuffle(candidates);
+    let index = 0;
+    while (problems.length < 20) {
+      if (index >= shuffled.length) {
+        shuffled = shuffle(candidates);
+        index = 0;
+      }
+      const { a, b } = shuffled[index++];
+      problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '+', method: 'make-ten' });
     }
   } else if (mode === 'break-ten' || mode === 'flat-ten') {
     while (problems.length < 20) {

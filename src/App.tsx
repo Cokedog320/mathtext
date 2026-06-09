@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Dices, Printer, Download, Settings2, Sparkles } from 'lucide-react';
+import { Dices, Printer, Download, Settings2, Sparkles, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
 export type Range = '11-20' | '21-30' | '10-50' | '10-100';
 export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten';
@@ -277,6 +277,7 @@ export default function App() {
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   // Helper to regenerate problems with current settings

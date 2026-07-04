@@ -218,6 +218,21 @@ const VerticalArithmetic: React.FC<{ problem: any; index: number }> = ({ problem
   );
 };
 
+const HorizontalArithmetic: React.FC<{ problem: any; index: number }> = ({ problem, index }) => {
+  return (
+    <div className="relative w-[160px] h-[60px] flex items-center justify-between px-2 border border-gray-100 rounded-sm">
+      <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
+      <div className="flex items-center justify-center gap-2.5 w-full text-2xl font-normal text-black mt-2 select-none">
+        <span>{problem.num1}</span>
+        <span>{problem.operator}</span>
+        <span>{problem.num2}</span>
+        <span>=</span>
+        <div className="w-[28px] h-[28px] border border-black bg-white shrink-0"></div>
+      </div>
+    </div>
+  );
+};
+
 const MethodDiagram: React.FC<{ problem: any; index: number; hideTen?: boolean }> = ({ problem, index, hideTen = false }) => {
   const { num1, num2, operator, method } = problem;
   const boxSize = 28;
@@ -494,6 +509,9 @@ export default function App() {
                 <option value="vertical-add">竖排加法 (Vertical Addition)</option>
                 <option value="vertical-sub">竖排减法 (Vertical Subtraction)</option>
                 <option value="vertical-mixed">竖排混合 (Vertical Mixed)</option>
+                <option value="horizontal-add">横排加法 (Horizontal Addition)</option>
+                <option value="horizontal-sub">横排减法 (Horizontal Subtraction)</option>
+                <option value="horizontal-mixed">横排混合 (Horizontal Mixed)</option>
                 <option value="make-ten">凑十法 (Make-Ten Method)</option>
                 <option value="break-ten">破十法 (Break-Ten Method)</option>
                 <option value="flat-ten">平十法 (Flat-Ten Method)</option>
@@ -518,8 +536,8 @@ export default function App() {
               </div>
             )}
 
-            {/* Regroup Select (only for vertical arithmetic) */}
-            {['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode) && (
+            {/* Regroup Select (only for vertical/horizontal arithmetic) */}
+            {['vertical-add', 'vertical-sub', 'vertical-mixed', 'horizontal-add', 'horizontal-sub', 'horizontal-mixed'].includes(mode) && (
               <div className="flex flex-col gap-1.5 animate-fade-in-up">
                 <label htmlFor="regroup" className="text-sm font-bold text-gray-755">进退位 (Regroup)</label>
                 <select 
@@ -659,6 +677,9 @@ export default function App() {
                   mode === 'vertical-add' ? 'VERTICAL ADDITION' :
                   mode === 'vertical-sub' ? 'VERTICAL SUBTRACTION' :
                   mode === 'vertical-mixed' ? 'VERTICAL ARITHMETIC' :
+                  mode === 'horizontal-add' ? 'HORIZONTAL ADDITION' :
+                  mode === 'horizontal-sub' ? 'HORIZONTAL SUBTRACTION' :
+                  mode === 'horizontal-mixed' ? 'HORIZONTAL ARITHMETIC' :
                   mode === 'make-ten' ? 'MAKE-TEN METHOD' :
                   mode === 'break-ten' ? 'BREAK-TEN METHOD' :
                   'FLAT-TEN METHOD'}
@@ -678,7 +699,10 @@ export default function App() {
                 if (mode === 'number-bonds') {
                   colClass = 'w-1/3';
                   heightClass = 'h-[230px]';
-                } else if (mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten') {
+                } else if (
+                  mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten' ||
+                  mode.startsWith('horizontal-')
+                ) {
                   colClass = 'w-1/4';
                   heightClass = 'h-[180px]';
                 }
@@ -687,6 +711,8 @@ export default function App() {
                   <div key={problem.id} className={`${colClass} ${heightClass} flex justify-center items-center break-inside-avoid`}>
                     {problem.type === 'bond' ? (
                       <NumberBond problem={problem} />
+                    ) : mode.startsWith('horizontal-') ? (
+                      <HorizontalArithmetic problem={problem} index={idx} />
                     ) : problem.type === 'arithmetic' ? (
                       <VerticalArithmetic problem={problem} index={idx} />
                     ) : (

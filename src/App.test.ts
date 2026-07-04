@@ -155,4 +155,66 @@ describe('generateProblems - Horizontal Arithmetic', () => {
   });
 });
 
+describe('generateProblems - Horizontal Arithmetic Details', () => {
+  it('should generate a mix of carry and no-carry addition problems', () => {
+    const problems = generateProblems('11-20', 'horizontal-add');
+    const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
+    expect(arithmetic.length).toBe(20);
+    const hasCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
+    const hasNoCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
+    expect(hasCarry).toBe(true);
+    expect(hasNoCarry).toBe(true);
+  });
+
+  it('should generate mixed carry/borrow in horizontal-mixed mode', () => {
+    const problems = generateProblems('11-20', 'horizontal-mixed');
+    const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
+    expect(arithmetic.length).toBe(20);
+    const hasCarry = arithmetic.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
+    const hasBorrow = arithmetic.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
+    expect(hasCarry).toBe(true);
+    expect(hasBorrow).toBe(true);
+  });
+
+  it('should respect regroup settings in horizontal mode', () => {
+    const problems = generateProblems('11-20', 'horizontal-add', 'none');
+    const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
+    expect(arithmetic.every(p => (p.num1 % 10) + (p.num2 % 10) <= 9)).toBe(true);
+  });
+});
+
+describe('generateProblems - Break-Ten and Flat-Ten Methods', () => {
+  it('should generate problems satisfying break-ten properties', () => {
+    const problems = generateProblems('11-20', 'break-ten');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => {
+      if (p.type !== 'method') return false;
+      return p.num1 >= 11 && p.num1 <= 19 && p.num2 >= 1 && p.num2 <= 9 && (p.num1 - p.num2) < 10 && (p.num1 - p.num2) > 0;
+    })).toBe(true);
+  });
+
+  it('should generate problems satisfying flat-ten properties', () => {
+    const problems = generateProblems('11-20', 'flat-ten');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => {
+      if (p.type !== 'method') return false;
+      return p.num1 >= 11 && p.num1 <= 19 && p.num2 >= 1 && p.num2 <= 9 && (p.num1 - p.num2) < 10 && (p.num1 - p.num2) > 0;
+    })).toBe(true);
+  });
+});
+
+describe('generateProblems - Number Bonds', () => {
+  it('should generate 12 number bond problems within selected range bounds', () => {
+    const problems = generateProblems('11-20', 'number-bonds');
+    expect(problems.length).toBe(12);
+    expect(problems.every(p => {
+      if (p.type !== 'bond') return false;
+      const validTop = p.top >= 11 && p.top <= 20;
+      const oneSideMissing = (p.left === '' && typeof p.right === 'number') || (p.right === '' && typeof p.left === 'number');
+      return validTop && oneSideMissing;
+    })).toBe(true);
+  });
+});
+
+
 

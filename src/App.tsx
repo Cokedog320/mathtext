@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Dices, Printer, Download, Settings2, Sparkles, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
 export type Range = '11-20' | '21-30' | '10-50' | '10-100';
-export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten';
+export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 
 export type Problem = 
@@ -102,70 +102,75 @@ export const generateProblems = (
       }
     }
   } else {
-    // Vertical Arithmetic - 25 problems (5x5)
-    let addOneCount = 0;
-    let subOneCount = 0;
-    
-    while (problems.length < 25) {
-      let operator: '+' | '-' = '+';
-      if (mode === 'vertical-add') operator = '+';
-      else if (mode === 'vertical-sub') operator = '-';
-      else operator = Math.random() > 0.5 ? '+' : '-';
+    const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
+    const isHorizontal = ['horizontal-add', 'horizontal-sub', 'horizontal-mixed'].includes(mode);
 
-      let num1 = 0, num2 = 0;
-      let isValid = false;
-      let attempts = 0;
+    if (isVertical || isHorizontal) {
+      const maxProblems = isVertical ? 25 : 20;
+      let addOneCount = 0;
+      let subOneCount = 0;
+      
+      while (problems.length < maxProblems) {
+        let operator: '+' | '-' = '+';
+        if (mode === 'vertical-add' || mode === 'horizontal-add') operator = '+';
+        else if (mode === 'vertical-sub' || mode === 'horizontal-sub') operator = '-';
+        else operator = Math.random() > 0.5 ? '+' : '-';
 
-      while (!isValid && attempts < 100) {
-        attempts++;
-        if (operator === '+') {
-          num1 = Math.floor(Math.random() * (max - 1)) + 1;
-          num2 = Math.floor(Math.random() * (max - num1)) + 1;
-          
-          if (num1 + num2 < min) continue;
-          
-          // Carry logic check
-          const isCarry = (num1 % 10) + (num2 % 10) > 9;
-          if (regroup === 'none' && isCarry) continue;
-          if (regroup === 'only' && !isCarry) continue;
-          
-          isValid = true;
-        } else {
-          num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-          num2 = Math.floor(Math.random() * num1) + 1;
-          
-          // Borrow logic check
-          const isBorrow = (num1 % 10) < (num2 % 10);
-          if (regroup === 'none' && isBorrow) continue;
-          if (regroup === 'only' && !isBorrow) continue;
-          
-          isValid = true;
+        let num1 = 0, num2 = 0;
+        let isValid = false;
+        let attempts = 0;
+
+        while (!isValid && attempts < 100) {
+          attempts++;
+          if (operator === '+') {
+            num1 = Math.floor(Math.random() * (max - 1)) + 1;
+            num2 = Math.floor(Math.random() * (max - num1)) + 1;
+            
+            if (num1 + num2 < min) continue;
+            
+            // Carry logic check
+            const isCarry = (num1 % 10) + (num2 % 10) > 9;
+            if (regroup === 'none' && isCarry) continue;
+            if (regroup === 'only' && !isCarry) continue;
+            
+            isValid = true;
+          } else {
+            num1 = Math.floor(Math.random() * (max - min + 1)) + min;
+            num2 = Math.floor(Math.random() * num1) + 1;
+            
+            // Borrow logic check
+            const isBorrow = (num1 % 10) < (num2 % 10);
+            if (regroup === 'none' && isBorrow) continue;
+            if (regroup === 'only' && !isBorrow) continue;
+            
+            isValid = true;
+          }
         }
-      }
 
-      // Fallback if strict rules fail
-      if (!isValid) {
-        if (operator === '+') {
-          num1 = Math.floor(Math.random() * (max - 1)) + 1;
-          num2 = Math.floor(Math.random() * (max - num1)) + 1;
-        } else {
-          num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-          num2 = Math.floor(Math.random() * num1) + 1;
+        // Fallback if strict rules fail
+        if (!isValid) {
+          if (operator === '+') {
+            num1 = Math.floor(Math.random() * (max - 1)) + 1;
+            num2 = Math.floor(Math.random() * (max - num1)) + 1;
+          } else {
+            num1 = Math.floor(Math.random() * (max - min + 1)) + min;
+            num2 = Math.floor(Math.random() * num1) + 1;
+          }
         }
-      }
 
-      const isAddOne = operator === '+' && (num1 === 1 || num2 === 1);
-      const isSubOne = operator === '-' && num2 === 1;
+        const isAddOne = operator === '+' && (num1 === 1 || num2 === 1);
+        const isSubOne = operator === '-' && num2 === 1;
 
-      if (isAddOne && addOneCount >= 1) continue;
-      if (isSubOne && subOneCount >= 1) continue;
+        if (isAddOne && addOneCount >= 1) continue;
+        if (isSubOne && subOneCount >= 1) continue;
 
-      const key = `${num1}${operator}${num2}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        if (isAddOne) addOneCount++;
-        if (isSubOne) subOneCount++;
-        problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
+        const key = `${num1}${operator}${num2}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          if (isAddOne) addOneCount++;
+          if (isSubOne) subOneCount++;
+          problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
+        }
       }
     }
   }
@@ -313,6 +318,57 @@ const MethodDiagram: React.FC<{ problem: any; index: number; hideTen?: boolean }
   );
 };
 
+const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const parentWidth = containerRef.current.clientWidth;
+      const targetWidth = 794; // A4 print area width
+      if (parentWidth < targetWidth) {
+        setScale(parentWidth / targetWidth);
+      } else {
+        setScale(1);
+      }
+    };
+
+    const observer = new ResizeObserver(handleResize);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (
+    <div 
+      ref={containerRef} 
+      className="w-full flex justify-center items-start overflow-hidden py-4 print-preview-wrapper"
+      style={{ height: `${1123 * scale + 32}px` }}
+    >
+      <div 
+        style={{ 
+          transform: `scale(${scale})`, 
+          transformOrigin: 'top center',
+          width: '794px',
+          height: '1123px',
+          transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+        className="shrink-0 print-preview-content animate-fade-in-up"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [range, setRange] = useState<Range>('11-20');
   const [mode, setMode] = useState<Mode>('number-bonds');
@@ -321,7 +377,7 @@ export default function App() {
   const [hideTen, setHideTen] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   // Helper to regenerate problems with current settings
@@ -358,7 +414,13 @@ export default function App() {
     const canvas = await html2canvas(worksheetRef.current, { 
       scale: 2,
       useCORS: true,
-      logging: false
+      logging: false,
+      onclone: (clonedDoc) => {
+        const clonedWorksheet = clonedDoc.getElementById('worksheet');
+        if (clonedWorksheet && clonedWorksheet.parentElement) {
+          clonedWorksheet.parentElement.style.transform = 'none';
+        }
+      }
     });
     
     const imgData = canvas.toDataURL('image/png');
@@ -371,48 +433,82 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-10 flex flex-col items-center font-sans relative">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex flex-col lg:flex-row font-sans relative">
       
       {/* Abstract Background Decoration */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-400/10 blur-[120px]"></div>
         <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-purple-400/10 blur-[120px]"></div>
       </div>
 
-      {/* Controls */}
-      <div className="no-print w-full max-w-[794px] glass-panel p-6 rounded-2xl mb-8 flex flex-col gap-6 relative z-10 transition-all duration-300">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+      {/* Mobile Tab Switcher */}
+      <div className="no-print lg:hidden w-full bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-30 flex">
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`flex-1 py-4 text-center font-bold text-sm transition-all duration-200 ${
+            activeTab === 'settings' 
+              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' 
+              : 'text-gray-500 hover:text-gray-750'
+          }`}
+        >
+          🛠️ 参数配置 (Settings)
+        </button>
+        <button
+          onClick={() => setActiveTab('preview')}
+          className={`flex-1 py-4 text-center font-bold text-sm transition-all duration-200 ${
+            activeTab === 'preview' 
+              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' 
+              : 'text-gray-500 hover:text-gray-750'
+          }`}
+        >
+          📄 打印预览 (Preview)
+        </button>
+      </div>
+
+      {/* Left Settings Sidebar */}
+      <div 
+        className={`no-print w-full lg:w-[380px] lg:shrink-0 bg-white/80 backdrop-blur-md lg:border-r border-gray-200 lg:min-h-screen lg:sticky lg:top-0 z-20 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-53px)] lg:max-h-screen ${
+          activeTab === 'settings' ? 'flex' : 'hidden lg:flex'
+        }`}
+      >
+        <div className="p-6 flex flex-col gap-6">
+          <div className="flex items-center gap-3 border-b border-gray-200/60 pb-4">
             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
               <Settings2 size={20} />
             </div>
-            <label htmlFor="mode" className="font-semibold text-gray-800">题型 (Mode)：</label>
-            <select 
-              id="mode" 
-              value={mode} 
-              onChange={(e) => setMode(e.target.value as Mode)}
-              className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-            >
-              <option value="number-bonds">数字组合 (Number Bonds)</option>
-              <option value="vertical-add">竖排加法 (Vertical Addition)</option>
-              <option value="vertical-sub">竖排减法 (Vertical Subtraction)</option>
-              <option value="vertical-mixed">竖排混合 (Vertical Mixed)</option>
-              <option value="make-ten">凑十法 (Make-Ten Method)</option>
-              <option value="break-ten">破十法 (Break-Ten Method)</option>
-              <option value="flat-ten">平十法 (Flat-Ten Method)</option>
-            </select>
+            <h2 className="text-xl font-bold text-gray-800">习题定制</h2>
           </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Only show difficulty range for modes that support it */}
+
+          {/* Form Options */}
+          <div className="flex flex-col gap-5">
+            {/* Mode Select */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="mode" className="text-sm font-bold text-gray-750">题型 (Mode)</label>
+              <select 
+                id="mode" 
+                value={mode} 
+                onChange={(e) => setMode(e.target.value as Mode)}
+                className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+              >
+                <option value="number-bonds">数字组合 (Number Bonds)</option>
+                <option value="vertical-add">竖排加法 (Vertical Addition)</option>
+                <option value="vertical-sub">竖排减法 (Vertical Subtraction)</option>
+                <option value="vertical-mixed">竖排混合 (Vertical Mixed)</option>
+                <option value="make-ten">凑十法 (Make-Ten Method)</option>
+                <option value="break-ten">破十法 (Break-Ten Method)</option>
+                <option value="flat-ten">平十法 (Flat-Ten Method)</option>
+              </select>
+            </div>
+
+            {/* Range Select (only for number-bonds, vertical-add, vertical-sub, vertical-mixed) */}
             {!['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
-              <div className="flex items-center gap-3 animate-fade-in-up">
-                <label htmlFor="range" className="font-semibold text-gray-800">难度 (Range)：</label>
+              <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                <label htmlFor="range" className="text-sm font-bold text-gray-750">难度 (Range)</label>
                 <select 
                   id="range" 
                   value={range} 
                   onChange={handleRangeChange}
-                  className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
                   <option value="11-20">11 - 20</option>
                   <option value="21-30">21 - 30</option>
@@ -422,15 +518,15 @@ export default function App() {
               </div>
             )}
 
-            {/* Only show carry/borrow option for vertical arithmetic modes */}
+            {/* Regroup Select (only for vertical arithmetic) */}
             {['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode) && (
-              <div className="flex items-center gap-3 animate-fade-in-up">
-                <label htmlFor="regroup" className="font-semibold text-gray-800">进退位 (Regroup)：</label>
+              <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                <label htmlFor="regroup" className="text-sm font-bold text-gray-755">进退位 (Regroup)</label>
                 <select 
                   id="regroup" 
                   value={regroup} 
                   onChange={handleRegroupChange}
-                  className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
                   <option value="mixed">混合 (Mixed)</option>
                   <option value="none">无进/退位 (No Regroup)</option>
@@ -439,15 +535,15 @@ export default function App() {
               </div>
             )}
 
-            {/* Only show make-ten left addend option when mode is make-ten */}
+            {/* Make Ten Left (only for make-ten) */}
             {mode === 'make-ten' && (
-              <div className="flex items-center gap-3 animate-fade-in-up">
-                <label htmlFor="makeTenLeft" className="font-semibold text-gray-800">左加数 (Left Addend)：</label>
+              <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-755">左加数 (Left Addend)</label>
                 <select 
                   id="makeTenLeft" 
                   value={makeTenLeft} 
                   onChange={(e) => setMakeTenLeft(e.target.value)}
-                  className="border border-white/60 shadow-sm rounded-xl px-4 py-2.5 bg-white/70 focus:bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
                   <option value="mixed">随机 (Mixed)</option>
                   <option value="9">9</option>
@@ -459,105 +555,149 @@ export default function App() {
               </div>
             )}
 
-            {/* Show hide-10 option for make-ten, break-ten, and flat-ten modes */}
+            {/* Hide Ten Checkbox (only for make-ten, break-ten, flat-ten) */}
             {['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
-              <div className="flex items-center gap-2 animate-fade-in-up">
+              <div className="flex items-center gap-2.5 pt-2 animate-fade-in-up">
                 <input
                   type="checkbox"
                   id="hideTen"
                   checked={hideTen}
                   onChange={(e) => setHideTen(e.target.checked)}
-                  className="w-5 h-5 rounded border-white/60 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
                 />
-                <label htmlFor="hideTen" className="font-semibold text-gray-800 cursor-pointer select-none">隐藏“10” (Hide '10')</label>
+                <label htmlFor="hideTen" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">隐藏“10”辅助数字</label>
               </div>
             )}
           </div>
         </div>
-        
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
 
-        <div className="flex items-center justify-center gap-4">
+        {/* Sidebar Sticky/Fixed Action Buttons */}
+        <div className="p-6 border-t border-gray-200 bg-white/60 flex flex-col gap-3">
           <button 
             onClick={handleRegenerate}
-            className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 font-semibold transform hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md transition-all duration-200 font-semibold cursor-pointer"
           >
-            <Dices size={22} className="group-hover:rotate-180 transition-transform duration-500" /> 
+            <Dices size={18} className="group-hover:rotate-180 transition-transform duration-500" /> 
             重新生成题目
           </button>
+
+          {/* On Mobile settings, show a button to switch to preview */}
           <button 
-            onClick={handlePrint}
-            className="flex items-center gap-2 bg-white/80 border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-md transition-all duration-300 font-semibold transform hover:-translate-y-0.5 active:translate-y-0"
+            onClick={() => setActiveTab('preview')}
+            className="lg:hidden w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl transition-all duration-200 font-semibold cursor-pointer"
           >
-            <Printer size={20} /> 
-            直接打印
+            查看打印预览 📄
           </button>
-          <button 
-            onClick={handleDownloadPdf}
-            className="flex items-center gap-2 bg-white/80 border border-purple-200 text-purple-700 px-6 py-3 rounded-xl hover:bg-purple-50 hover:border-purple-300 hover:shadow-md transition-all duration-300 font-semibold transform hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <Download size={20} /> 
-            下载 PDF
-          </button>
+
+          <div className="hidden lg:flex gap-3">
+            <button 
+              onClick={handlePrint}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 text-emerald-700 py-2.5 rounded-xl hover:bg-emerald-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
+            >
+              <Printer size={16} /> 
+              直接打印
+            </button>
+            <button 
+              onClick={handleDownloadPdf}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
+            >
+              <Download size={16} /> 
+              下载 PDF
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Worksheet */}
+      {/* Right Preview Area */}
       <div 
-        ref={worksheetRef}
-        id="worksheet"
-        className="print-area w-[794px] h-[1123px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] py-8 px-12 flex flex-col relative shrink-0 overflow-hidden z-10 transition-shadow duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
+        className={`flex-1 flex-col items-center py-6 px-4 lg:py-10 z-10 overflow-y-auto bg-slate-100/40 min-h-[calc(100vh-53px)] lg:min-h-screen print-preview-container ${
+          activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
+        }`}
       >
-        {/* Subtle Paper Texture Overlay */}
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}></div>
+        {/* Floating action bar for Mobile Preview Tab */}
+        <div className="lg:hidden w-full max-w-[400px] mb-4 flex gap-3 no-print">
+          <button 
+            onClick={handleRegenerate}
+            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold text-sm cursor-pointer"
+          >
+            <Dices size={16} />
+            换一批
+          </button>
+          <button 
+            onClick={handlePrint}
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl font-semibold text-sm cursor-pointer"
+          >
+            <Printer size={16} /> 
+            打印
+          </button>
+          <button 
+            onClick={handleDownloadPdf}
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl font-semibold text-sm cursor-pointer"
+          >
+            <Download size={16} /> 
+            下载
+          </button>
+        </div>
 
-        <div className="no-print absolute top-4 right-4 text-xs text-gray-400/60 font-mono flex items-center gap-1">
-          <Sparkles size={12} /> A4 Preview
-        </div>
-        
-        <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
-          <h1 className="text-3xl font-black tracking-widest text-black uppercase">
-            {mode === 'number-bonds' ? 'NUMBER BONDS' : 
-              mode === 'vertical-add' ? 'VERTICAL ADDITION' :
-              mode === 'vertical-sub' ? 'VERTICAL SUBTRACTION' :
-              mode === 'vertical-mixed' ? 'VERTICAL ARITHMETIC' :
-              mode === 'make-ten' ? 'MAKE-TEN METHOD' :
-              mode === 'break-ten' ? 'BREAK-TEN METHOD' :
-              'FLAT-TEN METHOD'}
-          </h1>
-          <div className="flex gap-6 text-sm font-bold text-black">
-            <span>Date: ________________</span>
-            <span>Name: ________________</span>
-            <span>Score: ____ / {problems.length}</span>
-          </div>
-        </div>
-        
-        <div key={generateCount} className="flex flex-wrap w-full content-start pt-2 relative z-10 animate-fade-in-up">
-          {problems.map((problem, idx) => {
-            let colClass = 'w-1/5';
-            let heightClass = 'h-[180px]'; // Reduced from 195px to prevent 5th row cut off
+        {/* Interactive A4 Sheet with Responsive Wrapper */}
+        <A4PreviewWrapper>
+          <div 
+            ref={worksheetRef}
+            id="worksheet"
+            className="print-area w-[794px] h-[1123px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] py-8 px-12 flex flex-col relative shrink-0 overflow-hidden transition-shadow duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
+          >
+            {/* Subtle Paper Texture Overlay */}
+            <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}></div>
+
+            <div className="no-print absolute top-4 right-4 text-xs text-gray-400/60 font-mono flex items-center gap-1">
+              <Sparkles size={12} /> A4 Preview
+            </div>
             
-            if (mode === 'number-bonds') {
-              colClass = 'w-1/3';
-              heightClass = 'h-[230px]'; // Reduced from 240px
-            } else if (mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten') {
-              colClass = 'w-1/4';
-              heightClass = 'h-[180px]'; // Reduced from 195px
-            }
-
-            return (
-              <div key={problem.id} className={`${colClass} ${heightClass} flex justify-center items-center break-inside-avoid`}>
-                {problem.type === 'bond' ? (
-                  <NumberBond problem={problem} />
-                ) : problem.type === 'arithmetic' ? (
-                  <VerticalArithmetic problem={problem} index={idx} />
-                ) : (
-                  <MethodDiagram problem={problem} index={idx} hideTen={hideTen} />
-                )}
+            <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
+              <h1 className="text-3xl font-black tracking-widest text-black uppercase">
+                {mode === 'number-bonds' ? 'NUMBER BONDS' : 
+                  mode === 'vertical-add' ? 'VERTICAL ADDITION' :
+                  mode === 'vertical-sub' ? 'VERTICAL SUBTRACTION' :
+                  mode === 'vertical-mixed' ? 'VERTICAL ARITHMETIC' :
+                  mode === 'make-ten' ? 'MAKE-TEN METHOD' :
+                  mode === 'break-ten' ? 'BREAK-TEN METHOD' :
+                  'FLAT-TEN METHOD'}
+              </h1>
+              <div className="flex gap-6 text-sm font-bold text-black">
+                <span>Date: ________________</span>
+                <span>Name: ________________</span>
+                <span>Score: ____ / {problems.length}</span>
               </div>
-            );
-          })}
-        </div>
+            </div>
+            
+            <div key={generateCount} className="flex flex-wrap w-full content-start pt-2 relative z-10 animate-fade-in-up">
+              {problems.map((problem, idx) => {
+                let colClass = 'w-1/5';
+                let heightClass = 'h-[180px]';
+                
+                if (mode === 'number-bonds') {
+                  colClass = 'w-1/3';
+                  heightClass = 'h-[230px]';
+                } else if (mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten') {
+                  colClass = 'w-1/4';
+                  heightClass = 'h-[180px]';
+                }
+
+                return (
+                  <div key={problem.id} className={`${colClass} ${heightClass} flex justify-center items-center break-inside-avoid`}>
+                    {problem.type === 'bond' ? (
+                      <NumberBond problem={problem} />
+                    ) : problem.type === 'arithmetic' ? (
+                      <VerticalArithmetic problem={problem} index={idx} />
+                    ) : (
+                      <MethodDiagram problem={problem} index={idx} hideTen={hideTen} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </A4PreviewWrapper>
       </div>
     </div>
   );

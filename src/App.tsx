@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Dices, Printer, Download, Settings2, Sparkles, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
 export type Range = '11-20' | '21-30' | '10-50' | '10-100';
-export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten';
+export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 
 export type Problem = 
@@ -102,70 +102,75 @@ export const generateProblems = (
       }
     }
   } else {
-    // Vertical Arithmetic - 25 problems (5x5)
-    let addOneCount = 0;
-    let subOneCount = 0;
-    
-    while (problems.length < 25) {
-      let operator: '+' | '-' = '+';
-      if (mode === 'vertical-add') operator = '+';
-      else if (mode === 'vertical-sub') operator = '-';
-      else operator = Math.random() > 0.5 ? '+' : '-';
+    const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
+    const isHorizontal = ['horizontal-add', 'horizontal-sub', 'horizontal-mixed'].includes(mode);
 
-      let num1 = 0, num2 = 0;
-      let isValid = false;
-      let attempts = 0;
+    if (isVertical || isHorizontal) {
+      const maxProblems = isVertical ? 25 : 20;
+      let addOneCount = 0;
+      let subOneCount = 0;
+      
+      while (problems.length < maxProblems) {
+        let operator: '+' | '-' = '+';
+        if (mode === 'vertical-add' || mode === 'horizontal-add') operator = '+';
+        else if (mode === 'vertical-sub' || mode === 'horizontal-sub') operator = '-';
+        else operator = Math.random() > 0.5 ? '+' : '-';
 
-      while (!isValid && attempts < 100) {
-        attempts++;
-        if (operator === '+') {
-          num1 = Math.floor(Math.random() * (max - 1)) + 1;
-          num2 = Math.floor(Math.random() * (max - num1)) + 1;
-          
-          if (num1 + num2 < min) continue;
-          
-          // Carry logic check
-          const isCarry = (num1 % 10) + (num2 % 10) > 9;
-          if (regroup === 'none' && isCarry) continue;
-          if (regroup === 'only' && !isCarry) continue;
-          
-          isValid = true;
-        } else {
-          num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-          num2 = Math.floor(Math.random() * num1) + 1;
-          
-          // Borrow logic check
-          const isBorrow = (num1 % 10) < (num2 % 10);
-          if (regroup === 'none' && isBorrow) continue;
-          if (regroup === 'only' && !isBorrow) continue;
-          
-          isValid = true;
+        let num1 = 0, num2 = 0;
+        let isValid = false;
+        let attempts = 0;
+
+        while (!isValid && attempts < 100) {
+          attempts++;
+          if (operator === '+') {
+            num1 = Math.floor(Math.random() * (max - 1)) + 1;
+            num2 = Math.floor(Math.random() * (max - num1)) + 1;
+            
+            if (num1 + num2 < min) continue;
+            
+            // Carry logic check
+            const isCarry = (num1 % 10) + (num2 % 10) > 9;
+            if (regroup === 'none' && isCarry) continue;
+            if (regroup === 'only' && !isCarry) continue;
+            
+            isValid = true;
+          } else {
+            num1 = Math.floor(Math.random() * (max - min + 1)) + min;
+            num2 = Math.floor(Math.random() * num1) + 1;
+            
+            // Borrow logic check
+            const isBorrow = (num1 % 10) < (num2 % 10);
+            if (regroup === 'none' && isBorrow) continue;
+            if (regroup === 'only' && !isBorrow) continue;
+            
+            isValid = true;
+          }
         }
-      }
 
-      // Fallback if strict rules fail
-      if (!isValid) {
-        if (operator === '+') {
-          num1 = Math.floor(Math.random() * (max - 1)) + 1;
-          num2 = Math.floor(Math.random() * (max - num1)) + 1;
-        } else {
-          num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-          num2 = Math.floor(Math.random() * num1) + 1;
+        // Fallback if strict rules fail
+        if (!isValid) {
+          if (operator === '+') {
+            num1 = Math.floor(Math.random() * (max - 1)) + 1;
+            num2 = Math.floor(Math.random() * (max - num1)) + 1;
+          } else {
+            num1 = Math.floor(Math.random() * (max - min + 1)) + min;
+            num2 = Math.floor(Math.random() * num1) + 1;
+          }
         }
-      }
 
-      const isAddOne = operator === '+' && (num1 === 1 || num2 === 1);
-      const isSubOne = operator === '-' && num2 === 1;
+        const isAddOne = operator === '+' && (num1 === 1 || num2 === 1);
+        const isSubOne = operator === '-' && num2 === 1;
 
-      if (isAddOne && addOneCount >= 1) continue;
-      if (isSubOne && subOneCount >= 1) continue;
+        if (isAddOne && addOneCount >= 1) continue;
+        if (isSubOne && subOneCount >= 1) continue;
 
-      const key = `${num1}${operator}${num2}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        if (isAddOne) addOneCount++;
-        if (isSubOne) subOneCount++;
-        problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
+        const key = `${num1}${operator}${num2}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          if (isAddOne) addOneCount++;
+          if (isSubOne) subOneCount++;
+          problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
+        }
       }
     }
   }

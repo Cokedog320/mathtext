@@ -129,3 +129,26 @@ describe('generateProblems - Make-Ten Method', () => {
   });
 });
 
+describe('generateProblems - Horizontal Arithmetic', () => {
+  it('should generate 20 problems in horizontal-add mode', () => {
+    const problems = generateProblems('11-20', 'horizontal-add');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => p.type === 'arithmetic' && p.operator === '+')).toBe(true);
+  });
+
+  it('should generate 20 problems in horizontal-sub mode', () => {
+    const problems = generateProblems('11-20', 'horizontal-sub');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => p.type === 'arithmetic' && p.operator === '-')).toBe(true);
+  });
+
+  it('should generate 20 problems in horizontal-mixed mode', () => {
+    const problems = generateProblems('11-20', 'horizontal-mixed');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => p.type === 'arithmetic')).toBe(true);
+    const hasAdd = problems.some(p => p.operator === '+');
+    const hasSub = problems.some(p => p.operator === '-');
+    expect(hasAdd).toBe(true);
+    expect(hasSub).toBe(true);
+  });
+});

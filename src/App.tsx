@@ -282,6 +282,34 @@ const MethodDiagram: React.FC<{ problem: any; index: number; hideTen?: boolean }
         )}
       </svg>
 
+      {/* Connector: routes the final computed result over to the answer box after "=" */}
+      <svg className="absolute inset-0" width="180" height="160" viewBox="0 0 180 160">
+        {method === 'make-ten' ? (
+          <>
+            {/* Horizontal line from 10 box (bottom center 58, 130) to answer column (164) at y=130 */}
+            <line x1="58" y1="130" x2="164" y2="130" stroke="black" strokeWidth="1.5" />
+            {/* Vertical line from part2 box (bottom center 120, 88) down to meet the horizontal line at y=130 */}
+            <line x1="120" y1="88" x2="120" y2="130" stroke="black" strokeWidth="1.5" />
+            {/* Vertical line from y=130 up to the bottom of the answer box (y=30) at x=164 */}
+            <line x1="164" y1="130" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
+            {/* Plus sign centered between the 10 box and the vertical drop line */}
+            <text x="89" y="122" fontSize="20" fontWeight="normal" fill="black" textAnchor="middle">+</text>
+          </>
+        ) : method === 'break-ten' ? (
+          <>
+            {/* Extend the existing "+" result over to the answer box */}
+            <line x1="80" y1="142" x2="164" y2="142" stroke="black" strokeWidth="1.5" />
+            <line x1="164" y1="142" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
+          </>
+        ) : (
+          <>
+            {/* Extend the existing final "-" result over to the answer box */}
+            <line x1="120" y1="142" x2="164" y2="142" stroke="black" strokeWidth="1.5" />
+            <line x1="164" y1="142" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
+          </>
+        )}
+      </svg>
+
       {/* Boxes */}
       {method === 'make-ten' ? (
         <>

@@ -215,3 +215,69 @@ describe('generateProblems - Number Bonds', () => {
     })).toBe(true);
   });
 });
+
+describe('generateProblems - Number Bonds 1-10', () => {
+  it('should generate 9 bond problems within the 1-10 range', () => {
+    const problems = generateProblems('1-10', 'number-bonds');
+    const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
+
+    expect(bondProblems.length).toBe(9);
+    for (const p of bondProblems) {
+      expect(p.top).toBeGreaterThanOrEqual(1);
+      expect(p.top).toBeLessThanOrEqual(10);
+    }
+  });
+
+  it('should still generate 12 bond problems for other ranges (e.g. 11-20)', () => {
+    const problems = generateProblems('11-20', 'number-bonds');
+    const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
+
+    expect(bondProblems.length).toBe(12);
+  });
+
+  it('should exclude any zero-part combinations in the 1-10 range', () => {
+    const problems = generateProblems('1-10', 'number-bonds');
+    const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
+
+    for (const p of bondProblems) {
+      const knownPart = p.left !== '' ? p.left : p.right;
+      expect(knownPart).not.toBe(0);
+      expect(knownPart).not.toBe(p.top);
+    }
+  });
+
+  it('should cap any single split value at 3 occurrences in the 1-10 range', () => {
+    for (let trial = 0; trial < 30; trial++) {
+      const problems = generateProblems('1-10', 'number-bonds');
+      const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
+
+      const counts: Record<number, number> = {};
+      for (const p of bondProblems) {
+        const knownPart = (p.left !== '' ? p.left : p.right) as number;
+        const otherPart = p.top - knownPart;
+        counts[knownPart] = (counts[knownPart] || 0) + 1;
+        counts[otherPart] = (counts[otherPart] || 0) + 1;
+      }
+
+      for (const value in counts) {
+        expect(counts[value]).toBeLessThanOrEqual(3);
+      }
+    }
+  });
+
+  it('should cap any single total (top) at 2 occurrences in the 1-10 range', () => {
+    for (let trial = 0; trial < 30; trial++) {
+      const problems = generateProblems('1-10', 'number-bonds');
+      const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
+
+      const topCounts: Record<number, number> = {};
+      for (const p of bondProblems) {
+        topCounts[p.top] = (topCounts[p.top] || 0) + 1;
+      }
+
+      for (const value in topCounts) {
+        expect(topCounts[value]).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+});

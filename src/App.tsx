@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Dices, Printer, Download, Settings2, Sparkles, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
-export type Range = '11-20' | '21-30' | '10-50' | '10-100';
+export type Range = '1-10' | '11-20' | '21-30' | '10-50' | '10-100';
 export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 
@@ -28,14 +28,77 @@ export const generateProblems = (
   makeTenLeft: string = 'mixed'
 ): Problem[] => {
   let min = 11, max = 20;
-  if (range === '21-30') { min = 21; max = 30; }
+  if (range === '1-10') { min = 1; max = 10; }
+  else if (range === '21-30') { min = 21; max = 30; }
   else if (range === '10-50') { min = 10; max = 50; }
   else if (range === '10-100') { min = 10; max = 100; }
 
   const problems: Problem[] = [];
   const seen = new Set<string>();
   
-  if (mode === 'number-bonds') {
+  if (mode === 'number-bonds' && range === '1-10') {
+    // Enumerate every valid (top, knownPart) split (no zero/top-equal splits).
+    const target = 9;
+    const splitCap = 3; // max times any single split value (1-9) may appear
+    const topCap = 2;   // max times any single total (2-10) may repeat
+    const candidates: { top: number; knownPart: number; otherPart: number }[] = [];
+    for (let top = min; top <= max; top++) {
+      for (let knownPart = 1; knownPart < top; knownPart++) {
+        candidates.push({ top, knownPart, otherPart: top - knownPart });
+      }
+    }
+
+    // Try to fill `target` problems while respecting both caps. A self-paired
+    // split (e.g. 4 = 2+2) uses up 2 slots of the same value in one shot, so
+    // it must be checked/incremented as a pair, not as two independent +1s.
+    const attemptFill = (useSplitCap: boolean, useTopCap: boolean) => {
+      const shuffled = shuffle(candidates);
+      const splitCounts: Record<number, number> = {};
+      const topCounts: Record<number, number> = {};
+      const picked: typeof candidates = [];
+      for (const c of shuffled) {
+        if (picked.length >= target) break;
+        const selfPaired = c.knownPart === c.otherPart;
+        const splitOk = !useSplitCap || (selfPaired
+          ? (splitCounts[c.knownPart] || 0) + 2 <= splitCap
+          : (splitCounts[c.knownPart] || 0) + 1 <= splitCap && (splitCounts[c.otherPart] || 0) + 1 <= splitCap);
+        const topOk = !useTopCap || (topCounts[c.top] || 0) < topCap;
+        if (splitOk && topOk) {
+          picked.push(c);
+          if (selfPaired) {
+            splitCounts[c.knownPart] = (splitCounts[c.knownPart] || 0) + 2;
+          } else {
+            splitCounts[c.knownPart] = (splitCounts[c.knownPart] || 0) + 1;
+            splitCounts[c.otherPart] = (splitCounts[c.otherPart] || 0) + 1;
+          }
+          topCounts[c.top] = (topCounts[c.top] || 0) + 1;
+        }
+      }
+      return picked;
+    };
+
+    // Both caps hold the vast majority of the time (verified by simulation);
+    // retrying a handful of random shuffles makes success effectively certain.
+    let selected: typeof candidates = [];
+    for (let attempt = 0; attempt < 300 && selected.length < target; attempt++) {
+      selected = attemptFill(true, true);
+    }
+    // Fallback: relax the total-repeat cap first (split balance still holds).
+    for (let attempt = 0; attempt < 100 && selected.length < target; attempt++) {
+      selected = attemptFill(true, false);
+    }
+    // Last resort: relax every constraint, just fill uniquely.
+    for (let attempt = 0; attempt < 20 && selected.length < target; attempt++) {
+      selected = attemptFill(false, false);
+    }
+
+    for (const c of shuffle(selected)) {
+      const isLeftKnown = Math.random() > 0.5;
+      const left = isLeftKnown ? c.knownPart : '';
+      const right = isLeftKnown ? '' : c.knownPart;
+      problems.push({ id: problems.length, type: 'bond', top: c.top, left, right });
+    }
+  } else if (mode === 'number-bonds') {
     let zeroCount = 0;
     while (problems.length < 12) {
       const top = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -177,7 +240,34 @@ export const generateProblems = (
   return problems;
 };
 
-const NumberBond: React.FC<{ problem: any }> = ({ problem }) => {
+const NumberBond: React.FC<{ problem: any; large?: boolean }> = ({ problem, large = false }) => {
+  if (large) {
+    return (
+      <div className="relative w-[220px] h-[260px]">
+        {/* SVG Lines */}
+        <svg className="absolute inset-0 z-0" width="220" height="260" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <line x1="110" y1="100" x2="50" y2="160" stroke="black" strokeWidth="4" />
+          <line x1="110" y1="100" x2="170" y2="160" stroke="black" strokeWidth="4" />
+        </svg>
+
+        {/* Top Circle */}
+        <div className="absolute top-0 left-[60px] z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
+          {problem.top}
+        </div>
+
+        {/* Bottom Left Circle */}
+        <div className="absolute bottom-0 left-0 z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
+          {problem.left}
+        </div>
+
+        {/* Bottom Right Circle */}
+        <div className="absolute bottom-0 right-0 z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
+          {problem.right}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-[160px] h-[180px]">
       {/* SVG Lines */}
@@ -306,14 +396,12 @@ const MethodDiagram: React.FC<{ problem: any; index: number; hideTen?: boolean }
       <svg className="absolute inset-0" width="180" height="160" viewBox="0 0 180 160">
         {method === 'make-ten' ? (
           <>
-            {/* Horizontal line from 10 box (bottom center 58, 130) to answer column (164) at y=130 */}
-            <line x1="58" y1="130" x2="164" y2="130" stroke="black" strokeWidth="1.5" />
-            {/* Vertical line from part2 box (bottom center 120, 88) down to meet the horizontal line at y=130 */}
-            <line x1="120" y1="88" x2="120" y2="130" stroke="black" strokeWidth="1.5" />
-            {/* Vertical line from y=130 up to the bottom of the answer box (y=30) at x=164 */}
-            <line x1="164" y1="130" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
-            {/* Plus sign centered between the 10 box and the vertical drop line */}
-            <text x="89" y="122" fontSize="20" fontWeight="normal" fill="black" textAnchor="middle">+</text>
+            {/* Second addition: part2 (box, bottom center 120,88) + 10 (box, right-mid 72,116) */}
+            <line x1="120" y1="88" x2="120" y2="116" stroke="black" strokeWidth="1.5" />
+            <line x1="72" y1="116" x2="120" y2="116" stroke="black" strokeWidth="1.5" />
+            <text x="96" y="112" fontSize="20" fontWeight="normal" fill="black" textAnchor="middle">+</text>
+            <line x1="120" y1="116" x2="164" y2="116" stroke="black" strokeWidth="1.5" />
+            <line x1="164" y1="116" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
           </>
         ) : method === 'break-ten' ? (
           <>
@@ -530,7 +618,13 @@ export default function App() {
               <select 
                 id="mode" 
                 value={mode} 
-                onChange={(e) => setMode(e.target.value as Mode)}
+                onChange={(e) => {
+                  const newMode = e.target.value as Mode;
+                  setMode(newMode);
+                  if (newMode !== 'number-bonds' && range === '1-10') {
+                    setRange('11-20');
+                  }
+                }}
                 className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
               >
                 <option value="number-bonds">数字组合 (Number Bonds)</option>
@@ -556,6 +650,7 @@ export default function App() {
                   onChange={handleRangeChange}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
+                  {mode === 'number-bonds' && <option value="1-10">1 - 10</option>}
                   <option value="11-20">11 - 20</option>
                   <option value="21-30">21 - 30</option>
                   <option value="10-50">10 - 50</option>
@@ -723,10 +818,11 @@ export default function App() {
               {problems.map((problem, idx) => {
                 let colClass = 'w-1/5';
                 let heightClass = 'h-[180px]';
+                const isLargeBonds = mode === 'number-bonds' && range === '1-10';
                 
                 if (mode === 'number-bonds') {
                   colClass = 'w-1/3';
-                  heightClass = 'h-[230px]';
+                  heightClass = isLargeBonds ? 'h-[320px]' : 'h-[230px]';
                 } else if (
                   mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten' ||
                   mode.startsWith('horizontal-')
@@ -738,7 +834,7 @@ export default function App() {
                 return (
                   <div key={problem.id} className={`${colClass} ${heightClass} flex justify-center items-center break-inside-avoid`}>
                     {problem.type === 'bond' ? (
-                      <NumberBond problem={problem} />
+                      <NumberBond problem={problem} large={isLargeBonds} />
                     ) : mode.startsWith('horizontal-') ? (
                       <HorizontalArithmetic problem={problem} index={idx} />
                     ) : problem.type === 'arithmetic' ? (

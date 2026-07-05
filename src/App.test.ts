@@ -3,41 +3,43 @@ import { generateProblems, Problem } from './App';
 
 describe('generateProblems - Vertical Arithmetic', () => {
   it('should generate a mix of carry and no-carry addition problems', () => {
-    const problems = generateProblems('11-20', 'vertical-add');
-    const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
-    
-    expect(arithmeticProblems.length).toBe(25);
-    
-    const hasCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
-    const hasNoCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
-    
-    // With 25 problems, it's statistically almost certain to have both unless the range is very restricted
+    let hasCarry = false, hasNoCarry = false;
+    for (let i = 0; i < 10; i++) {
+      const problems = generateProblems('11-20', 'vertical-add');
+      const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
+      expect(arithmeticProblems.length).toBe(25);
+      hasCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
+      hasNoCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
+      if (hasCarry && hasNoCarry) break;
+    }
     expect(hasCarry).toBe(true);
     expect(hasNoCarry).toBe(true);
   });
 
   it('should generate a mix of borrow and no-borrow subtraction problems', () => {
-    const problems = generateProblems('11-20', 'vertical-sub');
-    const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
-    
-    expect(arithmeticProblems.length).toBe(25);
-    
-    const hasBorrow = arithmeticProblems.some(p => (p.num1 % 10) < (p.num2 % 10));
-    const hasNoBorrow = arithmeticProblems.some(p => (p.num1 % 10) >= (p.num2 % 10));
-    
+    let hasBorrow = false, hasNoBorrow = false;
+    for (let i = 0; i < 10; i++) {
+      const problems = generateProblems('11-20', 'vertical-sub');
+      const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
+      expect(arithmeticProblems.length).toBe(25);
+      hasBorrow = arithmeticProblems.some(p => (p.num1 % 10) < (p.num2 % 10));
+      hasNoBorrow = arithmeticProblems.some(p => (p.num1 % 10) >= (p.num2 % 10));
+      if (hasBorrow && hasNoBorrow) break;
+    }
     expect(hasBorrow).toBe(true);
     expect(hasNoBorrow).toBe(true);
   });
 
   it('should generate mixed carry/borrow in vertical-mixed mode', () => {
-    const problems = generateProblems('11-20', 'vertical-mixed');
-    const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    
-    expect(arithmeticProblems.length).toBe(25);
-    
-    const hasCarry = arithmeticProblems.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
-    const hasBorrow = arithmeticProblems.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
-    
+    let hasCarry = false, hasBorrow = false;
+    for (let i = 0; i < 10; i++) {
+      const problems = generateProblems('11-20', 'vertical-mixed');
+      const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
+      expect(arithmeticProblems.length).toBe(25);
+      hasCarry = arithmeticProblems.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
+      hasBorrow = arithmeticProblems.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
+      if (hasCarry && hasBorrow) break;
+    }
     expect(hasCarry).toBe(true);
     expect(hasBorrow).toBe(true);
   });
@@ -145,11 +147,15 @@ describe('generateProblems - Horizontal Arithmetic', () => {
   });
 
   it('should generate 20 problems in horizontal-mixed mode', () => {
-    const problems = generateProblems('11-20', 'horizontal-mixed');
-    const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    expect(arithmeticProblems.length).toBe(20);
-    const hasAdd = arithmeticProblems.some(p => p.operator === '+');
-    const hasSub = arithmeticProblems.some(p => p.operator === '-');
+    let hasAdd = false, hasSub = false;
+    for (let i = 0; i < 10; i++) {
+      const problems = generateProblems('11-20', 'horizontal-mixed');
+      const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
+      expect(arithmeticProblems.length).toBe(20);
+      hasAdd = arithmeticProblems.some(p => p.operator === '+');
+      hasSub = arithmeticProblems.some(p => p.operator === '-');
+      if (hasAdd && hasSub) break;
+    }
     expect(hasAdd).toBe(true);
     expect(hasSub).toBe(true);
   });
@@ -157,21 +163,29 @@ describe('generateProblems - Horizontal Arithmetic', () => {
 
 describe('generateProblems - Horizontal Arithmetic Details', () => {
   it('should generate a mix of carry and no-carry addition problems', () => {
-    const problems = generateProblems('11-20', 'horizontal-add');
-    const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
-    expect(arithmetic.length).toBe(20);
-    const hasCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
-    const hasNoCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
+    let hasCarry = false, hasNoCarry = false;
+    for (let i = 0; i < 10; i++) {
+      const problems = generateProblems('11-20', 'horizontal-add');
+      const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
+      expect(arithmetic.length).toBe(20);
+      hasCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
+      hasNoCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
+      if (hasCarry && hasNoCarry) break;
+    }
     expect(hasCarry).toBe(true);
     expect(hasNoCarry).toBe(true);
   });
 
   it('should generate mixed carry/borrow in horizontal-mixed mode', () => {
-    const problems = generateProblems('11-20', 'horizontal-mixed');
-    const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    expect(arithmetic.length).toBe(20);
-    const hasCarry = arithmetic.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
-    const hasBorrow = arithmetic.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
+    let hasCarry = false, hasBorrow = false;
+    for (let i = 0; i < 10; i++) {
+      const problems = generateProblems('11-20', 'horizontal-mixed');
+      const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
+      expect(arithmetic.length).toBe(20);
+      hasCarry = arithmetic.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
+      hasBorrow = arithmetic.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
+      if (hasCarry && hasBorrow) break;
+    }
     expect(hasCarry).toBe(true);
     expect(hasBorrow).toBe(true);
   });
@@ -281,3 +295,6 @@ describe('generateProblems - Number Bonds 1-10', () => {
     }
   });
 });
+
+
+

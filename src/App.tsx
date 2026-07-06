@@ -962,10 +962,6 @@ export default function App() {
             {/* Subtle Paper Texture Overlay */}
             <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}></div>
 
-            <div className="no-print absolute top-4 right-4 text-xs text-gray-400/60 font-mono flex items-center gap-1">
-              <Sparkles size={12} /> A4 Preview
-            </div>
-            
             <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
               <h1 className="text-3xl font-black tracking-widest text-black uppercase">
                 {t.printTitles[mode]}

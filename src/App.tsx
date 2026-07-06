@@ -660,6 +660,7 @@ export default function App() {
     const saved = typeof window !== 'undefined' ? localStorage.getItem(LANGUAGE_KEY) : null;
     return saved === 'en' ? 'en' : 'zh';
   });
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   const t = translations[language];
@@ -697,27 +698,35 @@ export default function App() {
   };
 
   const handleDownloadPdf = async () => {
-    if (!worksheetRef.current) return;
-    
-    const canvas = await html2canvas(worksheetRef.current, { 
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      onclone: (clonedDoc) => {
-        const clonedWorksheet = clonedDoc.getElementById('worksheet');
-        if (clonedWorksheet && clonedWorksheet.parentElement) {
-          clonedWorksheet.parentElement.style.transform = 'none';
+    if (!worksheetRef.current || isGeneratingPdf) return;
+
+    setIsGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(worksheetRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          const clonedWorksheet = clonedDoc.getElementById('worksheet');
+          if (clonedWorksheet && clonedWorksheet.parentElement) {
+            clonedWorksheet.parentElement.style.transform = 'none';
+          }
         }
-      }
-    });
-    
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(pdfFileNames[language][mode]);
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(pdfFileNames[language][mode]);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      alert(language === 'zh' ? 'PDF 生成失败，请重试。' : 'Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -912,10 +921,11 @@ export default function App() {
             </button>
             <button 
               onClick={handleDownloadPdf}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
+              disabled={isGeneratingPdf}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
             >
               <Download size={16} /> 
-              {t.downloadPdf}
+              {isGeneratingPdf ? (language === 'zh' ? '生成中...' : 'Generating...') : t.downloadPdf}
             </button>
           </div>
         </div>
@@ -945,10 +955,11 @@ export default function App() {
           </button>
           <button 
             onClick={handleDownloadPdf}
-            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl font-semibold text-sm cursor-pointer"
+            disabled={isGeneratingPdf}
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
             <Download size={16} /> 
-            {t.mobileDownload}
+            {isGeneratingPdf ? (language === 'zh' ? '生成中...' : '...') : t.mobileDownload}
           </button>
         </div>
 

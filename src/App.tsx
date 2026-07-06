@@ -648,7 +648,7 @@ const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ children })
 const LANGUAGE_KEY = 'math-language';
 
 export default function App() {
-  const [range, setRange] = useState<Range>('11-20');
+  const [range, setRange] = useState<Range>('1-10');
   const [mode, setMode] = useState<Mode>('number-bonds');
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');

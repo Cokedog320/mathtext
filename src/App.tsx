@@ -186,22 +186,40 @@ export const generateProblems = (
     const target = 9;
     const splitCap = 3; // max times any single split value (1-9) may appear
     const topCap = 2;   // max times any single total (2-10) may repeat
-    const candidates: { top: number; knownPart: number; otherPart: number }[] = [];
+    const candidatesByTop: Record<number, { top: number; knownPart: number; otherPart: number }[]> = {};
     for (let top = min; top <= max; top++) {
+      candidatesByTop[top] = [];
       for (let knownPart = 1; knownPart < top; knownPart++) {
-        candidates.push({ top, knownPart, otherPart: top - knownPart });
+        candidatesByTop[top].push({ top, knownPart, otherPart: top - knownPart });
       }
+      candidatesByTop[top] = shuffle(candidatesByTop[top]);
     }
 
     // Try to fill `target` problems while respecting both caps. A self-paired
     // split (e.g. 4 = 2+2) uses up 2 slots of the same value in one shot, so
     // it must be checked/incremented as a pair, not as two independent +1s.
+    // Candidates are interleaved by top so each top gets equal consideration
+    // before any top is used a second time, removing the bias toward larger tops.
     const attemptFill = (useSplitCap: boolean, useTopCap: boolean) => {
-      const shuffled = shuffle(candidates);
+      const tops = shuffle([...Array(max - min + 1)].map((_, i) => min + i));
+      const interleaved: { top: number; knownPart: number; otherPart: number }[] = [];
+      let round = 0;
+      while (interleaved.length < 100) {
+        let added = false;
+        for (const top of tops) {
+          if (round < candidatesByTop[top].length) {
+            interleaved.push(candidatesByTop[top][round]);
+            added = true;
+          }
+        }
+        if (!added) break;
+        round++;
+      }
+
       const splitCounts: Record<number, number> = {};
       const topCounts: Record<number, number> = {};
-      const picked: typeof candidates = [];
-      for (const c of shuffled) {
+      const picked: typeof interleaved = [];
+      for (const c of interleaved) {
         if (picked.length >= target) break;
         const selfPaired = c.knownPart === c.otherPart;
         const splitOk = !useSplitCap || (selfPaired
@@ -224,7 +242,7 @@ export const generateProblems = (
 
     // Both caps hold the vast majority of the time (verified by simulation);
     // retrying a handful of random shuffles makes success effectively certain.
-    let selected: typeof candidates = [];
+    let selected: typeof interleaved = [];
     for (let attempt = 0; attempt < 300 && selected.length < target; attempt++) {
       selected = attemptFill(true, true);
     }

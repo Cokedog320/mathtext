@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { Dices, Printer, Download, Settings2 } from 'lucide-react';
 
@@ -702,24 +702,28 @@ export default function App() {
 
     setIsGeneratingPdf(true);
     try {
-      const canvas = await html2canvas(worksheetRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        onclone: (clonedDoc) => {
-          const clonedWorksheet = clonedDoc.getElementById('worksheet');
-          if (clonedWorksheet && clonedWorksheet.parentElement) {
-            clonedWorksheet.parentElement.style.transform = 'none';
-          }
-        }
+      const worksheet = worksheetRef.current;
+      const dataUrl = await toPng(worksheet, {
+        cacheBust: true,
+        pixelRatio: 2,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+      });
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfHeight = (img.height * pdfWidth) / img.width;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      if (!Number.isFinite(pdfHeight) || pdfHeight <= 0) {
+        throw new Error(`Invalid PDF height: ${pdfHeight}`);
+      }
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(pdfFileNames[language][mode]);
     } catch (error) {
       console.error('PDF generation failed:', error);
@@ -970,9 +974,6 @@ export default function App() {
             id="worksheet"
             className="print-area w-[794px] h-[1123px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] py-8 px-12 flex flex-col relative shrink-0 overflow-hidden transition-shadow duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
           >
-            {/* Subtle Paper Texture Overlay */}
-            <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}></div>
-
             <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
               <h1 className="text-3xl font-black tracking-widest text-black uppercase">
                 {t.printTitles[mode]}

@@ -13,6 +13,33 @@ export type Problem =
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
+const pdfFileNames: Record<Language, Record<Mode, string>> = {
+  zh: {
+    'number-bonds': '数字组合.pdf',
+    'vertical-add': '竖排加法.pdf',
+    'vertical-sub': '竖排减法.pdf',
+    'vertical-mixed': '竖排混合.pdf',
+    'horizontal-add': '横排加法.pdf',
+    'horizontal-sub': '横排减法.pdf',
+    'horizontal-mixed': '横排混合.pdf',
+    'make-ten': '凑十法.pdf',
+    'break-ten': '破十法.pdf',
+    'flat-ten': '平十法.pdf',
+  },
+  en: {
+    'number-bonds': 'number-bonds.pdf',
+    'vertical-add': 'vertical-addition.pdf',
+    'vertical-sub': 'vertical-subtraction.pdf',
+    'vertical-mixed': 'vertical-arithmetic.pdf',
+    'horizontal-add': 'horizontal-addition.pdf',
+    'horizontal-sub': 'horizontal-subtraction.pdf',
+    'horizontal-mixed': 'horizontal-arithmetic.pdf',
+    'make-ten': 'make-ten.pdf',
+    'break-ten': 'break-ten.pdf',
+    'flat-ten': 'flat-ten.pdf',
+  },
+};
+
 const translations = {
   zh: {
     settings: '参数配置',
@@ -690,7 +717,7 @@ export default function App() {
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('数学练习题.pdf');
+    pdf.save(pdfFileNames[language][mode]);
   };
 
   return (

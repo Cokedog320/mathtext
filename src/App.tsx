@@ -50,6 +50,7 @@ const translations = {
     regroup: '进退位',
     makeTenLeft: '左加数',
     hideTen: '隐藏“10”辅助数字',
+    hideBondParts: '隐藏底部分解数字',
     regenerate: '重新生成题目',
     viewPreview: '查看打印预览',
     print: '直接打印',
@@ -107,6 +108,7 @@ const translations = {
     regroup: 'Regroup',
     makeTenLeft: 'Left Addend',
     hideTen: 'Hide helper "10"',
+    hideBondParts: 'Hide bottom parts',
     regenerate: 'Regenerate Problems',
     viewPreview: 'View Preview',
     print: 'Print',
@@ -389,7 +391,7 @@ export const generateProblems = (
   return problems;
 };
 
-const NumberBond: React.FC<{ problem: any; large?: boolean }> = ({ problem, large = false }) => {
+const NumberBond: React.FC<{ problem: any; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
   if (large) {
     return (
       <div className="relative w-[220px] h-[260px]">
@@ -406,12 +408,12 @@ const NumberBond: React.FC<{ problem: any; large?: boolean }> = ({ problem, larg
 
         {/* Bottom Left Circle */}
         <div className="absolute bottom-0 left-0 z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
-          {problem.left}
+          {hideParts ? '' : problem.left}
         </div>
 
         {/* Bottom Right Circle */}
         <div className="absolute bottom-0 right-0 z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
-          {problem.right}
+          {hideParts ? '' : problem.right}
         </div>
       </div>
     );
@@ -432,12 +434,12 @@ const NumberBond: React.FC<{ problem: any; large?: boolean }> = ({ problem, larg
       
       {/* Bottom Left Circle */}
       <div className="absolute bottom-0 left-0 z-10 w-[70px] h-[70px] bg-white border-[3px] border-black rounded-full flex items-center justify-center text-3xl font-bold text-black">
-        {problem.left}
+        {hideParts ? '' : problem.left}
       </div>
       
       {/* Bottom Right Circle */}
       <div className="absolute bottom-0 right-0 z-10 w-[70px] h-[70px] bg-white border-[3px] border-black rounded-full flex items-center justify-center text-3xl font-bold text-black">
-        {problem.right}
+        {hideParts ? '' : problem.right}
       </div>
     </div>
   );
@@ -657,6 +659,7 @@ export default function App() {
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [hideTen, setHideTen] = useState<boolean>(false);
+  const [hideBondParts, setHideBondParts] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
@@ -898,6 +901,20 @@ export default function App() {
                 <label htmlFor="hideTen" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideTen}</label>
               </div>
             )}
+
+            {/* Hide Bond Parts Checkbox (only for number-bonds) */}
+            {mode === 'number-bonds' && (
+              <div className="flex items-center gap-2.5 pt-2 animate-fade-in-up">
+                <input
+                  type="checkbox"
+                  id="hideBondParts"
+                  checked={hideBondParts}
+                  onChange={(e) => setHideBondParts(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                />
+                <label htmlFor="hideBondParts" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideBondParts}</label>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1009,7 +1026,7 @@ export default function App() {
                 return (
                   <div key={problem.id} className={`${colClass} ${heightClass} flex justify-center items-center break-inside-avoid`}>
                     {problem.type === 'bond' ? (
-                      <NumberBond problem={problem} large={isLargeBonds} />
+                      <NumberBond problem={problem} large={isLargeBonds} hideParts={hideBondParts} />
                     ) : mode.startsWith('horizontal-') ? (
                       <HorizontalArithmetic problem={problem} index={idx} />
                     ) : problem.type === 'arithmetic' ? (

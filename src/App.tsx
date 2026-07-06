@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Dices, Printer, Download, Settings2, Sparkles, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { Dices, Printer, Download, Settings2 } from 'lucide-react';
 
+export type Language = 'zh' | 'en';
 export type Range = '1-10' | '11-20' | '21-30' | '10-50' | '10-100';
 export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
@@ -500,6 +501,8 @@ const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ children })
   );
 };
 
+const LANGUAGE_KEY = 'math-language';
+
 export default function App() {
   const [range, setRange] = useState<Range>('11-20');
   const [mode, setMode] = useState<Mode>('number-bonds');
@@ -509,7 +512,15 @@ export default function App() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem(LANGUAGE_KEY) : null;
+    return saved === 'en' ? 'en' : 'zh';
+  });
   const worksheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem(LANGUAGE_KEY, language);
+  }, [language]);
 
   // Helper to regenerate problems with current settings
   const regenerate = (r = range, m = mode, rg = regroup, mtl = makeTenLeft) => {
@@ -603,11 +614,26 @@ export default function App() {
         }`}
       >
         <div className="p-6 flex flex-col gap-6">
-          <div className="flex items-center gap-3 border-b border-gray-200/60 pb-4">
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
-              <Settings2 size={20} />
+          <div className="flex items-center justify-between border-b border-gray-200/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
+                <Settings2 size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">习题定制</h2>
             </div>
-            <h2 className="text-xl font-bold text-gray-800">习题定制</h2>
+            <button
+              onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
+              className="relative w-16 h-8 rounded-full bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+              aria-label={language === 'zh' ? 'Switch to English' : '切换到中文'}
+            >
+              <span
+                className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center text-xs font-bold transition-transform duration-200 ${
+                  language === 'en' ? 'translate-x-8' : 'translate-x-0'
+                }`}
+              >
+                {language === 'zh' ? '中' : 'EN'}
+              </span>
+            </button>
           </div>
 
           {/* Form Options */}

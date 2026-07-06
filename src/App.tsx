@@ -13,6 +13,123 @@ export type Problem =
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
+const translations = {
+  zh: {
+    settings: '参数配置',
+    preview: '打印预览',
+    worksheetTitle: '习题定制',
+    mode: '题型',
+    range: '难度',
+    regroup: '进退位',
+    makeTenLeft: '左加数',
+    hideTen: '隐藏“10”辅助数字',
+    regenerate: '重新生成题目',
+    viewPreview: '查看打印预览',
+    print: '直接打印',
+    downloadPdf: '下载 PDF',
+    mobileRegenerate: '换一批',
+    mobilePrint: '打印',
+    mobileDownload: '下载',
+    date: '日期',
+    name: '姓名',
+    score: '得分',
+    modes: {
+      'number-bonds': '数字组合',
+      'vertical-add': '竖排加法',
+      'vertical-sub': '竖排减法',
+      'vertical-mixed': '竖排混合',
+      'horizontal-add': '横排加法',
+      'horizontal-sub': '横排减法',
+      'horizontal-mixed': '横排混合',
+      'make-ten': '凑十法',
+      'break-ten': '破十法',
+      'flat-ten': '平十法',
+    },
+    regroupOptions: {
+      mixed: '混合',
+      none: '无进/退位',
+      only: '进/退位',
+    },
+    makeTenLeftOptions: {
+      mixed: '随机',
+      '9': '9',
+      '8': '8',
+      '7': '7',
+      '6': '6',
+      '5': '5',
+    },
+    printTitles: {
+      'number-bonds': '数字组合练习',
+      'vertical-add': '竖排加法练习',
+      'vertical-sub': '竖排减法练习',
+      'vertical-mixed': '竖排混合练习',
+      'horizontal-add': '横排加法练习',
+      'horizontal-sub': '横排减法练习',
+      'horizontal-mixed': '横排混合练习',
+      'make-ten': '凑十法练习',
+      'break-ten': '破十法练习',
+      'flat-ten': '平十法练习',
+    },
+  },
+  en: {
+    settings: 'Settings',
+    preview: 'Preview',
+    worksheetTitle: 'Worksheet Settings',
+    mode: 'Mode',
+    range: 'Range',
+    regroup: 'Regroup',
+    makeTenLeft: 'Left Addend',
+    hideTen: 'Hide helper "10"',
+    regenerate: 'Regenerate Problems',
+    viewPreview: 'View Preview',
+    print: 'Print',
+    downloadPdf: 'Download PDF',
+    mobileRegenerate: 'New Set',
+    mobilePrint: 'Print',
+    mobileDownload: 'Download',
+    date: 'Date',
+    name: 'Name',
+    score: 'Score',
+    modes: {
+      'number-bonds': 'Number Bonds',
+      'vertical-add': 'Vertical Addition',
+      'vertical-sub': 'Vertical Subtraction',
+      'vertical-mixed': 'Vertical Mixed',
+      'horizontal-add': 'Horizontal Addition',
+      'horizontal-sub': 'Horizontal Subtraction',
+      'horizontal-mixed': 'Horizontal Mixed',
+      'make-ten': 'Make-Ten Method',
+      'break-ten': 'Break-Ten Method',
+      'flat-ten': 'Flat-Ten Method',
+    },
+    regroupOptions: {
+      mixed: 'Mixed',
+      none: 'No Regroup',
+      only: 'Regroup Only',
+    },
+    makeTenLeftOptions: {
+      mixed: 'Mixed',
+      '9': '9',
+      '8': '8',
+      '7': '7',
+      '6': '6',
+      '5': '5',
+    },
+    printTitles: {
+      'number-bonds': 'Number Bonds',
+      'vertical-add': 'Vertical Addition',
+      'vertical-sub': 'Vertical Subtraction',
+      'vertical-mixed': 'Vertical Arithmetic',
+      'horizontal-add': 'Horizontal Addition',
+      'horizontal-sub': 'Horizontal Subtraction',
+      'horizontal-mixed': 'Horizontal Arithmetic',
+      'make-ten': 'Make-Ten Method',
+      'break-ten': 'Break-Ten Method',
+      'flat-ten': 'Flat-Ten Method',
+    },
+  },
+};
+
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -518,6 +635,8 @@ export default function App() {
   });
   const worksheetRef = useRef<HTMLDivElement>(null);
 
+  const t = translations[language];
+
   useEffect(() => {
     localStorage.setItem(LANGUAGE_KEY, language);
   }, [language]);
@@ -593,7 +712,7 @@ export default function App() {
               : 'text-gray-500 hover:text-gray-750'
           }`}
         >
-          🛠️ 参数配置 (Settings)
+          🛠️ {t.settings}
         </button>
         <button
           onClick={() => setActiveTab('preview')}
@@ -603,7 +722,7 @@ export default function App() {
               : 'text-gray-500 hover:text-gray-750'
           }`}
         >
-          📄 打印预览 (Preview)
+          📄 {t.preview}
         </button>
       </div>
 
@@ -619,7 +738,7 @@ export default function App() {
               <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
                 <Settings2 size={20} />
               </div>
-              <h2 className="text-xl font-bold text-gray-800">习题定制</h2>
+              <h2 className="text-xl font-bold text-gray-800">{t.worksheetTitle}</h2>
             </div>
             <button
               onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
@@ -640,7 +759,7 @@ export default function App() {
           <div className="flex flex-col gap-5">
             {/* Mode Select */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="mode" className="text-sm font-bold text-gray-750">题型 (Mode)</label>
+              <label htmlFor="mode" className="text-sm font-bold text-gray-750">{t.mode}</label>
               <select 
                 id="mode" 
                 value={mode} 
@@ -653,23 +772,23 @@ export default function App() {
                 }}
                 className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
               >
-                <option value="number-bonds">数字组合 (Number Bonds)</option>
-                <option value="vertical-add">竖排加法 (Vertical Addition)</option>
-                <option value="vertical-sub">竖排减法 (Vertical Subtraction)</option>
-                <option value="vertical-mixed">竖排混合 (Vertical Mixed)</option>
-                <option value="horizontal-add">横排加法 (Horizontal Addition)</option>
-                <option value="horizontal-sub">横排减法 (Horizontal Subtraction)</option>
-                <option value="horizontal-mixed">横排混合 (Horizontal Mixed)</option>
-                <option value="make-ten">凑十法 (Make-Ten Method)</option>
-                <option value="break-ten">破十法 (Break-Ten Method)</option>
-                <option value="flat-ten">平十法 (Flat-Ten Method)</option>
+                <option value="number-bonds">{t.modes['number-bonds']}</option>
+                <option value="vertical-add">{t.modes['vertical-add']}</option>
+                <option value="vertical-sub">{t.modes['vertical-sub']}</option>
+                <option value="vertical-mixed">{t.modes['vertical-mixed']}</option>
+                <option value="horizontal-add">{t.modes['horizontal-add']}</option>
+                <option value="horizontal-sub">{t.modes['horizontal-sub']}</option>
+                <option value="horizontal-mixed">{t.modes['horizontal-mixed']}</option>
+                <option value="make-ten">{t.modes['make-ten']}</option>
+                <option value="break-ten">{t.modes['break-ten']}</option>
+                <option value="flat-ten">{t.modes['flat-ten']}</option>
               </select>
             </div>
 
             {/* Range Select (only for number-bonds, vertical-add, vertical-sub, vertical-mixed) */}
             {!['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
               <div className="flex flex-col gap-1.5 animate-fade-in-up">
-                <label htmlFor="range" className="text-sm font-bold text-gray-750">难度 (Range)</label>
+                <label htmlFor="range" className="text-sm font-bold text-gray-750">{t.range}</label>
                 <select 
                   id="range" 
                   value={range} 
@@ -688,16 +807,16 @@ export default function App() {
             {/* Regroup Select (only for vertical/horizontal arithmetic) */}
             {['vertical-add', 'vertical-sub', 'vertical-mixed', 'horizontal-add', 'horizontal-sub', 'horizontal-mixed'].includes(mode) && (
               <div className="flex flex-col gap-1.5 animate-fade-in-up">
-                <label htmlFor="regroup" className="text-sm font-bold text-gray-755">进退位 (Regroup)</label>
+                <label htmlFor="regroup" className="text-sm font-bold text-gray-755">{t.regroup}</label>
                 <select 
                   id="regroup" 
                   value={regroup} 
                   onChange={handleRegroupChange}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
-                  <option value="mixed">混合 (Mixed)</option>
-                  <option value="none">无进/退位 (No Regroup)</option>
-                  <option value="only">进/退位 (Regroup Only)</option>
+                  <option value="mixed">{t.regroupOptions.mixed}</option>
+                  <option value="none">{t.regroupOptions.none}</option>
+                  <option value="only">{t.regroupOptions.only}</option>
                 </select>
               </div>
             )}
@@ -705,19 +824,19 @@ export default function App() {
             {/* Make Ten Left (only for make-ten) */}
             {mode === 'make-ten' && (
               <div className="flex flex-col gap-1.5 animate-fade-in-up">
-                <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-755">左加数 (Left Addend)</label>
+                <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-755">{t.makeTenLeft}</label>
                 <select 
                   id="makeTenLeft" 
                   value={makeTenLeft} 
                   onChange={(e) => setMakeTenLeft(e.target.value)}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
-                  <option value="mixed">随机 (Mixed)</option>
-                  <option value="9">9</option>
-                  <option value="8">8</option>
-                  <option value="7">7</option>
-                  <option value="6">6</option>
-                  <option value="5">5</option>
+                  <option value="mixed">{t.makeTenLeftOptions.mixed}</option>
+                  <option value="9">{t.makeTenLeftOptions['9']}</option>
+                  <option value="8">{t.makeTenLeftOptions['8']}</option>
+                  <option value="7">{t.makeTenLeftOptions['7']}</option>
+                  <option value="6">{t.makeTenLeftOptions['6']}</option>
+                  <option value="5">{t.makeTenLeftOptions['5']}</option>
                 </select>
               </div>
             )}
@@ -732,7 +851,7 @@ export default function App() {
                   onChange={(e) => setHideTen(e.target.checked)}
                   className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
                 />
-                <label htmlFor="hideTen" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">隐藏“10”辅助数字</label>
+                <label htmlFor="hideTen" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideTen}</label>
               </div>
             )}
           </div>
@@ -745,7 +864,7 @@ export default function App() {
             className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md transition-all duration-200 font-semibold cursor-pointer"
           >
             <Dices size={18} className="group-hover:rotate-180 transition-transform duration-500" /> 
-            重新生成题目
+            {t.regenerate}
           </button>
 
           {/* On Mobile settings, show a button to switch to preview */}
@@ -753,7 +872,7 @@ export default function App() {
             onClick={() => setActiveTab('preview')}
             className="lg:hidden w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl transition-all duration-200 font-semibold cursor-pointer"
           >
-            查看打印预览 📄
+            {t.viewPreview} 📄
           </button>
 
           <div className="hidden lg:flex gap-3">
@@ -762,14 +881,14 @@ export default function App() {
               className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 text-emerald-700 py-2.5 rounded-xl hover:bg-emerald-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
             >
               <Printer size={16} /> 
-              直接打印
+              {t.print}
             </button>
             <button 
               onClick={handleDownloadPdf}
               className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
             >
               <Download size={16} /> 
-              下载 PDF
+              {t.downloadPdf}
             </button>
           </div>
         </div>
@@ -788,21 +907,21 @@ export default function App() {
             className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold text-sm cursor-pointer"
           >
             <Dices size={16} />
-            换一批
+            {t.mobileRegenerate}
           </button>
           <button 
             onClick={handlePrint}
             className="flex-1 flex items-center justify-center gap-1 bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl font-semibold text-sm cursor-pointer"
           >
             <Printer size={16} /> 
-            打印
+            {t.mobilePrint}
           </button>
           <button 
             onClick={handleDownloadPdf}
             className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl font-semibold text-sm cursor-pointer"
           >
             <Download size={16} /> 
-            下载
+            {t.mobileDownload}
           </button>
         </div>
 
@@ -822,21 +941,12 @@ export default function App() {
             
             <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10">
               <h1 className="text-3xl font-black tracking-widest text-black uppercase">
-                {mode === 'number-bonds' ? 'NUMBER BONDS' : 
-                  mode === 'vertical-add' ? 'VERTICAL ADDITION' :
-                  mode === 'vertical-sub' ? 'VERTICAL SUBTRACTION' :
-                  mode === 'vertical-mixed' ? 'VERTICAL ARITHMETIC' :
-                  mode === 'horizontal-add' ? 'HORIZONTAL ADDITION' :
-                  mode === 'horizontal-sub' ? 'HORIZONTAL SUBTRACTION' :
-                  mode === 'horizontal-mixed' ? 'HORIZONTAL ARITHMETIC' :
-                  mode === 'make-ten' ? 'MAKE-TEN METHOD' :
-                  mode === 'break-ten' ? 'BREAK-TEN METHOD' :
-                  'FLAT-TEN METHOD'}
+                {t.printTitles[mode]}
               </h1>
               <div className="flex gap-6 text-sm font-bold text-black">
-                <span>Date: ________________</span>
-                <span>Name: ________________</span>
-                <span>Score: ____ / {problems.length}</span>
+                <span>{t.date}: ________________</span>
+                <span>{t.name}: ________________</span>
+                <span>{t.score}: ____ / {problems.length}</span>
               </div>
             </div>
             

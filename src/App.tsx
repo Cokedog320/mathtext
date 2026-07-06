@@ -277,37 +277,40 @@ export const generateProblems = (
     }
 
     for (const a of aValues) {
-      let minB = Math.max(2, 11 - a);
-      let maxB = Math.min(9, 19 - a);
-      if (minB > maxB) {
-        minB = 11 - a;
-        maxB = 19 - a;
-      }
+      const minB = Math.max(2, 11 - a);
+      const maxB = Math.min(9, 19 - a);
       for (let b = minB; b <= maxB; b++) {
         candidates.push({ a, b });
       }
     }
 
-    let shuffled = shuffle(candidates);
+    const shuffled = shuffle(candidates);
     let index = 0;
     while (problems.length < 20) {
       if (index >= shuffled.length) {
-        shuffled = shuffle(candidates);
+        shuffle(shuffled);
         index = 0;
       }
       const { a, b } = shuffled[index++];
       problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '+', method: 'make-ten' });
     }
   } else if (mode === 'break-ten' || mode === 'flat-ten') {
-    while (problems.length < 20) {
-      const a = Math.floor(Math.random() * 9) + 11; // 11-19
-      const b = Math.floor(Math.random() * 9) + 1; // 1-9
-      if (a - b >= 10 || a - b <= 0) continue;
-      const key = `${a}-${b}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '-', method: mode });
+    const candidates: { a: number; b: number }[] = [];
+    for (let a = 11; a <= 18; a++) {
+      for (let b = Math.max(1, a - 9); b <= Math.min(9, a - 1); b++) {
+        candidates.push({ a, b });
       }
+    }
+
+    const shuffled = shuffle(candidates);
+    let index = 0;
+    while (problems.length < 20) {
+      if (index >= shuffled.length) {
+        shuffle(shuffled);
+        index = 0;
+      }
+      const { a, b } = shuffled[index++];
+      problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '-', method: mode });
     }
   } else {
     const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
@@ -317,68 +320,51 @@ export const generateProblems = (
       const maxProblems = isVertical ? 25 : 20;
       let addOneCount = 0;
       let subOneCount = 0;
-      
-      while (problems.length < maxProblems) {
-        let operator: '+' | '-' = '+';
-        if (mode === 'vertical-add' || mode === 'horizontal-add') operator = '+';
-        else if (mode === 'vertical-sub' || mode === 'horizontal-sub') operator = '-';
-        else operator = Math.random() > 0.5 ? '+' : '-';
 
-        let num1 = 0, num2 = 0;
-        let isValid = false;
-        let attempts = 0;
+      const candidates: { num1: number; num2: number; operator: '+' | '-' }[] = [];
+      const includeAdd = mode === 'vertical-add' || mode === 'horizontal-add' || mode === 'vertical-mixed' || mode === 'horizontal-mixed';
+      const includeSub = mode === 'vertical-sub' || mode === 'horizontal-sub' || mode === 'vertical-mixed' || mode === 'horizontal-mixed';
 
-        while (!isValid && attempts < 100) {
-          attempts++;
-          if (operator === '+') {
-            num1 = Math.floor(Math.random() * (max - 1)) + 1;
-            num2 = Math.floor(Math.random() * (max - num1)) + 1;
-            
+      if (includeAdd) {
+        for (let num1 = 1; num1 <= max - 1; num1++) {
+          for (let num2 = 1; num2 <= max - num1; num2++) {
             if (num1 + num2 < min) continue;
-            
-            // Carry logic check
             const isCarry = (num1 % 10) + (num2 % 10) > 9;
             if (regroup === 'none' && isCarry) continue;
             if (regroup === 'only' && !isCarry) continue;
-            
-            isValid = true;
-          } else {
-            num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-            num2 = Math.floor(Math.random() * num1) + 1;
-            
-            // Borrow logic check
+            candidates.push({ num1, num2, operator: '+' });
+          }
+        }
+      }
+
+      if (includeSub) {
+        for (let num1 = min; num1 <= max; num1++) {
+          for (let num2 = 1; num2 < num1; num2++) {
             const isBorrow = (num1 % 10) < (num2 % 10);
             if (regroup === 'none' && isBorrow) continue;
             if (regroup === 'only' && !isBorrow) continue;
-            
-            isValid = true;
+            candidates.push({ num1, num2, operator: '-' });
           }
         }
+      }
 
-        // Fallback if strict rules fail
-        if (!isValid) {
-          if (operator === '+') {
-            num1 = Math.floor(Math.random() * (max - 1)) + 1;
-            num2 = Math.floor(Math.random() * (max - num1)) + 1;
-          } else {
-            num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-            num2 = Math.floor(Math.random() * num1) + 1;
-          }
+      const shuffled = shuffle(candidates);
+      let index = 0;
+      let reshuffles = 0;
+      while (problems.length < maxProblems && reshuffles < 10) {
+        if (index >= shuffled.length) {
+          shuffle(shuffled);
+          index = 0;
+          reshuffles++;
         }
-
+        const { num1, num2, operator } = shuffled[index++];
         const isAddOne = operator === '+' && (num1 === 1 || num2 === 1);
         const isSubOne = operator === '-' && num2 === 1;
-
         if (isAddOne && addOneCount >= 1) continue;
         if (isSubOne && subOneCount >= 1) continue;
-
-        const key = `${num1}${operator}${num2}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          if (isAddOne) addOneCount++;
-          if (isSubOne) subOneCount++;
-          problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
-        }
+        problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
+        if (isAddOne) addOneCount++;
+        if (isSubOne) subOneCount++;
       }
     }
   }

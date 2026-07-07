@@ -4,8 +4,6 @@
 
 A small tool for generating elementary math practice worksheets. It supports number bonds, vertical/horizontal addition & subtraction, make-ten / break-ten / flat-ten methods, and can print or export PDFs with one click.
 
-![Screenshot](./screenshot.png)
-
 ## 功能特性 / Features
 
 - **多种题型 / Multiple problem types**

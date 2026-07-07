@@ -1,29 +1,82 @@
 # MathText
 
-这是一个出于个人兴趣、结合 AI 辅助开发做出来的练手小工具。
+一个用于生成小学数学练习题的小工具，支持数字组合、竖式/横式加减、凑十/破十/平十法等多种题型，可一键打印或导出 PDF。
 
-项目目前主要用于生成和整理基础数学练习内容，偏向给自己做功能实验和界面尝试。它不是按标准开源项目方式包装出来的产品仓库，更像是我一边研究 AI、一边把想法快速做成可运行小工具时积累下来的代码。
+A small tool for generating elementary math practice worksheets. It supports number bonds, vertical/horizontal addition & subtraction, make-ten / break-ten / flat-ten methods, and can print or export PDFs with one click.
 
-## 项目目录
+![Screenshot](./screenshot.png)
 
-- `src/` 前端源码
-- `node_modules/` 本地依赖目录
+## 功能特性 / Features
 
-## 说明
+- **多种题型 / Multiple problem types**
+  - 数字组合 / Number bonds
+  - 竖式加法、竖式减法、竖式混合 / Vertical addition, subtraction, mixed
+  - 横式加法、横式减法、横式混合 / Horizontal addition, subtraction, mixed
+  - 凑十法、破十法、平十法 / Make-ten, break-ten, flat-ten methods
+- **难度范围 / Difficulty ranges**：1-10、11-20、21-30、10-50、10-100
+- **进退位控制 / Regrouping control**：混合、无进/退位、仅进/退位
+- **打印与导出 / Print & export**：打印预览、直接打印、下载 PDF
+- **中英双语界面 / Bilingual UI**：中文与英文一键切换
+- **响应式布局 / Responsive layout**：桌面与移动端均可使用
 
-这个项目主要用于个人学习、实验和功能验证。
+## 快速开始 / Quick Start
 
----
+```bash
+# 克隆仓库 / Clone the repo
+git clone https://github.com/Cokedog320/mathtext.git
+cd mathtext
 
-This is a small practice project built out of personal interest, with AI used as a helper during development.
+# 安装依赖 / Install dependencies
+npm install
 
-At the moment, the project is mainly used to generate and organize basic math practice content. It is more of a place for feature experiments and interface ideas than a polished product repository. Instead of being packaged like a standard open-source project, it is closer to a personal codebase built while exploring AI and quickly turning ideas into working tools.
+# 启动开发服务器 / Start dev server
+npm run dev
 
-## Project Structure
+# 构建生产版本 / Build for production
+npm run build
+```
 
-- `src/` Frontend source code
-- `node_modules/` Local dependency directory
+开发服务器默认运行在 `http://localhost:3000`。
+The dev server runs at `http://localhost:3000` by default.
 
-## Notes
+## 技术栈 / Tech Stack
 
-This project is mainly used for personal learning, experiments, and feature validation.
+- [React 19](https://react.dev/)
+- [Vite 6](https://vitejs.dev/)
+- [Tailwind CSS 4](https://tailwindcss.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [html-to-image](https://github.com/bubkoo/html-to-image) + [jsPDF](https://github.com/parallax/jsPDF) 用于 PDF 导出
+
+## 项目结构 / Project Structure
+
+```
+mathtext/
+├── src/              # 前端源码 / Frontend source
+│   ├── App.tsx       # 主要组件与题目生成逻辑 / Main component & problem generator
+│   ├── App.test.ts   # 单元测试 / Unit tests
+│   ├── main.tsx      # 应用入口 / App entry
+│   └── index.css     # 全局样式 / Global styles
+├── docs/             # 设计文档与决策记录 / Design docs & ADRs
+├── index.html        # HTML 入口 / HTML entry
+├── package.json      # 依赖与脚本 / Dependencies & scripts
+├── tsconfig.json     # TypeScript 配置 / TypeScript config
+├── vite.config.ts    # Vite 配置 / Vite config
+└── screenshot.png    # 项目截图 / Project screenshot
+```
+
+## 可用脚本 / Available Scripts
+
+| 脚本 / Script | 说明 / Description |
+| --- | --- |
+| `npm run dev` | 启动开发服务器 / Start dev server |
+| `npm run build` | 构建生产版本 / Build for production |
+| `npm run preview` | 预览生产构建 / Preview production build |
+| `npm run lint` | 运行 TypeScript 类型检查 / Run TypeScript type check |
+| `npm run test` | 运行单元测试 / Run unit tests |
+| `npm run clean` | 清理构建产物 / Clean build output |
+
+## 说明 / Notes
+
+这是一个出于个人兴趣、结合 AI 辅助开发做出来的练手项目，主要用于学习、实验和功能验证。代码和结构会随需求持续迭代，不保证按标准开源产品的形式维护。
+
+This is a personal practice project built out of interest, with AI used as a development helper. It is mainly used for learning, experiments, and feature validation. The code and structure will keep evolving, and it is not maintained as a polished open-source product.

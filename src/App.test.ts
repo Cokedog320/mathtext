@@ -260,6 +260,19 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
       }
     }
   });
+
+  it('should generate completely blank template of size 9 when isBlankTemplate is true', () => {
+    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5, true);
+    expect(problems.length).toBe(9);
+    for (const p of problems) {
+      if (p.type === 'bond') {
+        expect(p.top).toBe('');
+        expect(p.left).toBe('');
+        expect(p.right).toBe('');
+        expect(p.isBlank).toBe(true);
+      }
+    }
+  });
 });
 
 

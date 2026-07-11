@@ -9,7 +9,7 @@ export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-
 export type RegroupOption = 'mixed' | 'none' | 'only';
 
 export type Problem = 
-  | { id: number; type: 'bond'; top: number; left: number | string; right: number | string }
+  | { id: number; type: 'bond'; top: number | string; left: number | string; right: number | string; isBlank?: boolean }
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
@@ -100,6 +100,7 @@ const translations = {
     },
     bondNumber: '目标数字',
     bondUseTypeStudy: '学习卡片模式',
+    blankTemplate: '空白模板模式',
   },
   en: {
     settings: 'Settings',
@@ -160,6 +161,7 @@ const translations = {
     },
     bondNumber: 'Target Number',
     bondUseTypeStudy: 'Learning Card Mode',
+    blankTemplate: 'Blank Template Mode',
   },
 };
 
@@ -178,7 +180,8 @@ export const generateProblems = (
   regroup: RegroupOption = 'mixed',
   makeTenLeft: string = 'mixed',
   bondUseType: 'practice' | 'study' = 'practice',
-  bondNumber: number = 5
+  bondNumber: number = 5,
+  isBlankTemplate: boolean = false
 ): Problem[] => {
   let min = 11, max = 20;
   if (range === '1-10') { min = 1; max = 10; }
@@ -189,9 +192,10 @@ export const generateProblems = (
   const problems: Problem[] = [];
 
   if (mode === 'number-bonds') {
-    for (let k = 1; k < bondNumber; k++) {
+    const targetNumber = isBlankTemplate ? 10 : bondNumber;
+    for (let k = 1; k < targetNumber; k++) {
       const leftVal = k;
-      const rightVal = bondNumber - k;
+      const rightVal = targetNumber - k;
       let left: number | string = leftVal;
       let right: number | string = rightVal;
       if (bondUseType === 'practice') {
@@ -199,7 +203,14 @@ export const generateProblems = (
         left = isLeftKnown ? leftVal : '';
         right = isLeftKnown ? '' : rightVal;
       }
-      problems.push({ id: k - 1, type: 'bond', top: bondNumber, left, right });
+      problems.push({ 
+        id: k - 1, 
+        type: 'bond', 
+        top: isBlankTemplate ? '' : targetNumber, 
+        left: isBlankTemplate ? '' : left, 
+        right: isBlankTemplate ? '' : right, 
+        isBlank: isBlankTemplate 
+      });
     }
     return problems;
   } else if (mode === 'make-ten') {
@@ -579,6 +590,7 @@ export default function App() {
   const [hideBondParts, setHideBondParts] = useState<boolean>(false);
   const [bondNumber, setBondNumber] = useState<number>(5);
   const [bondUseType, setBondUseType] = useState<'practice' | 'study'>('practice');
+  const [isBlankTemplate, setIsBlankTemplate] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
@@ -602,15 +614,16 @@ export default function App() {
     rg = regroup, 
     mtl = makeTenLeft, 
     but = bondUseType, 
-    bn = bondNumber
+    bn = bondNumber,
+    bt = isBlankTemplate
   ) => {
-    setProblems(generateProblems(r, m, rg, mtl, but, bn));
+    setProblems(generateProblems(r, m, rg, mtl, but, bn, bt));
     setGenerateCount(c => c + 1);
   };
 
   useEffect(() => {
-    regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber);
-  }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber]);
+    regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate);
+  }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate]);
 
   const handleRegenerate = () => {
     regenerate();
@@ -658,7 +671,9 @@ export default function App() {
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
       const fileName = mode === 'number-bonds'
-        ? (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`)
+        ? (isBlankTemplate
+            ? (language === 'zh' ? '数字分解与组合模板.pdf' : 'decomposition-composition-template.pdf')
+            : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`))
         : pdfFileNames[language][mode];
       pdf.save(fileName);
     } catch (error) {
@@ -768,8 +783,9 @@ export default function App() {
                 <select 
                   id="bondNumber" 
                   value={bondNumber} 
+                  disabled={isBlankTemplate}
                   onChange={(e) => setBondNumber(parseInt(e.target.value, 10))}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
                     <option key={n} value={n}>{n}</option>
@@ -846,29 +862,42 @@ export default function App() {
               </div>
             )}
 
-            {/* Study Card Mode & Hide Bond Parts Checkboxes (only for number-bonds) */}
+            {/* Study Card Mode, Hide Bond Parts, & Blank Template Checkboxes (only for number-bonds) */}
             {mode === 'number-bonds' && (
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex items-center gap-2.5 animate-fade-in-up">
                   <input
                     type="checkbox"
                     id="bondUseTypeStudy"
-                    checked={bondUseType === 'study'}
+                    checked={bondUseType === 'study' && !isBlankTemplate}
+                    disabled={isBlankTemplate}
                     onChange={(e) => setBondUseType(e.target.checked ? 'study' : 'practice')}
-                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <label htmlFor="bondUseTypeStudy" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.bondUseTypeStudy}</label>
+                  <label htmlFor="bondUseTypeStudy" className={`text-sm font-semibold text-gray-750 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.bondUseTypeStudy}</label>
                 </div>
 
                 <div className="flex items-center gap-2.5 animate-fade-in-up">
                   <input
                     type="checkbox"
                     id="hideBondParts"
-                    checked={hideBondParts}
+                    checked={hideBondParts && !isBlankTemplate}
+                    disabled={isBlankTemplate}
                     onChange={(e) => setHideBondParts(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <label htmlFor="hideBondParts" className={`text-sm font-semibold text-gray-750 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.hideBondParts}</label>
+                </div>
+
+                <div className="flex items-center gap-2.5 animate-fade-in-up">
+                  <input
+                    type="checkbox"
+                    id="isBlankTemplate"
+                    checked={isBlankTemplate}
+                    onChange={(e) => setIsBlankTemplate(e.target.checked)}
                     className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
                   />
-                  <label htmlFor="hideBondParts" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideBondParts}</label>
+                  <label htmlFor="isBlankTemplate" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.blankTemplate}</label>
                 </div>
               </div>
             )}
@@ -955,7 +984,9 @@ export default function App() {
             <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10 gap-4">
               <h1 className="text-3xl font-black tracking-widest text-black">
                 {mode === 'number-bonds'
-                  ? (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`)
+                  ? (isBlankTemplate
+                      ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
+                      : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
                   : t.printTitles[mode]}
               </h1>
               <div className="flex gap-6 text-sm font-bold text-black whitespace-nowrap flex-shrink-0">
@@ -973,12 +1004,13 @@ export default function App() {
               {problems.map((problem, idx) => {
                 let colClass = 'w-1/5';
                 let heightClass = 'h-[180px]';
-                const isLargeBonds = mode === 'number-bonds' && bondNumber <= 4;
+                const isLargeBonds = mode === 'number-bonds' && bondNumber <= 4 && !isBlankTemplate;
                 
                 if (mode === 'number-bonds') {
-                  colClass = bondNumber === 2 
+                  const effectiveNumber = isBlankTemplate ? 10 : bondNumber;
+                  colClass = effectiveNumber === 2 
                     ? 'w-full' 
-                    : bondNumber === 3 
+                    : effectiveNumber === 3 
                       ? 'w-1/2' 
                       : 'w-1/3';
                   heightClass = isLargeBonds ? 'h-[320px]' : 'h-[230px]';

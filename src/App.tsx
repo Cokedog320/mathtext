@@ -172,7 +172,9 @@ export const generateProblems = (
   range: Range, 
   mode: Mode, 
   regroup: RegroupOption = 'mixed',
-  makeTenLeft: string = 'mixed'
+  makeTenLeft: string = 'mixed',
+  bondUseType: 'practice' | 'study' = 'practice',
+  bondNumber: number = 5
 ): Problem[] => {
   let min = 11, max = 20;
   if (range === '1-10') { min = 1; max = 10; }
@@ -181,110 +183,21 @@ export const generateProblems = (
   else if (range === '10-100') { min = 10; max = 100; }
 
   const problems: Problem[] = [];
-  const seen = new Set<string>();
-  
-  if (mode === 'number-bonds' && range === '1-10') {
-    // Enumerate every valid (top, knownPart) split (no zero/top-equal splits).
-    const target = 9;
-    const splitCap = 3; // max times any single split value (1-9) may appear
-    const topCap = 2;   // max times any single total (2-10) may repeat
-    const candidatesByTop: Record<number, { top: number; knownPart: number; otherPart: number }[]> = {};
-    for (let top = min; top <= max; top++) {
-      candidatesByTop[top] = [];
-      for (let knownPart = 1; knownPart < top; knownPart++) {
-        candidatesByTop[top].push({ top, knownPart, otherPart: top - knownPart });
+
+  if (mode === 'number-bonds') {
+    for (let k = 1; k < bondNumber; k++) {
+      const leftVal = k;
+      const rightVal = bondNumber - k;
+      let left: number | string = leftVal;
+      let right: number | string = rightVal;
+      if (bondUseType === 'practice') {
+        const isLeftKnown = Math.random() > 0.5;
+        left = isLeftKnown ? leftVal : '';
+        right = isLeftKnown ? '' : rightVal;
       }
-      candidatesByTop[top] = shuffle(candidatesByTop[top]);
+      problems.push({ id: k - 1, type: 'bond', top: bondNumber, left, right });
     }
-
-    // Try to fill `target` problems while respecting both caps. A self-paired
-    // split (e.g. 4 = 2+2) uses up 2 slots of the same value in one shot, so
-    // it must be checked/incremented as a pair, not as two independent +1s.
-    // Candidates are interleaved by top so each top gets equal consideration
-    // before any top is used a second time, removing the bias toward larger tops.
-    const attemptFill = (useSplitCap: boolean, useTopCap: boolean) => {
-      const tops = shuffle([...Array(max - min + 1)].map((_, i) => min + i));
-      const interleaved: { top: number; knownPart: number; otherPart: number }[] = [];
-      let round = 0;
-      while (interleaved.length < 100) {
-        let added = false;
-        for (const top of tops) {
-          if (round < candidatesByTop[top].length) {
-            interleaved.push(candidatesByTop[top][round]);
-            added = true;
-          }
-        }
-        if (!added) break;
-        round++;
-      }
-
-      const splitCounts: Record<number, number> = {};
-      const topCounts: Record<number, number> = {};
-      const picked: typeof interleaved = [];
-      for (const c of interleaved) {
-        if (picked.length >= target) break;
-        const selfPaired = c.knownPart === c.otherPart;
-        const splitOk = !useSplitCap || (selfPaired
-          ? (splitCounts[c.knownPart] || 0) + 2 <= splitCap
-          : (splitCounts[c.knownPart] || 0) + 1 <= splitCap && (splitCounts[c.otherPart] || 0) + 1 <= splitCap);
-        const topOk = !useTopCap || (topCounts[c.top] || 0) < topCap;
-        if (splitOk && topOk) {
-          picked.push(c);
-          if (selfPaired) {
-            splitCounts[c.knownPart] = (splitCounts[c.knownPart] || 0) + 2;
-          } else {
-            splitCounts[c.knownPart] = (splitCounts[c.knownPart] || 0) + 1;
-            splitCounts[c.otherPart] = (splitCounts[c.otherPart] || 0) + 1;
-          }
-          topCounts[c.top] = (topCounts[c.top] || 0) + 1;
-        }
-      }
-      return picked;
-    };
-
-    // Both caps hold the vast majority of the time (verified by simulation);
-    // retrying a handful of random shuffles makes success effectively certain.
-    let selected: typeof interleaved = [];
-    for (let attempt = 0; attempt < 300 && selected.length < target; attempt++) {
-      selected = attemptFill(true, true);
-    }
-    // Fallback: relax the total-repeat cap first (split balance still holds).
-    for (let attempt = 0; attempt < 100 && selected.length < target; attempt++) {
-      selected = attemptFill(true, false);
-    }
-    // Last resort: relax every constraint, just fill uniquely.
-    for (let attempt = 0; attempt < 20 && selected.length < target; attempt++) {
-      selected = attemptFill(false, false);
-    }
-
-    for (const c of shuffle(selected)) {
-      const isLeftKnown = Math.random() > 0.5;
-      const left = isLeftKnown ? c.knownPart : '';
-      const right = isLeftKnown ? '' : c.knownPart;
-      problems.push({ id: problems.length, type: 'bond', top: c.top, left, right });
-    }
-  } else if (mode === 'number-bonds') {
-    let zeroCount = 0;
-    while (problems.length < 12) {
-      const top = Math.floor(Math.random() * (max - min + 1)) + min;
-      const knownPart = Math.floor(Math.random() * (top + 1));
-      
-      const involvesZero = knownPart === 0 || knownPart === top;
-      if (involvesZero && zeroCount >= 1) {
-        continue;
-      }
-
-      const isLeftKnown = Math.random() > 0.5;
-      const left = isLeftKnown ? knownPart : '';
-      const right = isLeftKnown ? '' : knownPart;
-      const key = `${top}-${left}-${right}`;
-
-      if (!seen.has(key)) {
-        seen.add(key);
-        if (involvesZero) zeroCount++;
-        problems.push({ id: problems.length, type: 'bond', top, left, right });
-      }
-    }
+    return problems;
   } else if (mode === 'make-ten') {
     const candidates: { a: number; b: number }[] = [];
     const aValues: number[] = [];

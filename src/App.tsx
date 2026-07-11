@@ -180,7 +180,7 @@ export const generateProblems = (
   regroup: RegroupOption = 'mixed',
   makeTenLeft: string = 'mixed',
   bondUseType: 'practice' | 'study' = 'practice',
-  bondNumber: number = 5,
+  bondNumber: number | '2-10' = 5,
   isBlankTemplate: boolean = false
 ): Problem[] => {
   let min = 11, max = 20;
@@ -192,7 +192,24 @@ export const generateProblems = (
   const problems: Problem[] = [];
 
   if (mode === 'number-bonds') {
-    const targetNumber = isBlankTemplate ? 10 : bondNumber;
+    if (bondNumber === '2-10' && !isBlankTemplate) {
+      for (let n = 2; n <= 10; n++) {
+        const k = Math.floor(Math.random() * (n - 1)) + 1;
+        const leftVal = k;
+        const rightVal = n - k;
+        let left: number | string = leftVal;
+        let right: number | string = rightVal;
+        if (bondUseType === 'practice') {
+          const isLeftKnown = Math.random() > 0.5;
+          left = isLeftKnown ? leftVal : '';
+          right = isLeftKnown ? '' : rightVal;
+        }
+        problems.push({ id: n - 2, type: 'bond', top: n, left, right });
+      }
+      return problems;
+    }
+
+    const targetNumber = (isBlankTemplate || bondNumber === '2-10') ? 10 : bondNumber;
     for (let k = 1; k < targetNumber; k++) {
       const leftVal = k;
       const rightVal = targetNumber - k;
@@ -588,7 +605,7 @@ export default function App() {
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [hideTen, setHideTen] = useState<boolean>(false);
   const [hideBondParts, setHideBondParts] = useState<boolean>(false);
-  const [bondNumber, setBondNumber] = useState<number>(2);
+  const [bondNumber, setBondNumber] = useState<number | '2-10'>(2);
   const [bondUseType, setBondUseType] = useState<'practice' | 'study'>('practice');
   const [isBlankTemplate, setIsBlankTemplate] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -784,10 +801,13 @@ export default function App() {
                   id="bondNumber" 
                   value={bondNumber} 
                   disabled={isBlankTemplate}
-                  onChange={(e) => setBondNumber(parseInt(e.target.value, 10))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setBondNumber(val === '2-10' ? '2-10' : parseInt(val, 10));
+                  }}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                  {[2, 3, 4, 5, 6, 7, 8, 9, 10, '2-10'].map(n => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
@@ -1004,10 +1024,10 @@ export default function App() {
               {problems.map((problem, idx) => {
                 let colClass = 'w-1/5';
                 let heightClass = 'h-[180px]';
-                const isLargeBonds = mode === 'number-bonds' && bondNumber <= 4 && !isBlankTemplate;
+                const isLargeBonds = mode === 'number-bonds' && typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
                 
                 if (mode === 'number-bonds') {
-                  const effectiveNumber = isBlankTemplate ? 10 : bondNumber;
+                  const effectiveNumber = (isBlankTemplate || bondNumber === '2-10') ? 10 : bondNumber;
                   colClass = effectiveNumber === 2 
                     ? 'w-full' 
                     : effectiveNumber === 3 

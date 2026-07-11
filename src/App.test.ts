@@ -273,6 +273,13 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
       }
     }
   });
+
+  it('should generate exactly one problem for each number in 2-10 range when bondNumber is 2-10', () => {
+    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', '2-10');
+    expect(problems.length).toBe(9);
+    const tops = problems.map(p => p.type === 'bond' ? p.top : 0).sort((a, b) => (a as number) - (b as number));
+    expect(tops).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
 });
 
 

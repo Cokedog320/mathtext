@@ -99,11 +99,7 @@ const translations = {
       'flat-ten': '平十法',
     },
     bondNumber: '目标数字',
-    bondUseType: '卡片用途',
-    bondUseTypes: {
-      practice: '练习题卡 (带空格填空)',
-      study: '学习卡片 (无空格全显)',
-    },
+    bondUseTypeStudy: '学习卡片模式 (完整数字无挖空)',
   },
   en: {
     settings: 'Settings',
@@ -163,11 +159,7 @@ const translations = {
       'flat-ten': 'Flat-Ten Method',
     },
     bondNumber: 'Target Number',
-    bondUseType: 'Card Purpose',
-    bondUseTypes: {
-      practice: 'Practice Sheet (fill blanks)',
-      study: 'Learning Card (fully visible)',
-    },
+    bondUseTypeStudy: 'Learning Card Mode (fully visible)',
   },
 };
 
@@ -771,34 +763,19 @@ export default function App() {
 
             {/* Range / Bond inputs based on mode */}
             {mode === 'number-bonds' ? (
-              <>
-                <div className="flex flex-col gap-1.5 animate-fade-in-up">
-                  <label htmlFor="bondNumber" className="text-sm font-bold text-gray-750">{t.bondNumber}</label>
-                  <select 
-                    id="bondNumber" 
-                    value={bondNumber} 
-                    onChange={(e) => setBondNumber(parseInt(e.target.value, 10))}
-                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-                  >
-                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1.5 animate-fade-in-up">
-                  <label htmlFor="bondUseType" className="text-sm font-bold text-gray-755">{t.bondUseType}</label>
-                  <select 
-                    id="bondUseType" 
-                    value={bondUseType} 
-                    onChange={(e) => setBondUseType(e.target.value as 'practice' | 'study')}
-                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-                  >
-                    <option value="practice">{t.bondUseTypes.practice}</option>
-                    <option value="study">{t.bondUseTypes.study}</option>
-                  </select>
-                </div>
-              </>
+              <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                <label htmlFor="bondNumber" className="text-sm font-bold text-gray-750">{t.bondNumber}</label>
+                <select 
+                  id="bondNumber" 
+                  value={bondNumber} 
+                  onChange={(e) => setBondNumber(parseInt(e.target.value, 10))}
+                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                >
+                  {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
             ) : (
               !['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
                 <div className="flex flex-col gap-1.5 animate-fade-in-up">
@@ -869,17 +846,30 @@ export default function App() {
               </div>
             )}
 
-            {/* Hide Bond Parts Checkbox (only for number-bonds) */}
+            {/* Study Card Mode & Hide Bond Parts Checkboxes (only for number-bonds) */}
             {mode === 'number-bonds' && (
-              <div className="flex items-center gap-2.5 pt-2 animate-fade-in-up">
-                <input
-                  type="checkbox"
-                  id="hideBondParts"
-                  checked={hideBondParts}
-                  onChange={(e) => setHideBondParts(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
-                />
-                <label htmlFor="hideBondParts" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideBondParts}</label>
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="flex items-center gap-2.5 animate-fade-in-up">
+                  <input
+                    type="checkbox"
+                    id="bondUseTypeStudy"
+                    checked={bondUseType === 'study'}
+                    onChange={(e) => setBondUseType(e.target.checked ? 'study' : 'practice')}
+                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                  />
+                  <label htmlFor="bondUseTypeStudy" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.bondUseTypeStudy}</label>
+                </div>
+
+                <div className="flex items-center gap-2.5 animate-fade-in-up">
+                  <input
+                    type="checkbox"
+                    id="hideBondParts"
+                    checked={hideBondParts}
+                    onChange={(e) => setHideBondParts(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                  />
+                  <label htmlFor="hideBondParts" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideBondParts}</label>
+                </div>
               </div>
             )}
           </div>

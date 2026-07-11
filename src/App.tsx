@@ -177,19 +177,24 @@ function shuffle<T>(array: T[]): T[] {
 export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, language: Language, t: any): string => {
   if (range === '20-regroup') {
     if (mode.includes('-add')) {
-      if (regroup === 'only') return language === 'zh' ? '20以内进位加法' : 'Carrying Addition within 20';
-      if (regroup === 'none') return language === 'zh' ? '20以内不进位加法' : 'Non-carrying Addition within 20';
-      return language === 'zh' ? '20以内加法' : 'Addition within 20';
+      return language === 'zh' ? '20以内进位加法' : 'Carrying Addition within 20';
     }
     if (mode.includes('-sub')) {
-      if (regroup === 'only') return language === 'zh' ? '20以内退位减法' : 'Borrowing Subtraction within 20';
-      if (regroup === 'none') return language === 'zh' ? '20以内不退位减法' : 'Non-borrowing Subtraction within 20';
-      return language === 'zh' ? '20以内减法' : 'Subtraction within 20';
+      return language === 'zh' ? '20以内退位减法' : 'Borrowing Subtraction within 20';
     }
     if (mode.includes('-mixed')) {
-      if (regroup === 'only') return language === 'zh' ? '20以内加减法 (进退位)' : 'Regrouping Arithmetic within 20';
-      if (regroup === 'none') return language === 'zh' ? '20以内加减法 (无进退位)' : 'Non-regrouping Arithmetic within 20';
-      return language === 'zh' ? '20以内加减混合' : 'Mixed Arithmetic within 20';
+      return language === 'zh' ? '20以内加减法 (进退位)' : 'Regrouping Arithmetic within 20';
+    }
+  }
+  if (range === '1-10') {
+    if (mode.includes('-add')) {
+      return language === 'zh' ? '10以内加法' : 'Addition within 10';
+    }
+    if (mode.includes('-sub')) {
+      return language === 'zh' ? '10以内减法' : 'Subtraction within 10';
+    }
+    if (mode.includes('-mixed')) {
+      return language === 'zh' ? '10以内加减混合' : 'Mixed Arithmetic within 10';
     }
   }
   return t.printTitles[mode];
@@ -851,9 +856,6 @@ export default function App() {
                 onChange={(e) => {
                   const newMode = e.target.value as Mode;
                   setMode(newMode);
-                  if (newMode !== 'number-bonds' && range === '1-10') {
-                    setRange('11-20');
-                  }
                 }}
                 className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
               >
@@ -899,6 +901,7 @@ export default function App() {
                     onChange={handleRangeChange}
                     className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                   >
+                    <option value="1-10">1 - 10</option>
                     <option value="20-regroup">{language === 'zh' ? '20以内进退位 (加减数在10以内)' : 'Within 20 (Addends ≤ 9)'}</option>
                     <option value="11-20">11 - 20</option>
                     <option value="21-30">21 - 30</option>
@@ -915,9 +918,10 @@ export default function App() {
                 <label htmlFor="regroup" className="text-sm font-bold text-gray-755">{t.regroup}</label>
                 <select 
                   id="regroup" 
-                  value={regroup} 
+                  value={range === '20-regroup' ? 'only' : regroup} 
+                  disabled={range === '20-regroup'}
                   onChange={handleRegroupChange}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="mixed">{t.regroupOptions.mixed}</option>
                   <option value="none">{t.regroupOptions.none}</option>

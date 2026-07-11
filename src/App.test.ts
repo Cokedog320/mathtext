@@ -238,6 +238,26 @@ describe('generateProblems - 20-regroup Range', () => {
   });
 });
 
+describe('generateProblems - 1-10 Range', () => {
+  it('should only generate addition problems with sums up to 10', () => {
+    const problems = generateProblems('1-10', 'horizontal-add', 'mixed');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => {
+      if (p.type !== 'arithmetic') return false;
+      return p.num1 + p.num2 <= 10;
+    })).toBe(true);
+  });
+
+  it('should only generate subtraction problems with minuend up to 10', () => {
+    const problems = generateProblems('1-10', 'horizontal-sub', 'mixed');
+    expect(problems.length).toBe(20);
+    expect(problems.every(p => {
+      if (p.type !== 'arithmetic') return false;
+      return p.num1 <= 10;
+    })).toBe(true);
+  });
+});
+
 describe('generateProblems - Number Bonds (Single Number)', () => {
   it('should generate exactly N-1 problems for target number N', () => {
     for (let n = 2; n <= 10; n++) {

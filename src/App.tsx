@@ -99,7 +99,7 @@ const translations = {
       'flat-ten': '平十法',
     },
     bondNumber: '目标数字',
-    bondUseTypeStudy: '学习卡片模式 (完整数字无挖空)',
+    bondUseTypeStudy: '学习卡片模式',
   },
   en: {
     settings: 'Settings',
@@ -159,7 +159,7 @@ const translations = {
       'flat-ten': 'Flat-Ten Method',
     },
     bondNumber: 'Target Number',
-    bondUseTypeStudy: 'Learning Card Mode (fully visible)',
+    bondUseTypeStudy: 'Learning Card Mode',
   },
 };
 

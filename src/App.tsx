@@ -320,7 +320,7 @@ export const generateProblems = (
         for (let num1 = 5; num1 <= 9; num1++) {
           for (let num2 = 1; num2 <= 9; num2++) {
             const sum = num1 + num2;
-            if (sum >= 10 && sum <= 18) {
+            if (sum >= 11 && sum <= 18) {
               groups[num1].push({ num1, num2 });
             }
           }

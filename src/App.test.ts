@@ -218,22 +218,22 @@ describe('generateProblems - Break-Ten and Flat-Ten Methods', () => {
 });
 
 describe('generateProblems - 20-regroup Range', () => {
-  it('should only generate addition problems with single-digit addends and sums in 10-18', () => {
+  it('should only generate addition problems with single-digit addends and sums in 11-18', () => {
     const problems = generateProblems('20-regroup', 'horizontal-add', 'only');
     expect(problems.length).toBe(20);
     expect(problems.every(p => {
       if (p.type !== 'arithmetic') return false;
-      return p.num1 <= 9 && p.num2 <= 9 && (p.num1 + p.num2) >= 10 && (p.num1 + p.num2) <= 18;
+      return p.num1 <= 9 && p.num2 <= 9 && (p.num1 + p.num2) >= 11 && (p.num1 + p.num2) <= 18;
     })).toBe(true);
   });
 
-  it('should only generate subtraction problems where minuend <= 18, subtrahend <= 9, and difference <= 9', () => {
+  it('should only generate subtraction problems where minuend >= 11 && minuend <= 18, subtrahend <= 9, and difference <= 9', () => {
     const problems = generateProblems('20-regroup', 'horizontal-sub', 'only');
     expect(problems.length).toBe(20);
     expect(problems.every(p => {
       if (p.type !== 'arithmetic') return false;
       const diff = p.num1 - p.num2;
-      return p.num1 >= 10 && p.num1 <= 18 && p.num2 <= 9 && diff <= 9;
+      return p.num1 >= 11 && p.num1 <= 18 && p.num2 <= 9 && diff <= 9;
     })).toBe(true);
   });
 });

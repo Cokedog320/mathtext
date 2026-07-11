@@ -217,80 +217,46 @@ describe('generateProblems - Break-Ten and Flat-Ten Methods', () => {
   });
 });
 
-describe('generateProblems - Number Bonds', () => {
-  it('should generate 12 number bond problems within selected range bounds', () => {
-    const problems = generateProblems('11-20', 'number-bonds');
-    expect(problems.length).toBe(12);
-    expect(problems.every(p => {
-      if (p.type !== 'bond') return false;
-      const validTop = p.top >= 11 && p.top <= 20;
-      const oneSideMissing = (p.left === '' && typeof p.right === 'number') || (p.right === '' && typeof p.left === 'number');
-      return validTop && oneSideMissing;
-    })).toBe(true);
-  });
-});
-
-describe('generateProblems - Number Bonds 1-10', () => {
-  it('should generate 9 bond problems within the 1-10 range', () => {
-    const problems = generateProblems('1-10', 'number-bonds');
-    const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
-
-    expect(bondProblems.length).toBe(9);
-    for (const p of bondProblems) {
-      expect(p.top).toBeGreaterThanOrEqual(1);
-      expect(p.top).toBeLessThanOrEqual(10);
+describe('generateProblems - Number Bonds (Single Number)', () => {
+  it('should generate exactly N-1 problems for target number N', () => {
+    for (let n = 2; n <= 10; n++) {
+      const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', n);
+      expect(problems.length).toBe(n - 1);
+      expect(problems.every(p => p.type === 'bond' && p.top === n)).toBe(true);
     }
   });
 
-  it('should still generate 12 bond problems for other ranges (e.g. 11-20)', () => {
-    const problems = generateProblems('11-20', 'number-bonds');
-    const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
-
-    expect(bondProblems.length).toBe(12);
-  });
-
-  it('should exclude any zero-part combinations in the 1-10 range', () => {
-    const problems = generateProblems('1-10', 'number-bonds');
-    const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
-
-    for (const p of bondProblems) {
-      const knownPart = p.left !== '' ? p.left : p.right;
-      expect(knownPart).not.toBe(0);
-      expect(knownPart).not.toBe(p.top);
-    }
-  });
-
-  it('should cap any single split value at 3 occurrences in the 1-10 range', () => {
-    for (let trial = 0; trial < 30; trial++) {
-      const problems = generateProblems('1-10', 'number-bonds');
-      const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
-
-      const counts: Record<number, number> = {};
-      for (const p of bondProblems) {
-        const knownPart = (p.left !== '' ? p.left : p.right) as number;
-        const otherPart = p.top - knownPart;
-        counts[knownPart] = (counts[knownPart] || 0) + 1;
-        counts[otherPart] = (counts[otherPart] || 0) + 1;
-      }
-
-      for (const value in counts) {
-        expect(counts[value]).toBeLessThanOrEqual(3);
+  it('should exclude zero splits', () => {
+    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'study', 10);
+    for (const p of problems) {
+      if (p.type === 'bond') {
+        expect(p.left).not.toBe(0);
+        expect(p.right).not.toBe(0);
+        expect(p.left).not.toBe(10);
+        expect(p.right).not.toBe(10);
       }
     }
   });
 
-  it('should cap any single total (top) at 2 occurrences in the 1-10 range', () => {
-    for (let trial = 0; trial < 30; trial++) {
-      const problems = generateProblems('1-10', 'number-bonds');
-      const bondProblems = problems.filter((p): p is Extract<Problem, { type: 'bond' }> => p.type === 'bond');
-
-      const topCounts: Record<number, number> = {};
-      for (const p of bondProblems) {
-        topCounts[p.top] = (topCounts[p.top] || 0) + 1;
+  it('should show all numbers in study mode', () => {
+    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'study', 5);
+    for (const p of problems) {
+      if (p.type === 'bond') {
+        expect(typeof p.left).toBe('number');
+        expect(typeof p.right).toBe('number');
+        expect((p.left as number) + (p.right as number)).toBe(5);
       }
+    }
+  });
 
-      for (const value in topCounts) {
-        expect(topCounts[value]).toBeLessThanOrEqual(2);
+  it('should hide exactly one part in practice mode', () => {
+    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5);
+    for (const p of problems) {
+      if (p.type === 'bond') {
+        const leftIsHidden = p.left === '';
+        const rightIsHidden = p.right === '';
+        expect(leftIsHidden || rightIsHidden).toBe(true);
+        expect(leftIsHidden && rightIsHidden).toBe(false);
       }
     }
   });

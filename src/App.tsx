@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Dices, Printer, Download, Settings2 } from 'lucide-react';
 
 export type Language = 'zh' | 'en';
-export type Range = '1-10' | '11-20' | '21-30' | '10-50' | '10-100';
+export type Range = '1-10' | '11-20' | '21-30' | '10-50' | '10-100' | '20-regroup';
 export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 
@@ -174,6 +174,27 @@ function shuffle<T>(array: T[]): T[] {
   return arr;
 }
 
+export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, language: Language, t: any): string => {
+  if (range === '20-regroup') {
+    if (mode.includes('-add')) {
+      if (regroup === 'only') return language === 'zh' ? '20以内进位加法' : 'Carrying Addition within 20';
+      if (regroup === 'none') return language === 'zh' ? '20以内不进位加法' : 'Non-carrying Addition within 20';
+      return language === 'zh' ? '20以内加法' : 'Addition within 20';
+    }
+    if (mode.includes('-sub')) {
+      if (regroup === 'only') return language === 'zh' ? '20以内退位减法' : 'Borrowing Subtraction within 20';
+      if (regroup === 'none') return language === 'zh' ? '20以内不退位减法' : 'Non-borrowing Subtraction within 20';
+      return language === 'zh' ? '20以内减法' : 'Subtraction within 20';
+    }
+    if (mode.includes('-mixed')) {
+      if (regroup === 'only') return language === 'zh' ? '20以内加减法 (进退位)' : 'Regrouping Arithmetic within 20';
+      if (regroup === 'none') return language === 'zh' ? '20以内加减法 (无进退位)' : 'Non-regrouping Arithmetic within 20';
+      return language === 'zh' ? '20以内加减混合' : 'Mixed Arithmetic within 20';
+    }
+  }
+  return t.printTitles[mode];
+};
+
 export const generateProblems = (
   range: Range, 
   mode: Mode, 
@@ -185,6 +206,7 @@ export const generateProblems = (
 ): Problem[] => {
   let min = 11, max = 20;
   if (range === '1-10') { min = 1; max = 10; }
+  else if (range === '20-regroup') { min = 10; max = 18; }
   else if (range === '21-30') { min = 21; max = 30; }
   else if (range === '10-50') { min = 10; max = 50; }
   else if (range === '10-100') { min = 10; max = 100; }
@@ -294,6 +316,7 @@ export const generateProblems = (
         for (let num1 = 1; num1 <= max - 1; num1++) {
           for (let num2 = 1; num2 <= max - num1; num2++) {
             if (num1 + num2 < min) continue;
+            if (range === '20-regroup' && (num1 > 9 || num2 > 9)) continue;
             const isCarry = (num1 % 10) + (num2 % 10) > 9;
             if (regroup === 'none' && isCarry) continue;
             if (regroup === 'only' && !isCarry) continue;
@@ -305,6 +328,7 @@ export const generateProblems = (
       if (includeSub) {
         for (let num1 = min; num1 <= max; num1++) {
           for (let num2 = 1; num2 < num1; num2++) {
+            if (range === '20-regroup' && (num1 - num2 > 9 || num2 > 9)) continue;
             const isBorrow = (num1 % 10) < (num2 % 10);
             if (regroup === 'none' && isBorrow) continue;
             if (regroup === 'only' && !isBorrow) continue;
@@ -687,11 +711,14 @@ export default function App() {
       }
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      const fileName = mode === 'number-bonds'
-        ? (isBlankTemplate
-            ? (language === 'zh' ? '数字分解与组合模板.pdf' : 'decomposition-composition-template.pdf')
-            : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`))
-        : pdfFileNames[language][mode];
+      let fileName = pdfFileNames[language][mode];
+      if (mode === 'number-bonds') {
+        fileName = isBlankTemplate
+          ? (language === 'zh' ? '数字分解与组合模板.pdf' : 'decomposition-composition-template.pdf')
+          : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`);
+      } else if (range === '20-regroup') {
+        fileName = `${getPrintTitle(mode, range, regroup, language, t)}.pdf`;
+      }
       pdf.save(fileName);
     } catch (error) {
       console.error('PDF generation failed:', error);
@@ -822,6 +849,7 @@ export default function App() {
                     onChange={handleRangeChange}
                     className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                   >
+                    <option value="20-regroup">{language === 'zh' ? '20以内进退位 (加减数在10以内)' : 'Within 20 (Addends ≤ 9)'}</option>
                     <option value="11-20">11 - 20</option>
                     <option value="21-30">21 - 30</option>
                     <option value="10-50">10 - 50</option>
@@ -1007,7 +1035,7 @@ export default function App() {
                   ? (isBlankTemplate
                       ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
                       : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
-                  : t.printTitles[mode]}
+                  : getPrintTitle(mode, range, regroup, language, t)}
               </h1>
               <div className="flex gap-6 text-sm font-bold text-black whitespace-nowrap flex-shrink-0">
                 <span>{t.date}: ________________</span>

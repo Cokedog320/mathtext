@@ -98,6 +98,12 @@ const translations = {
       'break-ten': '破十法',
       'flat-ten': '平十法',
     },
+    bondNumber: '目标数字',
+    bondUseType: '卡片用途',
+    bondUseTypes: {
+      practice: '练习题卡 (带空格填空)',
+      study: '学习卡片 (无空格全显)',
+    },
   },
   en: {
     settings: 'Settings',
@@ -155,6 +161,12 @@ const translations = {
       'make-ten': 'Make-Ten Method',
       'break-ten': 'Break-Ten Method',
       'flat-ten': 'Flat-Ten Method',
+    },
+    bondNumber: 'Target Number',
+    bondUseType: 'Card Purpose',
+    bondUseTypes: {
+      practice: 'Practice Sheet (fill blanks)',
+      study: 'Learning Card (fully visible)',
     },
   },
 };
@@ -573,6 +585,8 @@ export default function App() {
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [hideTen, setHideTen] = useState<boolean>(false);
   const [hideBondParts, setHideBondParts] = useState<boolean>(false);
+  const [bondNumber, setBondNumber] = useState<number>(5);
+  const [bondUseType, setBondUseType] = useState<'practice' | 'study'>('practice');
   const [problems, setProblems] = useState<Problem[]>([]);
   const [generateCount, setGenerateCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
@@ -590,14 +604,21 @@ export default function App() {
   }, [language]);
 
   // Helper to regenerate problems with current settings
-  const regenerate = (r = range, m = mode, rg = regroup, mtl = makeTenLeft) => {
-    setProblems(generateProblems(r, m, rg, mtl));
+  const regenerate = (
+    r = range, 
+    m = mode, 
+    rg = regroup, 
+    mtl = makeTenLeft, 
+    but = bondUseType, 
+    bn = bondNumber
+  ) => {
+    setProblems(generateProblems(r, m, rg, mtl, but, bn));
     setGenerateCount(c => c + 1);
   };
 
   useEffect(() => {
-    regenerate(range, mode, regroup, makeTenLeft);
-  }, [range, mode, regroup, makeTenLeft]);
+    regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber);
+  }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber]);
 
   const handleRegenerate = () => {
     regenerate();
@@ -644,7 +665,10 @@ export default function App() {
       }
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(pdfFileNames[language][mode]);
+      const fileName = mode === 'number-bonds'
+        ? (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`)
+        : pdfFileNames[language][mode];
+      pdf.save(fileName);
     } catch (error) {
       console.error('PDF generation failed:', error);
       alert(language === 'zh' ? 'PDF 生成失败，请重试。' : 'Failed to generate PDF. Please try again.');
@@ -745,23 +769,53 @@ export default function App() {
               </select>
             </div>
 
-            {/* Range Select (only for number-bonds, vertical-add, vertical-sub, vertical-mixed) */}
-            {!['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
-              <div className="flex flex-col gap-1.5 animate-fade-in-up">
-                <label htmlFor="range" className="text-sm font-bold text-gray-750">{t.range}</label>
-                <select 
-                  id="range" 
-                  value={range} 
-                  onChange={handleRangeChange}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-                >
-                  {mode === 'number-bonds' && <option value="1-10">1 - 10</option>}
-                  <option value="11-20">11 - 20</option>
-                  <option value="21-30">21 - 30</option>
-                  <option value="10-50">10 - 50</option>
-                  <option value="10-100">10 - 100</option>
-                </select>
-              </div>
+            {/* Range / Bond inputs based on mode */}
+            {mode === 'number-bonds' ? (
+              <>
+                <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                  <label htmlFor="bondNumber" className="text-sm font-bold text-gray-750">{t.bondNumber}</label>
+                  <select 
+                    id="bondNumber" 
+                    value={bondNumber} 
+                    onChange={(e) => setBondNumber(parseInt(e.target.value, 10))}
+                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  >
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                  <label htmlFor="bondUseType" className="text-sm font-bold text-gray-755">{t.bondUseType}</label>
+                  <select 
+                    id="bondUseType" 
+                    value={bondUseType} 
+                    onChange={(e) => setBondUseType(e.target.value as 'practice' | 'study')}
+                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  >
+                    <option value="practice">{t.bondUseTypes.practice}</option>
+                    <option value="study">{t.bondUseTypes.study}</option>
+                  </select>
+                </div>
+              </>
+            ) : (
+              !['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
+                <div className="flex flex-col gap-1.5 animate-fade-in-up">
+                  <label htmlFor="range" className="text-sm font-bold text-gray-750">{t.range}</label>
+                  <select 
+                    id="range" 
+                    value={range} 
+                    onChange={handleRangeChange}
+                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  >
+                    <option value="11-20">11 - 20</option>
+                    <option value="21-30">21 - 30</option>
+                    <option value="10-50">10 - 50</option>
+                    <option value="10-100">10 - 100</option>
+                  </select>
+                </div>
+              )
             )}
 
             {/* Regroup Select (only for vertical/horizontal arithmetic) */}
@@ -910,7 +964,9 @@ export default function App() {
           >
             <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10 gap-4">
               <h1 className="text-3xl font-black tracking-widest text-black">
-                {t.printTitles[mode]}
+                {mode === 'number-bonds'
+                  ? (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`)
+                  : t.printTitles[mode]}
               </h1>
               <div className="flex gap-6 text-sm font-bold text-black whitespace-nowrap flex-shrink-0">
                 <span>{t.date}: ________________</span>
@@ -919,14 +975,22 @@ export default function App() {
               </div>
             </div>
             
-            <div key={generateCount} className="flex flex-wrap w-full content-start pt-2 relative z-10 animate-fade-in-up">
+            <div key={generateCount} className={`flex flex-wrap w-full pt-2 relative z-10 animate-fade-in-up ${
+              mode === 'number-bonds' 
+                ? 'h-[750px] items-center content-center justify-center' 
+                : 'content-start'
+            }`}>
               {problems.map((problem, idx) => {
                 let colClass = 'w-1/5';
                 let heightClass = 'h-[180px]';
-                const isLargeBonds = mode === 'number-bonds' && range === '1-10';
+                const isLargeBonds = mode === 'number-bonds' && bondNumber <= 4;
                 
                 if (mode === 'number-bonds') {
-                  colClass = 'w-1/3';
+                  colClass = bondNumber === 2 
+                    ? 'w-full' 
+                    : bondNumber === 3 
+                      ? 'w-1/2' 
+                      : 'w-1/3';
                   heightClass = isLargeBonds ? 'h-[320px]' : 'h-[230px]';
                 } else if (
                   mode === 'make-ten' || mode === 'break-ten' || mode === 'flat-ten' ||

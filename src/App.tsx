@@ -588,7 +588,7 @@ export default function App() {
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [hideTen, setHideTen] = useState<boolean>(false);
   const [hideBondParts, setHideBondParts] = useState<boolean>(false);
-  const [bondNumber, setBondNumber] = useState<number>(5);
+  const [bondNumber, setBondNumber] = useState<number>(2);
   const [bondUseType, setBondUseType] = useState<'practice' | 'study'>('practice');
   const [isBlankTemplate, setIsBlankTemplate] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);

@@ -305,6 +305,58 @@ export const generateProblems = (
 
     if (isVertical || isHorizontal) {
       const maxProblems = isVertical ? 25 : 20;
+
+      if (range === '20-regroup') {
+        const groupSize = Math.floor(maxProblems / 5); // 4 for 20, 5 for 25
+        const groups: Record<number, { num1: number; num2: number }[]> = {
+          5: [], 6: [], 7: [], 8: [], 9: []
+        };
+        
+        for (let num1 = 5; num1 <= 9; num1++) {
+          for (let num2 = 1; num2 <= 9; num2++) {
+            const sum = num1 + num2;
+            if (sum >= 10 && sum <= 18) {
+              groups[num1].push({ num1, num2 });
+            }
+          }
+        }
+        
+        const selectedPairs: { num1: number; num2: number }[] = [];
+        for (const d of [5, 6, 7, 8, 9]) {
+          const shuffledGroup = shuffle(groups[d]);
+          for (let i = 0; i < groupSize; i++) {
+            selectedPairs.push(shuffledGroup[i % shuffledGroup.length]);
+          }
+        }
+        
+        const mixedPairs = shuffle(selectedPairs);
+        for (let i = 0; i < mixedPairs.length; i++) {
+          let { num1, num2 } = mixedPairs[i];
+          if (Math.random() > 0.5) {
+            const temp = num1;
+            num1 = num2;
+            num2 = temp;
+          }
+          
+          let op: '+' | '-' = '+';
+          if (mode.includes('-add')) {
+            op = '+';
+          } else if (mode.includes('-sub')) {
+            op = '-';
+          } else {
+            op = Math.random() > 0.5 ? '+' : '-';
+          }
+          
+          if (op === '+') {
+            problems.push({ id: i, type: 'arithmetic', num1, num2, operator: '+' });
+          } else {
+            const sum = num1 + num2;
+            problems.push({ id: i, type: 'arithmetic', num1: sum, num2: num2, operator: '-' });
+          }
+        }
+        return problems;
+      }
+
       let addOneCount = 0;
       let subOneCount = 0;
 
@@ -316,7 +368,6 @@ export const generateProblems = (
         for (let num1 = 1; num1 <= max - 1; num1++) {
           for (let num2 = 1; num2 <= max - num1; num2++) {
             if (num1 + num2 < min) continue;
-            if (range === '20-regroup' && (num1 > 9 || num2 > 9)) continue;
             const isCarry = (num1 % 10) + (num2 % 10) > 9;
             if (regroup === 'none' && isCarry) continue;
             if (regroup === 'only' && !isCarry) continue;
@@ -328,7 +379,6 @@ export const generateProblems = (
       if (includeSub) {
         for (let num1 = min; num1 <= max; num1++) {
           for (let num2 = 1; num2 < num1; num2++) {
-            if (range === '20-regroup' && (num1 - num2 > 9 || num2 > 9)) continue;
             const isBorrow = (num1 % 10) < (num2 % 10);
             if (regroup === 'none' && isBorrow) continue;
             if (regroup === 'only' && !isBorrow) continue;

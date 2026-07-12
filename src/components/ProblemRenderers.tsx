@@ -1,7 +1,7 @@
 import React from 'react';
 import { Problem } from '../types';
 
-export const NumberBond: React.FC<{ problem: any; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
+export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
   if (large) {
     return (
       <div className="relative w-[220px] h-[260px]">
@@ -41,7 +41,7 @@ export const NumberBond: React.FC<{ problem: any; large?: boolean; hideParts?: b
   );
 };
 
-export const VerticalArithmetic: React.FC<{ problem: any; index: number }> = ({ problem, index }) => {
+export const VerticalArithmetic: React.FC<{ problem: Extract<Problem, { type: 'arithmetic' }>; index: number }> = ({ problem, index }) => {
   return (
     <div className="relative w-[120px] h-[140px] flex flex-col items-end justify-center pr-4 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400">{index + 1}.</span>
@@ -55,7 +55,7 @@ export const VerticalArithmetic: React.FC<{ problem: any; index: number }> = ({ 
   );
 };
 
-export const HorizontalArithmetic: React.FC<{ problem: any; index: number }> = ({ problem, index }) => {
+export const HorizontalArithmetic: React.FC<{ problem: Extract<Problem, { type: 'arithmetic' }>; index: number }> = ({ problem, index }) => {
   return (
     <div className="relative w-[160px] h-[60px] flex items-center justify-between px-2 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
@@ -70,7 +70,7 @@ export const HorizontalArithmetic: React.FC<{ problem: any; index: number }> = (
   );
 };
 
-export const MethodDiagram: React.FC<{ problem: any; index: number; hideTen?: boolean }> = ({ problem, index, hideTen = false }) => {
+export const MethodDiagram: React.FC<{ problem: Extract<Problem, { type: 'method' }>; index?: number; hideTen?: boolean }> = ({ problem, hideTen = false }) => {
   const { num1, num2, operator, method } = problem;
 
   return (

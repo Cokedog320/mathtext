@@ -109,6 +109,7 @@ const generateMakeTen = (
   }
 
   const shuffled = shuffle(candidates);
+  if (shuffled.length === 0) return [];
   let index = 0;
   while (problems.length < 20) {
     if (index >= shuffled.length) {
@@ -133,6 +134,7 @@ const generateBreakTenOrFlatTen = (
   }
 
   const shuffled = shuffle(candidates);
+  if (shuffled.length === 0) return [];
   let index = 0;
   while (problems.length < 20) {
     if (index >= shuffled.length) {
@@ -242,6 +244,7 @@ const generateArithmetic = (
   }
 
   const shuffled = shuffle(candidates);
+  if (shuffled.length === 0) return [];
   let index = 0;
   let reshuffles = 0;
   while (problems.length < maxProblems && reshuffles < 10) {

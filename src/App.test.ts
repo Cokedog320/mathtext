@@ -6,7 +6,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   it('should generate a mix of carry and no-carry addition problems', () => {
     let hasCarry = false, hasNoCarry = false;
     for (let i = 0; i < 10; i++) {
-      const problems = generateProblems('11-20', 'vertical-add');
+      const problems = generateProblems('1-20', 'vertical-add');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
       expect(arithmeticProblems.length).toBe(25);
       hasCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
@@ -20,7 +20,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   it('should generate a mix of borrow and no-borrow subtraction problems', () => {
     let hasBorrow = false, hasNoBorrow = false;
     for (let i = 0; i < 10; i++) {
-      const problems = generateProblems('11-20', 'vertical-sub');
+      const problems = generateProblems('1-20', 'vertical-sub');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
       expect(arithmeticProblems.length).toBe(25);
       hasBorrow = arithmeticProblems.some(p => (p.num1 % 10) < (p.num2 % 10));
@@ -34,7 +34,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   it('should generate mixed carry/borrow in vertical-mixed mode', () => {
     let hasCarry = false, hasBorrow = false;
     for (let i = 0; i < 10; i++) {
-      const problems = generateProblems('11-20', 'vertical-mixed');
+      const problems = generateProblems('1-20', 'vertical-mixed');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
       expect(arithmeticProblems.length).toBe(25);
       hasCarry = arithmeticProblems.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
@@ -46,7 +46,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   });
 
   it('should generate ONLY carry addition problems when regroup is only', () => {
-    const problems = generateProblems('11-20', 'vertical-add', 'only');
+    const problems = generateProblems('1-20', 'vertical-add', 'only');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
     
     expect(arithmeticProblems.length).toBe(25);
@@ -56,7 +56,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   });
 
   it('should generate ONLY no-carry addition problems when regroup is none', () => {
-    const problems = generateProblems('11-20', 'vertical-add', 'none');
+    const problems = generateProblems('1-20', 'vertical-add', 'none');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
     
     expect(arithmeticProblems.length).toBe(25);
@@ -66,7 +66,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   });
 
   it('should generate ONLY borrow subtraction problems when regroup is only', () => {
-    const problems = generateProblems('11-20', 'vertical-sub', 'only');
+    const problems = generateProblems('1-20', 'vertical-sub', 'only');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
     
     expect(arithmeticProblems.length).toBe(25);
@@ -76,7 +76,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
   });
 
   it('should generate ONLY no-borrow subtraction problems when regroup is none', () => {
-    const problems = generateProblems('11-20', 'vertical-sub', 'none');
+    const problems = generateProblems('1-20', 'vertical-sub', 'none');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
     
     expect(arithmeticProblems.length).toBe(25);
@@ -88,19 +88,19 @@ describe('generateProblems - Vertical Arithmetic', () => {
 
 describe('generateProblems - Make-Ten Method', () => {
   it('should generate problems with specified left addend when provided', () => {
-    const problems9 = generateProblems('11-20', 'make-ten', 'mixed', '9');
+    const problems9 = generateProblems('1-20', 'make-ten', 'mixed', '9');
     expect(problems9.length).toBe(20);
     const allNine = problems9.every(p => p.type === 'method' && p.num1 === 9);
     expect(allNine).toBe(true);
 
-    const problems5 = generateProblems('11-20', 'make-ten', 'mixed', '5');
+    const problems5 = generateProblems('1-20', 'make-ten', 'mixed', '5');
     expect(problems5.length).toBe(20);
     const allFive = problems5.every(p => p.type === 'method' && p.num1 === 5);
     expect(allFive).toBe(true);
   });
 
   it('should generate mixed left addends in the range 5-9 when makeTenLeft is mixed', () => {
-    const problemsMixed = generateProblems('11-20', 'make-ten', 'mixed', 'mixed');
+    const problemsMixed = generateProblems('1-20', 'make-ten', 'mixed', 'mixed');
     expect(problemsMixed.length).toBe(20);
     
     const leftAddends = new Set(problemsMixed.map(p => p.type === 'method' ? p.num1 : null));
@@ -114,7 +114,7 @@ describe('generateProblems - Make-Ten Method', () => {
   });
 
   it('should generate a perfectly uniform distribution of make-ten problems when candidates are limited', () => {
-    const problems9 = generateProblems('11-20', 'make-ten', 'mixed', '9');
+    const problems9 = generateProblems('1-20', 'make-ten', 'mixed', '9');
     expect(problems9.length).toBe(20);
     
     const frequencies: { [key: number]: number } = {};
@@ -134,14 +134,14 @@ describe('generateProblems - Make-Ten Method', () => {
 
 describe('generateProblems - Horizontal Arithmetic', () => {
   it('should generate 20 problems in horizontal-add mode', () => {
-    const problems = generateProblems('11-20', 'horizontal-add');
+    const problems = generateProblems('1-20', 'horizontal-add');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
     expect(arithmeticProblems.length).toBe(20);
     expect(arithmeticProblems.every(p => p.operator === '+')).toBe(true);
   });
 
   it('should generate 20 problems in horizontal-sub mode', () => {
-    const problems = generateProblems('11-20', 'horizontal-sub');
+    const problems = generateProblems('1-20', 'horizontal-sub');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
     expect(arithmeticProblems.length).toBe(20);
     expect(arithmeticProblems.every(p => p.operator === '-')).toBe(true);
@@ -150,7 +150,7 @@ describe('generateProblems - Horizontal Arithmetic', () => {
   it('should generate 20 problems in horizontal-mixed mode', () => {
     let hasAdd = false, hasSub = false;
     for (let i = 0; i < 10; i++) {
-      const problems = generateProblems('11-20', 'horizontal-mixed');
+      const problems = generateProblems('1-20', 'horizontal-mixed');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
       expect(arithmeticProblems.length).toBe(20);
       hasAdd = arithmeticProblems.some(p => p.operator === '+');
@@ -166,7 +166,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
   it('should generate a mix of carry and no-carry addition problems', () => {
     let hasCarry = false, hasNoCarry = false;
     for (let i = 0; i < 10; i++) {
-      const problems = generateProblems('11-20', 'horizontal-add');
+      const problems = generateProblems('1-20', 'horizontal-add');
       const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
       expect(arithmetic.length).toBe(20);
       hasCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
@@ -180,7 +180,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
   it('should generate mixed carry/borrow in horizontal-mixed mode', () => {
     let hasCarry = false, hasBorrow = false;
     for (let i = 0; i < 10; i++) {
-      const problems = generateProblems('11-20', 'horizontal-mixed');
+      const problems = generateProblems('1-20', 'horizontal-mixed');
       const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
       expect(arithmetic.length).toBe(20);
       hasCarry = arithmetic.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
@@ -192,7 +192,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
   });
 
   it('should respect regroup settings in horizontal mode', () => {
-    const problems = generateProblems('11-20', 'horizontal-add', 'none');
+    const problems = generateProblems('1-20', 'horizontal-add', 'none');
     const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
     expect(arithmetic.every(p => (p.num1 % 10) + (p.num2 % 10) <= 9)).toBe(true);
   });
@@ -200,7 +200,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
 
 describe('generateProblems - Break-Ten and Flat-Ten Methods', () => {
   it('should generate problems satisfying break-ten properties', () => {
-    const problems = generateProblems('11-20', 'break-ten');
+    const problems = generateProblems('1-20', 'break-ten');
     expect(problems.length).toBe(20);
     expect(problems.every(p => {
       if (p.type !== 'method') return false;
@@ -209,7 +209,7 @@ describe('generateProblems - Break-Ten and Flat-Ten Methods', () => {
   });
 
   it('should generate problems satisfying flat-ten properties', () => {
-    const problems = generateProblems('11-20', 'flat-ten');
+    const problems = generateProblems('1-20', 'flat-ten');
     expect(problems.length).toBe(20);
     expect(problems.every(p => {
       if (p.type !== 'method') return false;
@@ -218,26 +218,6 @@ describe('generateProblems - Break-Ten and Flat-Ten Methods', () => {
   });
 });
 
-describe('generateProblems - 20-regroup Range', () => {
-  it('should only generate addition problems with single-digit addends and sums in 11-18', () => {
-    const problems = generateProblems('20-regroup', 'horizontal-add', 'only');
-    expect(problems.length).toBe(20);
-    expect(problems.every(p => {
-      if (p.type !== 'arithmetic') return false;
-      return p.num1 <= 9 && p.num2 <= 9 && (p.num1 + p.num2) >= 11 && (p.num1 + p.num2) <= 18;
-    })).toBe(true);
-  });
-
-  it('should only generate subtraction problems where minuend >= 11 && minuend <= 18, subtrahend <= 9, and difference <= 9', () => {
-    const problems = generateProblems('20-regroup', 'horizontal-sub', 'only');
-    expect(problems.length).toBe(20);
-    expect(problems.every(p => {
-      if (p.type !== 'arithmetic') return false;
-      const diff = p.num1 - p.num2;
-      return p.num1 >= 11 && p.num1 <= 18 && p.num2 <= 9 && diff <= 9;
-    })).toBe(true);
-  });
-});
 
 describe('generateProblems - 1-10 Range', () => {
   it('should only generate addition problems with sums up to 10', () => {
@@ -262,14 +242,14 @@ describe('generateProblems - 1-10 Range', () => {
 describe('generateProblems - Number Bonds (Single Number)', () => {
   it('should generate exactly N-1 problems for target number N', () => {
     for (let n = 2; n <= 10; n++) {
-      const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', n);
+      const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', n);
       expect(problems.length).toBe(n - 1);
       expect(problems.every(p => p.type === 'bond' && p.top === n)).toBe(true);
     }
   });
 
   it('should exclude zero splits', () => {
-    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'study', 10);
+    const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'study', 10);
     for (const p of problems) {
       if (p.type === 'bond') {
         expect(p.left).not.toBe(0);
@@ -281,7 +261,7 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
   });
 
   it('should show all numbers in study mode', () => {
-    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'study', 5);
+    const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'study', 5);
     for (const p of problems) {
       if (p.type === 'bond') {
         expect(typeof p.left).toBe('number');
@@ -292,7 +272,7 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
   });
 
   it('should hide exactly one part in practice mode', () => {
-    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5);
+    const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5);
     for (const p of problems) {
       if (p.type === 'bond') {
         const leftIsHidden = p.left === '';
@@ -304,7 +284,7 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
   });
 
   it('should generate completely blank template of size 9 when isBlankTemplate is true', () => {
-    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5, true);
+    const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5, true);
     expect(problems.length).toBe(9);
     for (const p of problems) {
       if (p.type === 'bond') {
@@ -317,7 +297,7 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
   });
 
   it('should generate exactly one problem for each number in 2-10 range when bondNumber is 2-10', () => {
-    const problems = generateProblems('11-20', 'number-bonds', 'mixed', 'mixed', 'practice', '2-10');
+    const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', '2-10');
     expect(problems.length).toBe(9);
     const tops = problems.map(p => p.type === 'bond' ? p.top : 0).sort((a, b) => (a as number) - (b as number));
     expect(tops).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);

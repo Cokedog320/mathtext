@@ -1,5 +1,5 @@
 export type Language = 'zh' | 'en';
-export type Range = '1-10' | '11-20' | '21-30' | '10-50' | '10-100' | '20-regroup';
+export type Range = '1-10' | '1-20' | '1-30' | '1-50' | '1-100';
 export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 

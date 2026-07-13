@@ -10,26 +10,51 @@ export function shuffle<T>(array: T[]): T[] {
 }
 
 export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, language: Language, t: any): string => {
-  if (range === '20-regroup') {
-    if (mode.includes('-add')) {
-      return language === 'zh' ? '20以内进位加法' : 'Carrying Addition within 20';
-    }
-    if (mode.includes('-sub')) {
-      return language === 'zh' ? '20以内退位减法' : 'Borrowing Subtraction within 20';
-    }
-    if (mode.includes('-mixed')) {
-      return language === 'zh' ? '20以内加减法 (进退位)' : 'Regrouping Arithmetic within 20';
+  const rangeMap: Record<Range, {zh: string, en: string}> = {
+    '1-10': {zh: '10以内', en: 'Within 10'},
+    '1-20': {zh: '20以内', en: 'Within 20'},
+    '1-30': {zh: '30以内', en: 'Within 30'},
+    '1-50': {zh: '50以内', en: 'Within 50'},
+    '1-100': {zh: '100以内', en: 'Within 100'}
+  };
+  const rZh = rangeMap[range].zh;
+  const rEn = rangeMap[range].en;
+
+  let regroupZh = '';
+  let regroupEn = '';
+  if (range !== '1-10') {
+    if (regroup === 'none') {
+      regroupZh = mode.includes('-add') ? '不进位' : (mode.includes('-sub') ? '不退位' : '无进退位');
+      regroupEn = mode.includes('-add') ? 'No Carry' : (mode.includes('-sub') ? 'No Borrow' : 'No Regroup');
+    } else if (regroup === 'only') {
+      regroupZh = mode.includes('-add') ? '进位' : (mode.includes('-sub') ? '退位' : '进退位');
+      regroupEn = mode.includes('-add') ? 'Carrying' : (mode.includes('-sub') ? 'Borrowing' : 'Regrouping');
     }
   }
-  if (range === '1-10') {
-    if (mode.includes('-add')) {
-      return language === 'zh' ? '10以内加法' : 'Addition within 10';
-    }
-    if (mode.includes('-sub')) {
-      return language === 'zh' ? '10以内减法' : 'Subtraction within 10';
-    }
-    if (mode.includes('-mixed')) {
-      return language === 'zh' ? '10以内加减混合' : 'Mixed Arithmetic within 10';
+
+  const baseMapZh: Record<string, string> = {
+    'vertical-add': '加法',
+    'vertical-sub': '减法',
+    'vertical-mixed': '加减法',
+    'horizontal-add': '加法',
+    'horizontal-sub': '减法',
+    'horizontal-mixed': '加减混合'
+  };
+  const baseMapEn: Record<string, string> = {
+    'vertical-add': 'Addition',
+    'vertical-sub': 'Subtraction',
+    'vertical-mixed': 'Arithmetic',
+    'horizontal-add': 'Addition',
+    'horizontal-sub': 'Subtraction',
+    'horizontal-mixed': 'Mixed Arithmetic'
+  };
+
+  const isArithmetic = Object.keys(baseMapZh).includes(mode);
+  if (isArithmetic) {
+    if (language === 'zh') {
+      return `${rZh}${regroupZh}${baseMapZh[mode]}`;
+    } else {
+      return regroupEn ? `${regroupEn} ${baseMapEn[mode]} ${rEn}` : `${baseMapEn[mode]} ${rEn}`;
     }
   }
   return t.printTitles[mode];
@@ -156,113 +181,100 @@ const generateArithmetic = (
   const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
   const maxProblems = isVertical ? 25 : 20;
 
-  if (range === '20-regroup') {
-    const groupSize = Math.floor(maxProblems / 5);
-    const groups: Record<number, { num1: number; num2: number }[]> = {
-      5: [], 6: [], 7: [], 8: [], 9: []
-    };
-    
-    for (let num1 = 5; num1 <= 9; num1++) {
-      for (let num2 = 1; num2 <= 9; num2++) {
-        const sum = num1 + num2;
-        if (sum >= 11 && sum <= 18) {
-          groups[num1].push({ num1, num2 });
-        }
-      }
-    }
-    
-    const selectedPairs: { num1: number; num2: number }[] = [];
-    for (const d of [5, 6, 7, 8, 9]) {
-      const shuffledGroup = shuffle(groups[d]);
-      for (let i = 0; i < groupSize; i++) {
-        selectedPairs.push(shuffledGroup[i % shuffledGroup.length]);
-      }
-    }
-    
-    const mixedPairs = shuffle(selectedPairs);
-    for (let i = 0; i < mixedPairs.length; i++) {
-      let { num1, num2 } = mixedPairs[i];
-      if (Math.random() > 0.5) {
-        const temp = num1;
-        num1 = num2;
-        num2 = temp;
-      }
-      
-      let op: '+' | '-' = '+';
-      if (mode.includes('-add')) {
-        op = '+';
-      } else if (mode.includes('-sub')) {
-        op = '-';
-      } else {
-        op = Math.random() > 0.5 ? '+' : '-';
-      }
-      
-      if (op === '+') {
-        problems.push({ id: i, type: 'arithmetic', num1, num2, operator: '+' });
-      } else {
-        const sum = num1 + num2;
-        problems.push({ id: i, type: 'arithmetic', num1: sum, num2: num2, operator: '-' });
-      }
-    }
-    return problems;
-  }
+  let minTarget = 11, maxTarget = 20;
+  if (range === '1-10') { minTarget = 2; maxTarget = 10; }
+  else if (range === '1-20') { minTarget = 11; maxTarget = 20; }
+  else if (range === '1-30') { minTarget = 11; maxTarget = 30; }
+  else if (range === '1-50') { minTarget = 11; maxTarget = 50; }
+  else if (range === '1-100') { minTarget = 11; maxTarget = 100; }
 
-  let min = 11, max = 20;
-  if (range === '1-10') { min = 1; max = 10; }
-  else if (range === '21-30') { min = 21; max = 30; }
-  else if (range === '10-50') { min = 10; max = 50; }
-  else if (range === '10-100') { min = 10; max = 100; }
-
-  let addOneCount = 0;
-  let subOneCount = 0;
-
-  const candidates: { num1: number; num2: number; operator: '+' | '-' }[] = [];
   const includeAdd = mode.includes('-add') || mode.includes('-mixed');
   const includeSub = mode.includes('-sub') || mode.includes('-mixed');
 
+  const addGroups: Record<number, {num1: number; num2: number; operator: '+'}[]> = {};
+  const subGroups: Record<number, {num1: number; num2: number; operator: '-'}[]> = {};
+
   if (includeAdd) {
-    for (let num1 = 1; num1 <= max - 1; num1++) {
-      for (let num2 = 1; num2 <= max - num1; num2++) {
-        if (num1 + num2 < min) continue;
-        const isCarry = (num1 % 10) + (num2 % 10) > 9;
+    for (let S = minTarget; S <= maxTarget; S++) {
+      const pairs = [];
+      for (let num1 = 1; num1 < S; num1++) {
+        const num2 = S - num1;
+        const isCarry = (num1 % 10) + (num2 % 10) >= 10;
         if (regroup === 'none' && isCarry) continue;
         if (regroup === 'only' && !isCarry) continue;
-        candidates.push({ num1, num2, operator: '+' });
+        pairs.push({ num1, num2, operator: '+' as const });
+      }
+      if (pairs.length > 0) {
+        addGroups[S] = shuffle(pairs);
       }
     }
   }
 
   if (includeSub) {
-    for (let num1 = min; num1 <= max; num1++) {
-      for (let num2 = 1; num2 < num1; num2++) {
-        const isBorrow = (num1 % 10) < (num2 % 10);
+    for (let M = minTarget; M <= maxTarget; M++) {
+      const pairs = [];
+      for (let num2 = 1; num2 < M; num2++) {
+        const isBorrow = (M % 10) < (num2 % 10);
         if (regroup === 'none' && isBorrow) continue;
         if (regroup === 'only' && !isBorrow) continue;
-        candidates.push({ num1, num2, operator: '-' });
+        pairs.push({ num1: M, num2, operator: '-' as const });
+      }
+      if (pairs.length > 0) {
+        subGroups[M] = shuffle(pairs);
       }
     }
   }
 
-  const shuffled = shuffle(candidates);
-  if (shuffled.length === 0) return [];
-  let index = 0;
-  let reshuffles = 0;
-  while (problems.length < maxProblems && reshuffles < 10) {
-    if (index >= shuffled.length) {
-      shuffle(shuffled);
-      index = 0;
-      reshuffles++;
+  let addOneCount = 0;
+  let subOneCount = 0;
+
+  for (let i = 0; i < maxProblems; i++) {
+    const addAvailable = Object.keys(addGroups).filter(k => addGroups[Number(k)].length > 0);
+    const subAvailable = Object.keys(subGroups).filter(k => subGroups[Number(k)].length > 0);
+
+    if (addAvailable.length === 0 && subAvailable.length === 0) break;
+
+    let pickAdd = false;
+    if (addAvailable.length > 0 && subAvailable.length > 0) {
+      pickAdd = (i % 2 === 0);
+    } else if (addAvailable.length > 0) {
+      pickAdd = true;
+    } else {
+      pickAdd = false;
     }
-    const { num1, num2, operator } = shuffled[index++];
-    const isAddOne = operator === '+' && (num1 === 1 || num2 === 1);
-    const isSubOne = operator === '-' && num2 === 1;
-    if (isAddOne && addOneCount >= 1) continue;
-    if (isSubOne && subOneCount >= 1) continue;
-    problems.push({ id: problems.length, type: 'arithmetic', num1, num2, operator });
-    if (isAddOne) addOneCount++;
-    if (isSubOne) subOneCount++;
+
+    if (pickAdd) {
+      const target = Number(addAvailable[Math.floor(Math.random() * addAvailable.length)]);
+      const group = addGroups[target];
+      
+      let pairIndex = group.findIndex(p => p.num1 !== 1 && p.num2 !== 1);
+      if (addOneCount >= 1 && pairIndex !== -1) {
+        // filter +1 out
+      } else {
+        pairIndex = 0;
+      }
+      
+      const pair = group.splice(pairIndex, 1)[0];
+      if (pair.num1 === 1 || pair.num2 === 1) addOneCount++;
+      problems.push({ id: i, type: 'arithmetic', num1: pair.num1, num2: pair.num2, operator: '+' });
+    } else {
+      const target = Number(subAvailable[Math.floor(Math.random() * subAvailable.length)]);
+      const group = subGroups[target];
+      
+      let pairIndex = group.findIndex(p => p.num2 !== 1);
+      if (subOneCount >= 1 && pairIndex !== -1) {
+        // filter -1 out
+      } else {
+        pairIndex = 0;
+      }
+      
+      const pair = group.splice(pairIndex, 1)[0];
+      if (pair.num2 === 1) subOneCount++;
+      problems.push({ id: i, type: 'arithmetic', num1: pair.num1, num2: pair.num2, operator: '-' });
+    }
   }
-  return problems;
+
+  return shuffle(problems).map((p, i) => ({ ...p, id: i }));
 };
 
 // Strategy Registry Table

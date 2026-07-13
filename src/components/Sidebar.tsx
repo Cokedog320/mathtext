@@ -294,18 +294,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <option value="1-10">
                     {language === 'zh' ? '10以内' : 'Within 10'}
                   </option>
-                  <option value="20-regroup">
-                    {mode.includes('-add')
-                      ? (language === 'zh' ? '20以内进位' : 'Carrying within 20')
-                      : mode.includes('-sub')
-                        ? (language === 'zh' ? '20以内退位' : 'Borrowing within 20')
-                        : (language === 'zh' ? '20以内进退位' : 'Carrying & Borrowing within 20')
-                    }
+                  <option value="1-20">
+                    {language === 'zh' ? '20以内' : 'Within 20'}
                   </option>
-                  <option value="11-20">11 - 20</option>
-                  <option value="21-30">21 - 30</option>
-                  <option value="10-50">10 - 50</option>
-                  <option value="10-100">10 - 100</option>
+                  <option value="1-30">
+                    {language === 'zh' ? '30以内' : 'Within 30'}
+                  </option>
+                  <option value="1-50">
+                    {language === 'zh' ? '50以内' : 'Within 50'}
+                  </option>
+                  <option value="1-100">
+                    {language === 'zh' ? '100以内' : 'Within 100'}
+                  </option>
                 </select>
               </div>
 
@@ -313,8 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <label htmlFor="regroup" className="text-sm font-bold text-gray-800">{t.regroup}</label>
                 <select 
                   id="regroup" 
-                  value={range === '20-regroup' ? 'only' : regroup} 
-                  disabled={range === '20-regroup'}
+                  value={regroup} 
                   onChange={handleRegroupChange}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

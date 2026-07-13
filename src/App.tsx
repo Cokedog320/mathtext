@@ -8,6 +8,10 @@ import { generateProblems, getPrintTitle } from './utils/problemGenerator';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
 
+export { generateProblems } from './utils/problemGenerator';
+export type { Problem } from './types';
+
+
 const LANGUAGE_KEY = 'math-language';
 
 const pdfFileNames: Record<Language, Record<Mode, string>> = {

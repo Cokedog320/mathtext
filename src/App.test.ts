@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateProblems, Problem } from './App';
+import { generateProblems } from './utils/problemGenerator';
+import { Problem } from './types';
 
 describe('generateProblems - Vertical Arithmetic', () => {
   it('should generate a mix of carry and no-carry addition problems', () => {

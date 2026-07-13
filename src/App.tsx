@@ -213,7 +213,7 @@ export default function App() {
           <button 
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-750 py-3 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
             <Download size={16} /> 
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : '...') : t.mobileDownload}

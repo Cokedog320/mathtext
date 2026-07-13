@@ -180,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {mode === 'number-bonds' && (
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="bondNumber" className="text-sm font-bold text-gray-750">{t.bondNumber}</label>
+                <label htmlFor="bondNumber" className="text-sm font-bold text-gray-700">{t.bondNumber}</label>
                 <select 
                   id="bondNumber" 
                   value={bondNumber} 
@@ -207,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onChange={(e) => setBondUseType(e.target.checked ? 'study' : 'practice')}
                     className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <label htmlFor="bondUseTypeStudy" className={`text-sm font-semibold text-gray-750 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.bondUseTypeStudy}</label>
+                  <label htmlFor="bondUseTypeStudy" className={`text-sm font-semibold text-gray-700 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.bondUseTypeStudy}</label>
                 </div>
 
                 <div className="flex items-center gap-2.5">
@@ -219,7 +219,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onChange={(e) => setHideBondParts(e.target.checked)}
                     className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <label htmlFor="hideBondParts" className={`text-sm font-semibold text-gray-750 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.hideBondParts}</label>
+                  <label htmlFor="hideBondParts" className={`text-sm font-semibold text-gray-700 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.hideBondParts}</label>
                 </div>
 
                 <div className="flex items-center gap-2.5">
@@ -230,7 +230,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onChange={(e) => setIsBlankTemplate(e.target.checked)}
                     className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
                   />
-                  <label htmlFor="isBlankTemplate" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.blankTemplate}</label>
+                  <label htmlFor="isBlankTemplate" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">{t.blankTemplate}</label>
                 </div>
               </div>
             </div>
@@ -239,7 +239,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {mode === 'make-ten' && (
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-755">{t.makeTenLeft}</label>
+                <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-800">{t.makeTenLeft}</label>
                 <select 
                   id="makeTenLeft" 
                   value={makeTenLeft} 
@@ -263,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onChange={(e) => setHideTen(e.target.checked)}
                   className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
                 />
-                <label htmlFor="hideTen" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideTen}</label>
+                <label htmlFor="hideTen" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">{t.hideTen}</label>
               </div>
             </div>
           )}
@@ -277,14 +277,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onChange={(e) => setHideTen(e.target.checked)}
                 className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
               />
-              <label htmlFor="hideTen" className="text-sm font-semibold text-gray-750 cursor-pointer select-none">{t.hideTen}</label>
+              <label htmlFor="hideTen" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">{t.hideTen}</label>
             </div>
           )}
 
           {arithmeticModes.includes(mode) && (
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="range" className="text-sm font-bold text-gray-755">{t.range}</label>
+                <label htmlFor="range" className="text-sm font-bold text-gray-800">{t.range}</label>
                 <select 
                   id="range" 
                   value={range} 
@@ -310,7 +310,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="regroup" className="text-sm font-bold text-gray-755">{t.regroup}</label>
+                <label htmlFor="regroup" className="text-sm font-bold text-gray-800">{t.regroup}</label>
                 <select 
                   id="regroup" 
                   value={range === '20-regroup' ? 'only' : regroup} 

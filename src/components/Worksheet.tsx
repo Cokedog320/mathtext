@@ -62,7 +62,7 @@ interface LayoutSettings {
 
 interface RenderConfig {
   component: React.FC<{
-    problem: any;
+    problem: Problem;
     index: number;
     large?: boolean;
     hideParts?: boolean;

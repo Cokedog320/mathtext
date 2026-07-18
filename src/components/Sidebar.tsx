@@ -5,7 +5,7 @@ import { Dices, Printer, Download, Settings2, ChevronDown, ChevronUp } from 'luc
 interface SidebarProps {
   range: Range;
   setRange: (r: Range) => void;
-  mode: Mode;
+  mode: Mode | null;
   setMode: (m: Mode) => void;
   regroup: RegroupOption;
   setRegroup: (rg: RegroupOption) => void;
@@ -24,6 +24,7 @@ interface SidebarProps {
   language: Language;
   setLanguage: (lang: Language) => void;
   isGeneratingPdf: boolean;
+  hasWorksheet: boolean;
   handleRegenerate: () => void;
   handlePrint: () => void;
   handleDownloadPdf: () => void;
@@ -43,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isBlankTemplate, setIsBlankTemplate,
   language, setLanguage,
   isGeneratingPdf,
+  hasWorksheet,
   handleRegenerate,
   handlePrint,
   handleDownloadPdf,
@@ -59,15 +61,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   // Accordion active sections
-  const [methodExpanded, setMethodExpanded] = useState(methodModes.includes(mode));
-  const [arithmeticExpanded, setArithmeticExpanded] = useState(arithmeticModes.includes(mode));
+  const [methodExpanded, setMethodExpanded] = useState(true);
+  const [arithmeticExpanded, setArithmeticExpanded] = useState(false);
 
   // Sync expanded status when mode changes externally
   useEffect(() => {
-    if (methodModes.includes(mode)) {
+    if (mode && methodModes.includes(mode)) {
       setMethodExpanded(true);
       setArithmeticExpanded(false);
-    } else if (arithmeticModes.includes(mode)) {
+    } else if (mode && arithmeticModes.includes(mode)) {
       setArithmeticExpanded(true);
       setMethodExpanded(false);
     }
@@ -281,7 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {arithmeticModes.includes(mode) && (
+          {mode && arithmeticModes.includes(mode) && (
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="range" className="text-sm font-bold text-gray-800">{t.range}</label>
@@ -331,7 +333,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-6 border-t border-gray-200 bg-white/60 flex flex-col gap-3">
         <button 
           onClick={handleRegenerate}
-          className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md transition-all duration-200 font-semibold cursor-pointer"
+          disabled={!hasWorksheet}
+          className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 font-semibold cursor-pointer"
         >
           <Dices size={18} className="group-hover:rotate-180 transition-transform duration-500" /> 
           {t.regenerate}
@@ -347,15 +350,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="hidden lg:flex gap-3">
           <button 
             onClick={handlePrint}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 text-emerald-700 py-2.5 rounded-xl hover:bg-emerald-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
+            disabled={!hasWorksheet}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 text-emerald-700 py-2.5 rounded-xl hover:bg-emerald-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
           >
             <Printer size={16} /> 
             {t.print}
           </button>
           <button 
             onClick={handleDownloadPdf}
-            disabled={isGeneratingPdf}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
+            disabled={!hasWorksheet || isGeneratingPdf}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
           >
             <Download size={16} /> 
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : 'Generating...') : t.downloadPdf}

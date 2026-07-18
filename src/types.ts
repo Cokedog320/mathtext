@@ -96,6 +96,8 @@ export const translations = {
     bondNumber: '目标数字',
     bondUseTypeStudy: '学习卡片模式',
     blankTemplate: '空白模板模式',
+    selectProblemType: '请选择习题类型',
+    selectProblemTypeHint: '从左侧选择一种练习，习题预览将在这里显示。',
   },
   en: {
     settings: 'Settings',
@@ -157,5 +159,7 @@ export const translations = {
     bondNumber: 'Target Number',
     bondUseTypeStudy: 'Learning Card Mode',
     blankTemplate: 'Blank Template Mode',
+    selectProblemType: 'Select a problem type',
+    selectProblemTypeHint: 'Choose an exercise from the left to see its worksheet preview here.',
   },
 };

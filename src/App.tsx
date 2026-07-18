@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
-import { Dices, Printer, Download } from 'lucide-react';
+import { Dices, Printer, Download, FileQuestion } from 'lucide-react';
 
 import { Language, Range, Mode, RegroupOption, Problem, translations } from './types';
 import { generateProblems, getPrintTitle } from './utils/problemGenerator';
@@ -43,7 +43,7 @@ const pdfFileNames: Record<Language, Record<Mode, string>> = {
 
 export default function App() {
   const [range, setRange] = useState<Range>('1-10');
-  const [mode, setMode] = useState<Mode>('number-bonds');
+  const [mode, setMode] = useState<Mode | null>(null);
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [hideTen, setHideTen] = useState<boolean>(false);
@@ -62,6 +62,7 @@ export default function App() {
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   const t = translations[language];
+  const hasWorksheet = mode !== null && problems.length > 0;
 
   useEffect(() => {
     localStorage.setItem(LANGUAGE_KEY, language);
@@ -76,24 +77,32 @@ export default function App() {
     bn = bondNumber,
     bt = isBlankTemplate
   ) => {
+    if (!m) return;
     setProblems(generateProblems(r, m, rg, mtl, but, bn, bt));
     setGenerateCount(c => c + 1);
   };
 
   useEffect(() => {
-    regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate);
+    if (mode) {
+      regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate);
+    }
   }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate]);
 
   const handleRegenerate = () => {
-    regenerate();
+    if (mode) regenerate();
+  };
+
+  const handleModeChange = (nextMode: Mode) => {
+    setProblems([]);
+    setMode(nextMode);
   };
 
   const handlePrint = () => {
-    window.print();
+    if (hasWorksheet) window.print();
   };
 
   const handleDownloadPdf = async () => {
-    if (!worksheetRef.current || isGeneratingPdf) return;
+    if (!mode || !worksheetRef.current || !hasWorksheet || isGeneratingPdf) return;
 
     setIsGeneratingPdf(true);
     try {
@@ -171,7 +180,7 @@ export default function App() {
       {/* Settings Sidebar */}
       <Sidebar
         range={range} setRange={setRange}
-        mode={mode} setMode={setMode}
+        mode={mode} setMode={handleModeChange}
         regroup={regroup} setRegroup={setRegroup}
         makeTenLeft={makeTenLeft} setMakeTenLeft={setMakeTenLeft}
         hideTen={hideTen} setHideTen={setHideTen}
@@ -181,6 +190,7 @@ export default function App() {
         isBlankTemplate={isBlankTemplate} setIsBlankTemplate={setIsBlankTemplate}
         language={language} setLanguage={setLanguage}
         isGeneratingPdf={isGeneratingPdf}
+        hasWorksheet={hasWorksheet}
         handleRegenerate={handleRegenerate}
         handlePrint={handlePrint}
         handleDownloadPdf={handleDownloadPdf}
@@ -198,41 +208,57 @@ export default function App() {
         <div className="lg:hidden w-full max-w-[400px] mb-4 flex gap-3 no-print">
           <button 
             onClick={handleRegenerate}
-            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold text-sm cursor-pointer"
+            disabled={!hasWorksheet}
+            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
             <Dices size={16} />
             {t.mobileRegenerate}
           </button>
           <button 
             onClick={handlePrint}
-            className="flex-1 flex items-center justify-center gap-1 bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl font-semibold text-sm cursor-pointer"
+            disabled={!hasWorksheet}
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
             <Printer size={16} /> 
             {t.mobilePrint}
           </button>
           <button 
             onClick={handleDownloadPdf}
-            disabled={isGeneratingPdf}
-            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
+            disabled={!hasWorksheet || isGeneratingPdf}
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
             <Download size={16} /> 
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : '...') : t.mobileDownload}
           </button>
         </div>
 
-        <Worksheet
-          mode={mode}
-          range={range}
-          regroup={regroup}
-          language={language}
-          bondNumber={bondNumber}
-          isBlankTemplate={isBlankTemplate}
-          hideBondParts={hideBondParts}
-          hideTen={hideTen}
-          problems={problems}
-          generateCount={generateCount}
-          worksheetRef={worksheetRef}
-        />
+        {mode ? (
+          <Worksheet
+            mode={mode}
+            range={range}
+            regroup={regroup}
+            language={language}
+            bondNumber={bondNumber}
+            isBlankTemplate={isBlankTemplate}
+            hideBondParts={hideBondParts}
+            hideTen={hideTen}
+            problems={problems}
+            generateCount={generateCount}
+            worksheetRef={worksheetRef}
+          />
+        ) : (
+          <div className="flex flex-1 min-h-[60vh] w-full max-w-2xl items-center justify-center px-6 text-center">
+            <div className="flex flex-col items-center gap-4 text-slate-500 animate-fade-in-up">
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
+                <FileQuestion size={48} className="text-blue-400" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-700">{t.selectProblemType}</h2>
+                <p className="mt-2 text-sm text-slate-500">{t.selectProblemTypeHint}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

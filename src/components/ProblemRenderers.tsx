@@ -1,5 +1,5 @@
 import React from 'react';
-import { Problem } from '../types';
+import { Problem, RegroupOption } from '../types';
 
 export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
   if (large) {
@@ -41,23 +41,48 @@ export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>;
   );
 };
 
-export const VerticalArithmetic: React.FC<{ problem: Extract<Problem, { type: 'arithmetic' }>; index: number }> = ({ problem, index }) => {
+export const VerticalArithmetic: React.FC<{
+  problem: Extract<Problem, { type: 'arithmetic' }>;
+  index: number;
+  regroup: RegroupOption;
+}> = ({ problem, index, regroup }) => {
+  const showWorkBoxes = regroup !== 'none';
+  const topTens = Math.floor(problem.num1 / 10);
+  const topOnes = problem.num1 % 10;
+  const lowerTens = problem.num2 >= 10 ? Math.floor(problem.num2 / 10) : '';
+  const lowerOnes = problem.num2 % 10;
+
   return (
-    <div className="relative w-[120px] h-[140px] flex flex-col items-end justify-center pr-4 border border-gray-100 rounded-sm">
-      <span className="absolute top-1 left-1 text-[10px] text-gray-400">{index + 1}.</span>
-      <div className="text-4xl font-mono tracking-widest text-black mb-1">{problem.num1}</div>
-      <div className="flex items-center gap-4 text-4xl font-mono tracking-widest text-black">
-        <span>{problem.operator}</span>
-        <span>{problem.num2}</span>
+    <div className="relative w-[150px] h-[185px] flex items-center justify-center border border-gray-100 rounded-sm">
+      <span className="absolute top-2 left-2 text-[10px] text-gray-400">{index + 1}.</span>
+      <div className="grid grid-cols-[30px_42px_42px] grid-rows-[26px_45px_45px_4px] items-center text-center font-mono text-black">
+        <span />
+        {showWorkBoxes && problem.operator === '+' ? (
+          <span data-work-box="carry-tens" className="mx-auto h-[22px] w-[22px] border border-black bg-white" />
+        ) : showWorkBoxes && problem.operator === '-' ? (
+          <span data-work-box="borrow-tens" className="mx-auto h-[22px] w-[22px] border border-black bg-white" />
+        ) : <span />}
+        {showWorkBoxes && problem.operator === '-' ? (
+          <span data-work-box="borrow-ones" className="mx-auto h-[22px] w-[22px] border border-black bg-white" />
+        ) : <span />}
+
+        <span />
+        <span className="text-4xl">{topTens}</span>
+        <span className="text-4xl">{topOnes}</span>
+
+        <span className="text-4xl">{problem.operator}</span>
+        <span className="text-4xl">{lowerTens}</span>
+        <span className="text-4xl">{lowerOnes}</span>
+
+        <span className="col-span-3 h-[3px] w-full bg-black" />
       </div>
-      <div className="w-full h-[3px] bg-black mt-2"></div>
     </div>
   );
 };
 
 export const HorizontalArithmetic: React.FC<{ problem: Extract<Problem, { type: 'arithmetic' }>; index: number }> = ({ problem, index }) => {
   return (
-    <div className="relative w-[160px] h-[60px] flex items-center justify-between px-2 border border-gray-100 rounded-sm">
+    <div className="relative w-[160px] h-full flex items-center justify-between px-2 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
       <div className="flex items-center justify-center gap-2.5 w-full text-2xl font-normal text-black mt-2 select-none">
         <span>{problem.num1}</span>

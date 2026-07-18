@@ -1,4 +1,4 @@
-import { Mode, Range, RegroupOption, Problem, Language } from '../types';
+import { Mode, Range, RegroupOption, Problem, Language, LowerOperandDigits } from '../types';
 
 export function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
@@ -175,106 +175,104 @@ const generateBreakTenOrFlatTen = (
 const generateArithmetic = (
   range: Range,
   mode: Mode,
-  regroup: RegroupOption
+  regroup: RegroupOption,
+  lowerOperandDigits: LowerOperandDigits
 ): Problem[] => {
-  const problems: Problem[] = [];
   const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
-  const maxProblems = isVertical ? 25 : 20;
-
-  let minTarget = 11, maxTarget = 20;
-  if (range === '1-10') { minTarget = 2; maxTarget = 10; }
-  else if (range === '1-20') { minTarget = 11; maxTarget = 20; }
-  else if (range === '1-30') { minTarget = 11; maxTarget = 30; }
-  else if (range === '1-50') { minTarget = 11; maxTarget = 50; }
-  else if (range === '1-100') { minTarget = 11; maxTarget = 100; }
+  const horizontalCounts: Record<Range, number> = {
+    '1-10': 20, '1-20': 40, '1-30': 60, '1-50': 60, '1-100': 60,
+  };
+  const maxProblems = isVertical ? 20 : horizontalCounts[range];
+  const practiceBands: Record<Range, [number, number]> = {
+    '1-10': [2, 10], '1-20': [11, 20], '1-30': [21, 30],
+    '1-50': [31, 50], '1-100': [51, 100],
+  };
+  const [minTarget, maxTarget] = practiceBands[range];
 
   const includeAdd = mode.includes('-add') || mode.includes('-mixed');
   const includeSub = mode.includes('-sub') || mode.includes('-mixed');
 
-  const addGroups: Record<number, {num1: number; num2: number; operator: '+'}[]> = {};
-  const subGroups: Record<number, {num1: number; num2: number; operator: '-'}[]> = {};
+  type Candidate = {
+    num1: number;
+    num2: number;
+    operator: '+' | '-';
+    lowerDigits: 'one' | 'two';
+    needsRegroup: boolean;
+  };
+  const candidates: Candidate[] = [];
 
   if (includeAdd) {
     for (let S = minTarget; S <= maxTarget; S++) {
-      const pairs = [];
       for (let num1 = 1; num1 < S; num1++) {
         const num2 = S - num1;
+        if (isVertical && (num1 < 10 || num1 > 99)) continue;
         const isCarry = (num1 % 10) + (num2 % 10) >= 10;
         if (regroup === 'none' && isCarry) continue;
         if (regroup === 'only' && !isCarry) continue;
-        pairs.push({ num1, num2, operator: '+' as const });
-      }
-      if (pairs.length > 0) {
-        addGroups[S] = shuffle(pairs);
+        candidates.push({
+          num1, num2, operator: '+', needsRegroup: isCarry,
+          lowerDigits: num2 < 10 ? 'one' : 'two',
+        });
       }
     }
   }
 
   if (includeSub) {
     for (let M = minTarget; M <= maxTarget; M++) {
-      const pairs = [];
       for (let num2 = 1; num2 < M; num2++) {
+        if (isVertical && (M < 10 || M > 99)) continue;
         const isBorrow = (M % 10) < (num2 % 10);
         if (regroup === 'none' && isBorrow) continue;
         if (regroup === 'only' && !isBorrow) continue;
-        pairs.push({ num1: M, num2, operator: '-' as const });
-      }
-      if (pairs.length > 0) {
-        subGroups[M] = shuffle(pairs);
+        candidates.push({
+          num1: M, num2, operator: '-', needsRegroup: isBorrow,
+          lowerDigits: num2 < 10 ? 'one' : 'two',
+        });
       }
     }
   }
 
-  let addOneCount = 0;
-  let subOneCount = 0;
-
+  const chosen: Candidate[] = [];
+  const used = new Set<string>();
   for (let i = 0; i < maxProblems; i++) {
-    const addAvailable = Object.keys(addGroups).filter(k => addGroups[Number(k)].length > 0);
-    const subAvailable = Object.keys(subGroups).filter(k => subGroups[Number(k)].length > 0);
+    const desiredOperator: '+' | '-' | undefined = includeAdd && includeSub
+      ? (i % 2 === 0 ? '+' : '-')
+      : (includeAdd ? '+' : '-');
+    const desiredDigits: 'one' | 'two' | undefined = !isVertical
+      ? undefined
+      : lowerOperandDigits === 'mixed'
+        ? (Math.floor(i / (includeAdd && includeSub ? 2 : 1)) % 2 === 0 ? 'one' : 'two')
+        : lowerOperandDigits;
+    const desiredRegroup = regroup === 'mixed' ? Math.floor(i / 2) % 2 === 0 : regroup === 'only';
 
-    if (addAvailable.length === 0 && subAvailable.length === 0) break;
-
-    let pickAdd = false;
-    if (addAvailable.length > 0 && subAvailable.length > 0) {
-      pickAdd = (i % 2 === 0);
-    } else if (addAvailable.length > 0) {
-      pickAdd = true;
-    } else {
-      pickAdd = false;
+    const filters = [
+      (c: Candidate) => c.operator === desiredOperator && (!desiredDigits || c.lowerDigits === desiredDigits) && c.needsRegroup === desiredRegroup,
+      (c: Candidate) => c.operator === desiredOperator && (!desiredDigits || c.lowerDigits === desiredDigits),
+      ...(lowerOperandDigits === 'mixed'
+        ? [
+            (c: Candidate) => c.operator === desiredOperator && c.needsRegroup === desiredRegroup,
+            (c: Candidate) => c.operator === desiredOperator,
+          ]
+        : []),
+    ];
+    let pool: Candidate[] = [];
+    for (const filter of filters) {
+      pool = candidates.filter(filter);
+      if (pool.length > 0) break;
     }
+    if (pool.length === 0) break;
 
-    if (pickAdd) {
-      const target = Number(addAvailable[Math.floor(Math.random() * addAvailable.length)]);
-      const group = addGroups[target];
-      
-      let pairIndex = group.findIndex(p => p.num1 !== 1 && p.num2 !== 1);
-      if (addOneCount >= 1 && pairIndex !== -1) {
-        // filter +1 out
-      } else {
-        pairIndex = 0;
-      }
-      
-      const pair = group.splice(pairIndex, 1)[0];
-      if (pair.num1 === 1 || pair.num2 === 1) addOneCount++;
-      problems.push({ id: i, type: 'arithmetic', num1: pair.num1, num2: pair.num2, operator: '+' });
-    } else {
-      const target = Number(subAvailable[Math.floor(Math.random() * subAvailable.length)]);
-      const group = subGroups[target];
-      
-      let pairIndex = group.findIndex(p => p.num2 !== 1);
-      if (subOneCount >= 1 && pairIndex !== -1) {
-        // filter -1 out
-      } else {
-        pairIndex = 0;
-      }
-      
-      const pair = group.splice(pairIndex, 1)[0];
-      if (pair.num2 === 1) subOneCount++;
-      problems.push({ id: i, type: 'arithmetic', num1: pair.num1, num2: pair.num2, operator: '-' });
-    }
+    const unused = pool.filter(c => !used.has(`${c.num1}${c.operator}${c.num2}`));
+    const preferred = unused.filter(c => c.num2 !== 1 && (c.operator === '-' || c.num1 !== 1));
+    const selectionPool = preferred.length > 0 ? preferred : (unused.length > 0 ? unused : pool);
+    const selected = selectionPool[Math.floor(Math.random() * selectionPool.length)];
+    used.add(`${selected.num1}${selected.operator}${selected.num2}`);
+    chosen.push(selected);
   }
 
-  return shuffle(problems).map((p, i) => ({ ...p, id: i }));
+  return shuffle(chosen).map((candidate, id) => ({
+    id, type: 'arithmetic', num1: candidate.num1, num2: candidate.num2, operator: candidate.operator,
+  }));
 };
 
 // Strategy Registry Table
@@ -284,7 +282,8 @@ const GENERATOR_STRATEGIES: Record<Mode, (
   makeTenLeft: string,
   bondUseType: 'practice' | 'study',
   bondNumber: number | '2-10',
-  isBlankTemplate: boolean
+  isBlankTemplate: boolean,
+  lowerOperandDigits: LowerOperandDigits
 ) => Problem[]> = {
   'number-bonds': (range, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate) =>
     generateNumberBonds(range, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate),
@@ -292,12 +291,12 @@ const GENERATOR_STRATEGIES: Record<Mode, (
     generateMakeTen(range, regroup, makeTenLeft),
   'break-ten': () => generateBreakTenOrFlatTen('break-ten'),
   'flat-ten': () => generateBreakTenOrFlatTen('flat-ten'),
-  'vertical-add': (range, regroup) => generateArithmetic(range, 'vertical-add', regroup),
-  'vertical-sub': (range, regroup) => generateArithmetic(range, 'vertical-sub', regroup),
-  'vertical-mixed': (range, regroup) => generateArithmetic(range, 'vertical-mixed', regroup),
-  'horizontal-add': (range, regroup) => generateArithmetic(range, 'horizontal-add', regroup),
-  'horizontal-sub': (range, regroup) => generateArithmetic(range, 'horizontal-sub', regroup),
-  'horizontal-mixed': (range, regroup) => generateArithmetic(range, 'horizontal-mixed', regroup),
+  'vertical-add': (range, regroup, _mtl, _but, _bn, _ibt, lowerDigits) => generateArithmetic(range, 'vertical-add', regroup, lowerDigits),
+  'vertical-sub': (range, regroup, _mtl, _but, _bn, _ibt, lowerDigits) => generateArithmetic(range, 'vertical-sub', regroup, lowerDigits),
+  'vertical-mixed': (range, regroup, _mtl, _but, _bn, _ibt, lowerDigits) => generateArithmetic(range, 'vertical-mixed', regroup, lowerDigits),
+  'horizontal-add': (range, regroup) => generateArithmetic(range, 'horizontal-add', regroup, 'mixed'),
+  'horizontal-sub': (range, regroup) => generateArithmetic(range, 'horizontal-sub', regroup, 'mixed'),
+  'horizontal-mixed': (range, regroup) => generateArithmetic(range, 'horizontal-mixed', regroup, 'mixed'),
 };
 
 export const generateProblems = (
@@ -307,8 +306,9 @@ export const generateProblems = (
   makeTenLeft: string = 'mixed',
   bondUseType: 'practice' | 'study' = 'practice',
   bondNumber: number | '2-10' = 5,
-  isBlankTemplate: boolean = false
+  isBlankTemplate: boolean = false,
+  lowerOperandDigits: LowerOperandDigits = 'mixed'
 ): Problem[] => {
   const strategy = GENERATOR_STRATEGIES[mode];
-  return strategy ? strategy(range, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate) : [];
+  return strategy ? strategy(range, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits) : [];
 };

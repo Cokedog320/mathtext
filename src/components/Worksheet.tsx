@@ -58,6 +58,7 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
 interface LayoutSettings {
   bondNumber: number | '2-10';
   isBlankTemplate: boolean;
+  range: Range;
 }
 
 interface RenderConfig {
@@ -69,6 +70,7 @@ interface RenderConfig {
     hideTen?: boolean;
     bondNumber?: number | '2-10';
     isBlankTemplate?: boolean;
+    regroup?: RegroupOption;
   }>;
   getLayoutClass: (settings: LayoutSettings) => { colClass: string; heightClass: string };
 }
@@ -101,28 +103,28 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
   },
   'vertical-add': {
-    component: ({ problem, index }) => <VerticalArithmetic problem={problem} index={index} />,
-    getLayoutClass: () => ({ colClass: 'w-1/5', heightClass: 'h-[180px]' })
+    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem} index={index} regroup={regroup} />,
+    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'vertical-sub': {
-    component: ({ problem, index }) => <VerticalArithmetic problem={problem} index={index} />,
-    getLayoutClass: () => ({ colClass: 'w-1/5', heightClass: 'h-[180px]' })
+    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem} index={index} regroup={regroup} />,
+    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'vertical-mixed': {
-    component: ({ problem, index }) => <VerticalArithmetic problem={problem} index={index} />,
-    getLayoutClass: () => ({ colClass: 'w-1/5', heightClass: 'h-[180px]' })
+    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem} index={index} regroup={regroup} />,
+    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'horizontal-add': {
     component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
+    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-sub': {
     component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
+    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-mixed': {
     component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
+    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   }
 };
 
@@ -148,7 +150,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
   const t = translations[language];
   const renderConfig = RENDER_REGISTRY[mode];
 
-  const { colClass, heightClass } = renderConfig.getLayoutClass({ bondNumber, isBlankTemplate });
+  const { colClass, heightClass } = renderConfig.getLayoutClass({ bondNumber, isBlankTemplate, range });
   const RendererComponent = renderConfig.component;
 
   return (
@@ -187,6 +189,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
                 bondNumber={bondNumber}
                 isBlankTemplate={isBlankTemplate}
                 hideTen={hideTen}
+                regroup={regroup}
               />
             </div>
           ))}

@@ -2,6 +2,7 @@ export type Language = 'zh' | 'en';
 export type Range = '1-10' | '1-20' | '1-30' | '1-50' | '1-100';
 export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
+export type LowerOperandDigits = 'mixed' | 'one' | 'two';
 
 export type Problem = 
   | { id: number; type: 'bond'; top: number | string; left: number | string; right: number | string; isBlank?: boolean }
@@ -43,6 +44,7 @@ export const translations = {
     mode: '题型',
     range: '难度',
     regroup: '进退位',
+    lowerOperandDigits: '下方数位数',
     makeTenLeft: '左加数',
     hideTen: '隐藏“10”辅助数字',
     hideBondParts: '隐藏底部分解数字',
@@ -72,6 +74,11 @@ export const translations = {
       mixed: '混合',
       none: '无进/退位',
       only: '进/退位',
+    },
+    lowerOperandDigitOptions: {
+      mixed: '一位数与两位数混合',
+      one: '一位数',
+      two: '两位数',
     },
     makeTenLeftOptions: {
       mixed: '随机',
@@ -106,6 +113,7 @@ export const translations = {
     mode: 'Mode',
     range: 'Range',
     regroup: 'Regroup',
+    lowerOperandDigits: 'Lower Operand Digits',
     makeTenLeft: 'Left Addend',
     hideTen: 'Hide helper "10"',
     hideBondParts: 'Hide bottom parts',
@@ -135,6 +143,11 @@ export const translations = {
       mixed: 'Mixed',
       none: 'No Regroup',
       only: 'Regroup Only',
+    },
+    lowerOperandDigitOptions: {
+      mixed: 'Mixed One- and Two-Digit',
+      one: 'One Digit',
+      two: 'Two Digits',
     },
     makeTenLeftOptions: {
       mixed: 'Mixed',

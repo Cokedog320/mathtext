@@ -8,7 +8,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'vertical-add');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
-      expect(arithmeticProblems.length).toBe(25);
+      expect(arithmeticProblems.length).toBe(20);
       hasCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
       hasNoCarry = arithmeticProblems.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
       if (hasCarry && hasNoCarry) break;
@@ -22,7 +22,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'vertical-sub');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
-      expect(arithmeticProblems.length).toBe(25);
+      expect(arithmeticProblems.length).toBe(20);
       hasBorrow = arithmeticProblems.some(p => (p.num1 % 10) < (p.num2 % 10));
       hasNoBorrow = arithmeticProblems.some(p => (p.num1 % 10) >= (p.num2 % 10));
       if (hasBorrow && hasNoBorrow) break;
@@ -36,7 +36,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'vertical-mixed');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-      expect(arithmeticProblems.length).toBe(25);
+      expect(arithmeticProblems.length).toBe(20);
       hasCarry = arithmeticProblems.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
       hasBorrow = arithmeticProblems.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
       if (hasCarry && hasBorrow) break;
@@ -49,7 +49,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     const problems = generateProblems('1-20', 'vertical-add', 'only');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
     
-    expect(arithmeticProblems.length).toBe(25);
+    expect(arithmeticProblems.length).toBe(20);
     
     const allHaveCarry = arithmeticProblems.every(p => (p.num1 % 10) + (p.num2 % 10) > 9);
     expect(allHaveCarry).toBe(true);
@@ -59,7 +59,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     const problems = generateProblems('1-20', 'vertical-add', 'none');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
     
-    expect(arithmeticProblems.length).toBe(25);
+    expect(arithmeticProblems.length).toBe(20);
     
     const allHaveNoCarry = arithmeticProblems.every(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
     expect(allHaveNoCarry).toBe(true);
@@ -69,7 +69,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     const problems = generateProblems('1-20', 'vertical-sub', 'only');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
     
-    expect(arithmeticProblems.length).toBe(25);
+    expect(arithmeticProblems.length).toBe(20);
     
     const allHaveBorrow = arithmeticProblems.every(p => (p.num1 % 10) < (p.num2 % 10));
     expect(allHaveBorrow).toBe(true);
@@ -79,7 +79,7 @@ describe('generateProblems - Vertical Arithmetic', () => {
     const problems = generateProblems('1-20', 'vertical-sub', 'none');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '-');
     
-    expect(arithmeticProblems.length).toBe(25);
+    expect(arithmeticProblems.length).toBe(20);
     
     const allHaveNoBorrow = arithmeticProblems.every(p => (p.num1 % 10) >= (p.num2 % 10));
     expect(allHaveNoBorrow).toBe(true);
@@ -133,26 +133,26 @@ describe('generateProblems - Make-Ten Method', () => {
 });
 
 describe('generateProblems - Horizontal Arithmetic', () => {
-  it('should generate 20 problems in horizontal-add mode', () => {
+  it('should generate 40 problems in horizontal-add mode within 20', () => {
     const problems = generateProblems('1-20', 'horizontal-add');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    expect(arithmeticProblems.length).toBe(20);
+    expect(arithmeticProblems.length).toBe(40);
     expect(arithmeticProblems.every(p => p.operator === '+')).toBe(true);
   });
 
-  it('should generate 20 problems in horizontal-sub mode', () => {
+  it('should generate 40 problems in horizontal-sub mode within 20', () => {
     const problems = generateProblems('1-20', 'horizontal-sub');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    expect(arithmeticProblems.length).toBe(20);
+    expect(arithmeticProblems.length).toBe(40);
     expect(arithmeticProblems.every(p => p.operator === '-')).toBe(true);
   });
 
-  it('should generate 20 problems in horizontal-mixed mode', () => {
+  it('should generate 40 problems in horizontal-mixed mode within 20', () => {
     let hasAdd = false, hasSub = false;
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'horizontal-mixed');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-      expect(arithmeticProblems.length).toBe(20);
+      expect(arithmeticProblems.length).toBe(40);
       hasAdd = arithmeticProblems.some(p => p.operator === '+');
       hasSub = arithmeticProblems.some(p => p.operator === '-');
       if (hasAdd && hasSub) break;
@@ -168,7 +168,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'horizontal-add');
       const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
-      expect(arithmetic.length).toBe(20);
+      expect(arithmetic.length).toBe(40);
       hasCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
       hasNoCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
       if (hasCarry && hasNoCarry) break;
@@ -182,7 +182,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'horizontal-mixed');
       const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-      expect(arithmetic.length).toBe(20);
+      expect(arithmetic.length).toBe(40);
       hasCarry = arithmetic.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
       hasBorrow = arithmetic.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
       if (hasCarry && hasBorrow) break;
@@ -195,6 +195,70 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
     const problems = generateProblems('1-20', 'horizontal-add', 'none');
     const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
     expect(arithmetic.every(p => (p.num1 % 10) + (p.num2 % 10) <= 9)).toBe(true);
+  });
+});
+
+describe('generateProblems - Practice bands and worksheet density', () => {
+  it.each([
+    ['1-10', 20],
+    ['1-20', 40],
+    ['1-30', 60],
+    ['1-50', 60],
+    ['1-100', 60],
+  ] as const)('generates the horizontal count for %s', (range, count) => {
+    expect(generateProblems(range, 'horizontal-add')).toHaveLength(count);
+  });
+
+  it.each([
+    ['1-10', 2, 10],
+    ['1-20', 11, 20],
+    ['1-30', 21, 30],
+    ['1-50', 31, 50],
+    ['1-100', 51, 100],
+  ] as const)('keeps addition targets in the %s practice band', (range, min, max) => {
+    const problems = generateProblems(range, 'horizontal-add');
+    expect(problems.every(problem =>
+      problem.type === 'arithmetic' &&
+      problem.num1 + problem.num2 >= min &&
+      problem.num1 + problem.num2 <= max
+    )).toBe(true);
+  });
+
+  it('keeps subtraction minuends in the selected practice band', () => {
+    const problems = generateProblems('1-50', 'horizontal-sub');
+    expect(problems.every(problem =>
+      problem.type === 'arithmetic' && problem.num1 >= 31 && problem.num1 <= 50
+    )).toBe(true);
+  });
+});
+
+describe('generateProblems - Vertical operand shape', () => {
+  const verticalProblems = (lowerDigits: 'one' | 'two' | 'mixed') =>
+    generateProblems('1-100', 'vertical-mixed', 'mixed', 'mixed', 'practice', 5, false, lowerDigits)
+      .filter((problem): problem is Extract<Problem, { type: 'arithmetic' }> => problem.type === 'arithmetic');
+
+  it('uses 20 problems and always places a two-digit number on top', () => {
+    const problems = verticalProblems('mixed');
+    expect(problems).toHaveLength(20);
+    expect(problems.every(problem => problem.num1 >= 10 && problem.num1 <= 99)).toBe(true);
+  });
+
+  it('supports one-digit and two-digit lower operands', () => {
+    expect(verticalProblems('one').every(problem => problem.num2 >= 1 && problem.num2 <= 9)).toBe(true);
+    expect(verticalProblems('two').every(problem => problem.num2 >= 10 && problem.num2 <= 99)).toBe(true);
+  });
+
+  it('does not silently replace an impossible two-digit lower operand with a one-digit operand', () => {
+    const problems = generateProblems('1-20', 'vertical-add', 'only', 'mixed', 'practice', 5, false, 'two');
+    expect(problems).toHaveLength(0);
+  });
+
+  it('balances mixed lower-operand widths and operators', () => {
+    const problems = verticalProblems('mixed');
+    expect(problems.filter(problem => problem.num2 < 10)).toHaveLength(10);
+    expect(problems.filter(problem => problem.num2 >= 10)).toHaveLength(10);
+    expect(problems.filter(problem => problem.operator === '+')).toHaveLength(10);
+    expect(problems.filter(problem => problem.operator === '-')).toHaveLength(10);
   });
 });
 

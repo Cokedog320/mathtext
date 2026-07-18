@@ -3,7 +3,7 @@ import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { Dices, Printer, Download, FileQuestion } from 'lucide-react';
 
-import { Language, Range, Mode, RegroupOption, Problem, translations } from './types';
+import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations } from './types';
 import { generateProblems, getPrintTitle } from './utils/problemGenerator';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
@@ -45,6 +45,7 @@ export default function App() {
   const [range, setRange] = useState<Range>('1-10');
   const [mode, setMode] = useState<Mode | null>(null);
   const [regroup, setRegroup] = useState<RegroupOption>('mixed');
+  const [lowerOperandDigits, setLowerOperandDigits] = useState<LowerOperandDigits>('mixed');
   const [makeTenLeft, setMakeTenLeft] = useState<string>('mixed');
   const [hideTen, setHideTen] = useState<boolean>(false);
   const [hideBondParts, setHideBondParts] = useState<boolean>(false);
@@ -75,18 +76,19 @@ export default function App() {
     mtl = makeTenLeft, 
     but = bondUseType, 
     bn = bondNumber,
-    bt = isBlankTemplate
+    bt = isBlankTemplate,
+    lod = lowerOperandDigits
   ) => {
     if (!m) return;
-    setProblems(generateProblems(r, m, rg, mtl, but, bn, bt));
+    setProblems(generateProblems(r, m, rg, mtl, but, bn, bt, lod));
     setGenerateCount(c => c + 1);
   };
 
   useEffect(() => {
     if (mode) {
-      regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate);
+      regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits);
     }
-  }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate]);
+  }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits]);
 
   const handleRegenerate = () => {
     if (mode) regenerate();
@@ -94,7 +96,15 @@ export default function App() {
 
   const handleModeChange = (nextMode: Mode) => {
     setProblems([]);
+    if (nextMode.startsWith('vertical-') && (range === '1-10' || (range === '1-20' && lowerOperandDigits === 'two'))) {
+      setRange(lowerOperandDigits === 'two' ? '1-30' : '1-20');
+    }
     setMode(nextMode);
+  };
+
+  const handleLowerOperandDigitsChange = (digits: LowerOperandDigits) => {
+    if (digits === 'two' && range === '1-20') setRange('1-30');
+    setLowerOperandDigits(digits);
   };
 
   const handlePrint = () => {
@@ -182,6 +192,7 @@ export default function App() {
         range={range} setRange={setRange}
         mode={mode} setMode={handleModeChange}
         regroup={regroup} setRegroup={setRegroup}
+        lowerOperandDigits={lowerOperandDigits} setLowerOperandDigits={handleLowerOperandDigitsChange}
         makeTenLeft={makeTenLeft} setMakeTenLeft={setMakeTenLeft}
         hideTen={hideTen} setHideTen={setHideTen}
         hideBondParts={hideBondParts} setHideBondParts={setHideBondParts}

@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   // Accordion active sections
-  const [methodExpanded, setMethodExpanded] = useState(true);
+  const [methodExpanded, setMethodExpanded] = useState(false);
   const [arithmeticExpanded, setArithmeticExpanded] = useState(false);
 
   // Sync expanded status when mode changes externally

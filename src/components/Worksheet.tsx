@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Mode, Range, RegroupOption, Language, Problem, translations } from '../types';
 import { getPrintTitle } from '../utils/problemGenerator';
-import { NumberBond, VerticalArithmetic, HorizontalArithmetic, MethodDiagram } from './ProblemRenderers';
+import { NumberBond, VerticalArithmetic, HorizontalArithmetic, ChainedArithmetic, MethodDiagram } from './ProblemRenderers';
 
 export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -125,6 +125,18 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
   'horizontal-mixed': {
     component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
+  },
+  'horizontal-chain-add': {
+    component: ({ problem, index }) => <ChainedArithmetic problem={problem} index={index} />,
+    getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
+  },
+  'horizontal-chain-sub': {
+    component: ({ problem, index }) => <ChainedArithmetic problem={problem} index={index} />,
+    getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
+  },
+  'horizontal-chain-mixed': {
+    component: ({ problem, index }) => <ChainedArithmetic problem={problem} index={index} />,
+    getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   }
 };
 

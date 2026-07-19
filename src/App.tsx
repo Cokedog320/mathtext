@@ -3,8 +3,8 @@ import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { Dices, Printer, Download, FileQuestion } from 'lucide-react';
 
-import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations } from './types';
-import { generateProblems, getPrintTitle } from './utils/problemGenerator';
+import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, pdfFileNames } from './types';
+import { generateProblems, getPrintTitle, getRequestedProblemCount } from './utils/problemGenerator';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
 
@@ -13,33 +13,6 @@ export type { Problem } from './types';
 
 
 const LANGUAGE_KEY = 'math-language';
-
-const pdfFileNames: Record<Language, Record<Mode, string>> = {
-  zh: {
-    'number-bonds': '数字组合.pdf',
-    'vertical-add': '竖排加法.pdf',
-    'vertical-sub': '竖排减法.pdf',
-    'vertical-mixed': '竖排混合.pdf',
-    'horizontal-add': '横排加法.pdf',
-    'horizontal-sub': '横排减法.pdf',
-    'horizontal-mixed': '横排混合.pdf',
-    'make-ten': '凑十法.pdf',
-    'break-ten': '破十法.pdf',
-    'flat-ten': '平十法.pdf',
-  },
-  en: {
-    'number-bonds': 'number-bonds.pdf',
-    'vertical-add': 'vertical-addition.pdf',
-    'vertical-sub': 'vertical-subtraction.pdf',
-    'vertical-mixed': 'vertical-arithmetic.pdf',
-    'horizontal-add': 'horizontal-addition.pdf',
-    'horizontal-sub': 'horizontal-subtraction.pdf',
-    'horizontal-mixed': 'horizontal-arithmetic.pdf',
-    'make-ten': 'make-ten.pdf',
-    'break-ten': 'break-ten.pdf',
-    'flat-ten': 'flat-ten.pdf',
-  },
-};
 
 export default function App() {
   const [range, setRange] = useState<Range>('1-10');
@@ -53,6 +26,7 @@ export default function App() {
   const [bondUseType, setBondUseType] = useState<'practice' | 'study'>('practice');
   const [isBlankTemplate, setIsBlankTemplate] = useState<boolean>(false);
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [generationLimit, setGenerationLimit] = useState<{ actual: number; requested: number } | null>(null);
   const [generateCount, setGenerateCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
   const [language, setLanguage] = useState<Language>(() => {
@@ -80,7 +54,14 @@ export default function App() {
     lod = lowerOperandDigits
   ) => {
     if (!m) return;
-    setProblems(generateProblems(r, m, rg, mtl, but, bn, bt, lod));
+    const generated = generateProblems(r, m, rg, mtl, but, bn, bt, lod);
+    const requestedCount = getRequestedProblemCount(r, m, bn, bt);
+    setProblems(generated);
+    setGenerationLimit(
+      generated.length < requestedCount
+        ? { actual: generated.length, requested: requestedCount }
+        : null
+    );
     setGenerateCount(c => c + 1);
   };
 
@@ -96,6 +77,7 @@ export default function App() {
 
   const handleModeChange = (nextMode: Mode) => {
     setProblems([]);
+    setGenerationLimit(null);
     if (nextMode.startsWith('vertical-') && (range === '1-10' || (range === '1-20' && lowerOperandDigits === 'two'))) {
       setRange(lowerOperandDigits === 'two' ? '1-30' : '1-20');
     }
@@ -244,19 +226,26 @@ export default function App() {
         </div>
 
         {mode ? (
-          <Worksheet
-            mode={mode}
-            range={range}
-            regroup={regroup}
-            language={language}
-            bondNumber={bondNumber}
-            isBlankTemplate={isBlankTemplate}
-            hideBondParts={hideBondParts}
-            hideTen={hideTen}
-            problems={problems}
-            generateCount={generateCount}
-            worksheetRef={worksheetRef}
-          />
+          <>
+            {generationLimit && (
+              <div role="status" className="no-print mb-3 w-full max-w-[794px] rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+                {t.limitedProblemCount(generationLimit.actual, generationLimit.requested)}
+              </div>
+            )}
+            <Worksheet
+              mode={mode}
+              range={range}
+              regroup={regroup}
+              language={language}
+              bondNumber={bondNumber}
+              isBlankTemplate={isBlankTemplate}
+              hideBondParts={hideBondParts}
+              hideTen={hideTen}
+              problems={problems}
+              generateCount={generateCount}
+              worksheetRef={worksheetRef}
+            />
+          </>
         ) : (
           <div className="flex flex-1 min-h-[60vh] w-full max-w-2xl items-center justify-center px-6 text-center">
             <div className="flex flex-col items-center gap-4 text-slate-500 animate-fade-in-up">

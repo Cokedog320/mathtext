@@ -10,8 +10,9 @@ A small tool for generating elementary math practice worksheets. It supports num
   - 数字组合 / Number bonds
   - 竖式加法、竖式减法、竖式混合 / Vertical addition, subtraction, mixed
   - 横式加法、横式减法、横式混合 / Horizontal addition, subtraction, mixed
+  - 连续加法、连续减法、连续加减混合 / Chained addition, subtraction, mixed
   - 凑十法、破十法、平十法 / Make-ten, break-ten, flat-ten methods
-- **难度范围 / Difficulty ranges**：1-10、11-20、21-30、10-50、10-100
+- **练习区间 / Practice bands**：10以内（2–10）、20以内（11–20）、30以内（21–30）、50以内（31–50）、100以内（51–100）
 - **进退位控制 / Regrouping control**：混合、无进/退位、仅进/退位
 - **打印与导出 / Print & export**：打印预览、直接打印、下载 PDF
 - **中英双语界面 / Bilingual UI**：中文与英文一键切换

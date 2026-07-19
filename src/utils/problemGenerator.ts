@@ -9,6 +9,39 @@ export function shuffle<T>(array: T[]): T[] {
   return arr;
 }
 
+const PRACTICE_BANDS: Record<Range, [number, number]> = {
+  '1-10': [2, 10],
+  '1-20': [11, 20],
+  '1-30': [21, 30],
+  '1-50': [31, 50],
+  '1-100': [51, 100],
+};
+
+const HORIZONTAL_PROBLEM_COUNTS: Record<Range, number> = {
+  '1-10': 20,
+  '1-20': 24,
+  '1-30': 60,
+  '1-50': 30,
+  '1-100': 60,
+};
+
+const CHAINED_PROBLEM_COUNT = 20;
+
+export const getRequestedProblemCount = (
+  range: Range,
+  mode: Mode,
+  bondNumber: number | '2-10' = 5,
+  isBlankTemplate = false
+): number => {
+  if (mode === 'number-bonds') {
+    return isBlankTemplate || bondNumber === '2-10' ? 9 : bondNumber - 1;
+  }
+  if (mode.startsWith('horizontal-chain-')) return CHAINED_PROBLEM_COUNT;
+  if (mode.startsWith('vertical-')) return 20;
+  if (mode.startsWith('horizontal-')) return HORIZONTAL_PROBLEM_COUNTS[range];
+  return 20;
+};
+
 export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, language: Language, t: any): string => {
   const rangeMap: Record<Range, {zh: string, en: string}> = {
     '1-10': {zh: '10以内', en: 'Within 10'},
@@ -38,7 +71,10 @@ export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, 
     'vertical-mixed': '加减法',
     'horizontal-add': '加法',
     'horizontal-sub': '减法',
-    'horizontal-mixed': '加减混合'
+    'horizontal-mixed': '加减混合',
+    'horizontal-chain-add': '连续加法',
+    'horizontal-chain-sub': '连续减法',
+    'horizontal-chain-mixed': '连续加减混合',
   };
   const baseMapEn: Record<string, string> = {
     'vertical-add': 'Addition',
@@ -46,7 +82,10 @@ export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, 
     'vertical-mixed': 'Arithmetic',
     'horizontal-add': 'Addition',
     'horizontal-sub': 'Subtraction',
-    'horizontal-mixed': 'Mixed Arithmetic'
+    'horizontal-mixed': 'Mixed Arithmetic',
+    'horizontal-chain-add': 'Chained Addition',
+    'horizontal-chain-sub': 'Chained Subtraction',
+    'horizontal-chain-mixed': 'Chained Mixed Arithmetic',
   };
 
   const isArithmetic = Object.keys(baseMapZh).includes(mode);
@@ -139,6 +178,129 @@ const takeBalancedCandidates = <T>(
   return shuffle(selected);
 };
 
+type BalanceKey = string | number | boolean;
+
+const takeBalancedAcrossDimensions = <T>(
+  candidates: T[],
+  limit: number,
+  primaryDimensions: Array<(candidate: T) => BalanceKey>,
+  secondaryDimensions: Array<(candidate: T) => BalanceKey> = [],
+  priorSelections: T[] = []
+): T[] => {
+  const dimensions = [...primaryDimensions, ...secondaryDimensions];
+  type CandidateGroup = { values: BalanceKey[]; candidates: T[] };
+  const groups = new Map<string, CandidateGroup>();
+  for (const candidate of candidates) {
+    const values = dimensions.map(dimension => dimension(candidate));
+    const key = JSON.stringify(values);
+    const group = groups.get(key) ?? { values, candidates: [] };
+    group.candidates.push(candidate);
+    groups.set(key, group);
+  }
+
+  const distinctValueCounts = dimensions.map((_, dimensionIndex) => {
+    const distinctValues = new Set(
+      [
+        ...[...groups.values()].map(group => group.values[dimensionIndex]),
+        ...priorSelections.map(candidate => dimensions[dimensionIndex](candidate)),
+      ]
+    ).size;
+    return distinctValues;
+  });
+  const totalLimit = limit + priorSelections.length;
+  const idealCounts = distinctValueCounts.map(distinctValues =>
+    Math.max(1, totalLimit / distinctValues)
+  );
+  const primaryCaps = distinctValueCounts
+    .slice(0, primaryDimensions.length)
+    .map(distinctValues => Math.max(1, Math.ceil(totalLimit / distinctValues)));
+  const compareScores = (left: number[], right: number[]): number => {
+    for (let index = 0; index < left.length; index++) {
+      if (left[index] !== right[index]) return left[index] - right[index];
+    }
+    return 0;
+  };
+
+  const selectAtCap = (capOffset: number): T[] => {
+    const workingGroups = [...groups.values()].map(group => ({
+      values: group.values,
+      candidates: [...group.candidates],
+    }));
+    const counts = dimensions.map(() => new Map<BalanceKey, number>());
+    for (const priorSelection of priorSelections) {
+      dimensions.forEach((dimension, index) => {
+        const value = dimension(priorSelection);
+        counts[index].set(value, (counts[index].get(value) ?? 0) + 1);
+      });
+    }
+    const selected: T[] = [];
+
+    while (selected.length < limit) {
+      const eligibleGroups = workingGroups.filter(group =>
+        group.candidates.length > 0 &&
+        group.values.slice(0, primaryDimensions.length).every((value, index) =>
+          (counts[index].get(value) ?? 0) < primaryCaps[index] + capOffset
+        )
+      );
+      if (eligibleGroups.length === 0) break;
+
+      const availability = primaryDimensions.map(() => new Map<BalanceKey, number>());
+      for (const group of eligibleGroups) {
+        group.values.slice(0, primaryDimensions.length).forEach((value, index) => {
+          availability[index].set(value, (availability[index].get(value) ?? 0) + 1);
+        });
+      }
+
+      let bestScore: number[] | null = null;
+      let bestGroups: CandidateGroup[] = [];
+      for (const group of eligibleGroups) {
+        const valueAvailability = group.values
+          .slice(0, primaryDimensions.length)
+          .map((value, index) => availability[index].get(value) ?? 0);
+        const projectedLoads = group.values.map((value, index) =>
+          ((counts[index].get(value) ?? 0) + 1) / idealCounts[index]
+        );
+        const primaryLoads = projectedLoads.slice(0, primaryDimensions.length);
+        const secondaryLoads = projectedLoads.slice(primaryDimensions.length);
+        const score = [
+          secondaryLoads.length > 0 ? Math.max(...secondaryLoads) : 0,
+          secondaryLoads.reduce((sum, load) => sum + load, 0),
+          Math.min(...valueAvailability),
+          valueAvailability.reduce((sum, value) => sum + value, 0),
+          Math.max(...primaryLoads),
+          primaryLoads.reduce((sum, load) => sum + load, 0),
+        ];
+        const comparison = bestScore === null ? -1 : compareScores(score, bestScore);
+        if (comparison < 0) {
+          bestScore = score;
+          bestGroups = [group];
+        } else if (comparison === 0) {
+          bestGroups.push(group);
+        }
+      }
+
+      const group = bestGroups[Math.floor(Math.random() * bestGroups.length)];
+      const candidateIndex = Math.floor(Math.random() * group.candidates.length);
+      const [candidate] = group.candidates.splice(candidateIndex, 1);
+      selected.push(candidate);
+      group.values.forEach((value, index) => {
+        counts[index].set(value, (counts[index].get(value) ?? 0) + 1);
+      });
+    }
+
+    return selected;
+  };
+
+  for (let capOffset = 0; capOffset <= limit; capOffset++) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const selected = selectAtCap(capOffset);
+      if (selected.length === limit || capOffset === limit) return shuffle(selected);
+    }
+  }
+
+  return [];
+};
+
 const generateMakeTen = (
   range: Range,
   regroup: RegroupOption,
@@ -180,6 +342,212 @@ const generateBreakTenOrFlatTen = (
     .map(({ a, b }, id) => ({ id, type: 'method', num1: a, num2: b, operator: '-', method: mode }));
 };
 
+type ArithmeticOperator = '+' | '-';
+type ChainedMode = Extract<Mode, 'horizontal-chain-add' | 'horizontal-chain-sub' | 'horizontal-chain-mixed'>;
+type ChainedCandidate = {
+  operands: [number, number, number];
+  operators: [ArithmeticOperator, ArithmeticOperator];
+  intermediateResult: number;
+  result: number;
+  needsRegroup: boolean;
+};
+
+const calculate = (left: number, operator: ArithmeticOperator, right: number): number =>
+  operator === '+' ? left + right : left - right;
+
+const additionRequiresRegroup = (left: number, right: number): boolean => {
+  let remainingLeft = left;
+  let remainingRight = right;
+  while (remainingLeft > 0 || remainingRight > 0) {
+    if ((remainingLeft % 10) + (remainingRight % 10) >= 10) return true;
+    remainingLeft = Math.floor(remainingLeft / 10);
+    remainingRight = Math.floor(remainingRight / 10);
+  }
+  return false;
+};
+
+const subtractionRequiresRegroup = (left: number, right: number): boolean => {
+  let remainingLeft = left;
+  let remainingRight = right;
+  while (remainingLeft > 0 || remainingRight > 0) {
+    if ((remainingLeft % 10) < (remainingRight % 10)) return true;
+    remainingLeft = Math.floor(remainingLeft / 10);
+    remainingRight = Math.floor(remainingRight / 10);
+  }
+  return false;
+};
+
+export const requiresRegroup = (
+  left: number,
+  operator: ArithmeticOperator,
+  right: number
+): boolean => operator === '+'
+  ? additionRequiresRegroup(left, right)
+  : subtractionRequiresRegroup(left, right);
+
+const matchesRegroup = (needsRegroup: boolean, regroup: RegroupOption): boolean =>
+  regroup === 'mixed' || (regroup === 'only' ? needsRegroup : !needsRegroup);
+
+const buildChainedCandidates = (
+  range: Range,
+  mode: ChainedMode,
+  regroup: RegroupOption
+): ChainedCandidate[] => {
+  const [minTarget, maxTarget] = PRACTICE_BANDS[range];
+  const operatorPairs: Record<ChainedMode, [ArithmeticOperator, ArithmeticOperator]> = {
+    'horizontal-chain-add': ['+', '+'],
+    'horizontal-chain-sub': ['-', '-'],
+    'horizontal-chain-mixed': ['+', '-'],
+  };
+  const addThenSubtract = operatorPairs['horizontal-chain-mixed'];
+  const subtractThenAdd: [ArithmeticOperator, ArithmeticOperator] = ['-', '+'];
+  const retainedPerBalanceGroup = 5;
+  type CandidateReservoir = { seen: number; candidates: ChainedCandidate[] };
+  const reservoirs = new Map<number, CandidateReservoir>();
+  const append = (
+    first: number,
+    second: number,
+    third: number,
+    operators: [ArithmeticOperator, ArithmeticOperator]
+  ) => {
+    const intermediateResult = calculate(first, operators[0], second);
+    const result = calculate(intermediateResult, operators[1], third);
+    const needsRegroup =
+      requiresRegroup(first, operators[0], second) ||
+      requiresRegroup(intermediateResult, operators[1], third);
+    if (!matchesRegroup(needsRegroup, regroup)) return;
+
+    const pattern = operators[0] === '+' ? 0 : 1;
+    const key = (((pattern * 2 + Number(needsRegroup)) * 101 + first) * 101) + result;
+    const reservoir = reservoirs.get(key) ?? { seen: 0, candidates: [] };
+    reservoir.seen += 1;
+    const retainedIndex = reservoir.candidates.length < retainedPerBalanceGroup
+      ? reservoir.candidates.length
+      : Math.floor(Math.random() * reservoir.seen);
+    if (retainedIndex >= retainedPerBalanceGroup) return;
+
+    const candidate: ChainedCandidate = {
+      operands: [first, second, third],
+      operators,
+      intermediateResult,
+      result,
+      needsRegroup,
+    };
+    if (reservoir.candidates.length < retainedPerBalanceGroup) {
+      reservoir.candidates.push(candidate);
+    } else {
+      reservoir.candidates[retainedIndex] = candidate;
+    }
+    reservoirs.set(key, reservoir);
+  };
+
+  if (mode === 'horizontal-chain-add') {
+    for (let target = minTarget; target <= maxTarget; target++) {
+      for (let first = 1; first <= target - 2; first++) {
+        for (let second = 1; second <= target - first - 1; second++) {
+          append(first, second, target - first - second, operatorPairs[mode]);
+        }
+      }
+    }
+  } else if (mode === 'horizontal-chain-sub') {
+    for (let first = minTarget; first <= maxTarget; first++) {
+      for (let second = 1; second <= first - 2; second++) {
+        const intermediate = first - second;
+        for (let third = 1; third < intermediate; third++) {
+          append(first, second, third, operatorPairs[mode]);
+        }
+      }
+    }
+  } else {
+    for (let intermediate = minTarget; intermediate <= maxTarget; intermediate++) {
+      for (let first = 1; first < intermediate; first++) {
+        const second = intermediate - first;
+        for (let third = 1; third < intermediate; third++) {
+          append(first, second, third, addThenSubtract);
+        }
+      }
+    }
+    for (let first = minTarget; first <= maxTarget; first++) {
+      for (let second = 1; second < first; second++) {
+        const intermediate = first - second;
+        for (let third = 1; intermediate + third <= maxTarget; third++) {
+          append(first, second, third, subtractThenAdd);
+        }
+      }
+    }
+  }
+
+  return [...reservoirs.values()].flatMap(reservoir => reservoir.candidates);
+};
+
+const selectChainedCandidates = (
+  candidates: ChainedCandidate[],
+  limit: number,
+  priorSelections: ChainedCandidate[] = []
+): ChainedCandidate[] => takeBalancedAcrossDimensions(candidates, limit, [
+  candidate => candidate.operands[0],
+  candidate => candidate.result,
+], [
+  candidate => candidate.needsRegroup,
+], priorSelections);
+
+const generateChainedArithmetic = (
+  range: Range,
+  mode: ChainedMode,
+  regroup: RegroupOption
+): Problem[] => {
+  const candidates = buildChainedCandidates(range, mode, regroup);
+  let selected: ChainedCandidate[];
+  if (mode === 'horizontal-chain-mixed') {
+    const plusMinusCandidates: ChainedCandidate[] = [];
+    const minusPlusCandidates: ChainedCandidate[] = [];
+    for (const candidate of candidates) {
+      (candidate.operators[0] === '+' ? plusMinusCandidates : minusPlusCandidates).push(candidate);
+    }
+    const maximumFrequency = (values: number[]): number => {
+      const counts = new Map<number, number>();
+      for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+      return Math.max(0, ...counts.values());
+    };
+    const attempts = range === '1-10' && regroup === 'mixed' ? 20 : 1;
+    let bestSelection: ChainedCandidate[] = [];
+    let bestConcentration = Number.POSITIVE_INFINITY;
+
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const plusMinus = selectChainedCandidates(
+        plusMinusCandidates,
+        CHAINED_PROBLEM_COUNT / 2
+      );
+      const minusPlus = selectChainedCandidates(
+        minusPlusCandidates,
+        CHAINED_PROBLEM_COUNT / 2,
+        plusMinus
+      );
+      const combined = [...plusMinus, ...minusPlus];
+      const concentration = Math.max(
+        maximumFrequency(combined.map(candidate => candidate.operands[0])),
+        maximumFrequency(combined.map(candidate => candidate.result))
+      );
+      if (concentration < bestConcentration) {
+        bestSelection = combined;
+        bestConcentration = concentration;
+      }
+      if (concentration <= 3) break;
+    }
+
+    selected = bestSelection;
+  } else {
+    selected = selectChainedCandidates(candidates, CHAINED_PROBLEM_COUNT);
+  }
+
+  return shuffle(selected).map((candidate, id) => ({
+    id,
+    type: 'arithmetic-chain',
+    operands: candidate.operands,
+    operators: candidate.operators,
+  }));
+};
+
 const generateArithmetic = (
   range: Range,
   mode: Mode,
@@ -187,15 +555,8 @@ const generateArithmetic = (
   lowerOperandDigits: LowerOperandDigits
 ): Problem[] => {
   const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
-  const horizontalCounts: Record<Range, number> = {
-    '1-10': 20, '1-20': 24, '1-30': 60, '1-50': 30, '1-100': 60,
-  };
-  const maxProblems = isVertical ? 20 : horizontalCounts[range];
-  const practiceBands: Record<Range, [number, number]> = {
-    '1-10': [2, 10], '1-20': [11, 20], '1-30': [21, 30],
-    '1-50': [31, 50], '1-100': [51, 100],
-  };
-  const [minTarget, maxTarget] = practiceBands[range];
+  const maxProblems = isVertical ? 20 : HORIZONTAL_PROBLEM_COUNTS[range];
+  const [minTarget, maxTarget] = PRACTICE_BANDS[range];
 
   const includeAdd = mode.includes('-add') || mode.includes('-mixed');
   const includeSub = mode.includes('-sub') || mode.includes('-mixed');
@@ -214,7 +575,7 @@ const generateArithmetic = (
       for (let num1 = 1; num1 < S; num1++) {
         const num2 = S - num1;
         if (isVertical && (num1 < 10 || num1 > 99)) continue;
-        const isCarry = (num1 % 10) + (num2 % 10) >= 10;
+        const isCarry = additionRequiresRegroup(num1, num2);
         if (regroup === 'none' && isCarry) continue;
         if (regroup === 'only' && !isCarry) continue;
         candidates.push({
@@ -229,7 +590,7 @@ const generateArithmetic = (
     for (let M = minTarget; M <= maxTarget; M++) {
       for (let num2 = 1; num2 < M; num2++) {
         if (isVertical && (M < 10 || M > 99)) continue;
-        const isBorrow = (M % 10) < (num2 % 10);
+        const isBorrow = subtractionRequiresRegroup(M, num2);
         if (regroup === 'none' && isBorrow) continue;
         if (regroup === 'only' && !isBorrow) continue;
         candidates.push({
@@ -318,6 +679,9 @@ const GENERATOR_STRATEGIES: Record<Mode, (
   'horizontal-add': (range, regroup) => generateArithmetic(range, 'horizontal-add', regroup, 'mixed'),
   'horizontal-sub': (range, regroup) => generateArithmetic(range, 'horizontal-sub', regroup, 'mixed'),
   'horizontal-mixed': (range, regroup) => generateArithmetic(range, 'horizontal-mixed', regroup, 'mixed'),
+  'horizontal-chain-add': (range, regroup) => generateChainedArithmetic(range, 'horizontal-chain-add', regroup),
+  'horizontal-chain-sub': (range, regroup) => generateChainedArithmetic(range, 'horizontal-chain-sub', regroup),
+  'horizontal-chain-mixed': (range, regroup) => generateChainedArithmetic(range, 'horizontal-chain-mixed', regroup),
 };
 
 export const generateProblems = (

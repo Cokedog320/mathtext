@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { VerticalArithmetic } from './ProblemRenderers';
+import { ChainedArithmetic, VerticalArithmetic } from './ProblemRenderers';
 
 const renderVertical = (operator: '+' | '-', regroup: 'mixed' | 'none' | 'only') =>
   renderToStaticMarkup(
@@ -29,5 +29,24 @@ describe('VerticalArithmetic work boxes', () => {
   it('hides all work boxes when regrouping is disabled', () => {
     expect(renderVertical('+', 'none')).not.toContain('data-work-box=');
     expect(renderVertical('-', 'none')).not.toContain('data-work-box=');
+  });
+});
+
+describe('ChainedArithmetic', () => {
+  it('renders all three operands and both operators in order', () => {
+    const markup = renderToStaticMarkup(
+      <ChainedArithmetic
+        problem={{
+          id: 1,
+          type: 'arithmetic-chain',
+          operands: [8, 2, 3],
+          operators: ['+', '-'],
+        }}
+        index={0}
+      />,
+    );
+    const visibleText = markup.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
+
+    expect(visibleText).toContain('1.8+2-3=');
   });
 });

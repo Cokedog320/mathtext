@@ -1,12 +1,13 @@
 export type Language = 'zh' | 'en';
 export type Range = '1-10' | '1-20' | '1-30' | '1-50' | '1-100';
-export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed';
+export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed' | 'horizontal-chain-add' | 'horizontal-chain-sub' | 'horizontal-chain-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 export type LowerOperandDigits = 'mixed' | 'one' | 'two';
 
 export type Problem = 
   | { id: number; type: 'bond'; top: number | string; left: number | string; right: number | string; isBlank?: boolean }
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
+  | { id: number; type: 'arithmetic-chain'; operands: [number, number, number]; operators: ['+' | '-', '+' | '-'] }
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
 
 export const pdfFileNames: Record<Language, Record<Mode, string>> = {
@@ -18,6 +19,9 @@ export const pdfFileNames: Record<Language, Record<Mode, string>> = {
     'horizontal-add': '横排加法.pdf',
     'horizontal-sub': '横排减法.pdf',
     'horizontal-mixed': '横排混合.pdf',
+    'horizontal-chain-add': '连续加法.pdf',
+    'horizontal-chain-sub': '连续减法.pdf',
+    'horizontal-chain-mixed': '连续加减混合.pdf',
     'make-ten': '凑十法.pdf',
     'break-ten': '破十法.pdf',
     'flat-ten': '平十法.pdf',
@@ -30,6 +34,9 @@ export const pdfFileNames: Record<Language, Record<Mode, string>> = {
     'horizontal-add': 'horizontal-addition.pdf',
     'horizontal-sub': 'horizontal-subtraction.pdf',
     'horizontal-mixed': 'horizontal-arithmetic.pdf',
+    'horizontal-chain-add': 'chained-addition.pdf',
+    'horizontal-chain-sub': 'chained-subtraction.pdf',
+    'horizontal-chain-mixed': 'chained-mixed-arithmetic.pdf',
     'make-ten': 'make-ten.pdf',
     'break-ten': 'break-ten.pdf',
     'flat-ten': 'flat-ten.pdf',
@@ -42,7 +49,7 @@ export const translations = {
     preview: '打印预览',
     worksheetTitle: '习题定制',
     mode: '题型',
-    range: '难度',
+    range: '练习区间',
     regroup: '进退位',
     lowerOperandDigits: '下方数位数',
     makeTenLeft: '左加数',
@@ -66,6 +73,9 @@ export const translations = {
       'horizontal-add': '横排加法',
       'horizontal-sub': '横排减法',
       'horizontal-mixed': '横排混合',
+      'horizontal-chain-add': '连续加法',
+      'horizontal-chain-sub': '连续减法',
+      'horizontal-chain-mixed': '连续加减混合',
       'make-ten': '凑十法',
       'break-ten': '破十法',
       'flat-ten': '平十法',
@@ -96,6 +106,9 @@ export const translations = {
       'horizontal-add': '横排加法',
       'horizontal-sub': '横排减法',
       'horizontal-mixed': '横排混合',
+      'horizontal-chain-add': '连续加法',
+      'horizontal-chain-sub': '连续减法',
+      'horizontal-chain-mixed': '连续加减混合',
       'make-ten': '凑十法',
       'break-ten': '破十法',
       'flat-ten': '平十法',
@@ -105,13 +118,15 @@ export const translations = {
     blankTemplate: '空白模板模式',
     selectProblemType: '请选择习题类型',
     selectProblemTypeHint: '从左侧选择一种练习，习题预览将在这里显示。',
+    limitedProblemCount: (actual: number, requested: number) =>
+      `当前配置最多可生成 ${actual} 道不重复题，少于计划的 ${requested} 道。`,
   },
   en: {
     settings: 'Settings',
     preview: 'Preview',
     worksheetTitle: 'Worksheet Settings',
     mode: 'Mode',
-    range: 'Range',
+    range: 'Practice Band',
     regroup: 'Regroup',
     lowerOperandDigits: 'Lower Operand Digits',
     makeTenLeft: 'Left Addend',
@@ -135,6 +150,9 @@ export const translations = {
       'horizontal-add': 'Horizontal Addition',
       'horizontal-sub': 'Horizontal Subtraction',
       'horizontal-mixed': 'Horizontal Mixed',
+      'horizontal-chain-add': 'Chained Addition',
+      'horizontal-chain-sub': 'Chained Subtraction',
+      'horizontal-chain-mixed': 'Chained Mixed',
       'make-ten': 'Make-Ten Method',
       'break-ten': 'Break-Ten Method',
       'flat-ten': 'Flat-Ten Method',
@@ -165,6 +183,9 @@ export const translations = {
       'horizontal-add': 'Horizontal Addition',
       'horizontal-sub': 'Horizontal Subtraction',
       'horizontal-mixed': 'Horizontal Arithmetic',
+      'horizontal-chain-add': 'Chained Addition',
+      'horizontal-chain-sub': 'Chained Subtraction',
+      'horizontal-chain-mixed': 'Chained Mixed Arithmetic',
       'make-ten': 'Make-Ten Method',
       'break-ten': 'Break-Ten Method',
       'flat-ten': 'Flat-Ten Method',
@@ -174,5 +195,7 @@ export const translations = {
     blankTemplate: 'Blank Template Mode',
     selectProblemType: 'Select a problem type',
     selectProblemTypeHint: 'Choose an exercise from the left to see its worksheet preview here.',
+    limitedProblemCount: (actual: number, requested: number) =>
+      `This configuration has ${actual} unique problems, fewer than the requested ${requested}.`,
   },
 };

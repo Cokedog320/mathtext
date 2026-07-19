@@ -60,7 +60,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const methodModes: Mode[] = ['number-bonds', 'make-ten', 'break-ten', 'flat-ten'];
   const arithmeticModes: Mode[] = [
     'vertical-add', 'vertical-sub', 'vertical-mixed',
-    'horizontal-add', 'horizontal-sub', 'horizontal-mixed'
+    'horizontal-add', 'horizontal-sub', 'horizontal-mixed',
+    'horizontal-chain-add', 'horizontal-chain-sub', 'horizontal-chain-mixed'
   ];
   const isVerticalMode = mode?.startsWith('vertical-') ?? false;
 

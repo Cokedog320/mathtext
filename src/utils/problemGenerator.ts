@@ -109,12 +109,41 @@ const generateNumberBonds = (
   return problems;
 };
 
+const takeBalancedCandidates = <T>(
+  candidates: T[],
+  limit: number,
+  groupKey: (candidate: T) => string | number
+): T[] => {
+  const grouped = new Map<string | number, T[]>();
+  for (const candidate of candidates) {
+    const key = groupKey(candidate);
+    const group = grouped.get(key) ?? [];
+    group.push(candidate);
+    grouped.set(key, group);
+  }
+
+  const queues = shuffle([...grouped.values()]).map(group => shuffle(group));
+  const selected: T[] = [];
+  while (selected.length < limit) {
+    let addedInRound = false;
+    for (const queue of queues) {
+      const candidate = queue.pop();
+      if (candidate === undefined) continue;
+      selected.push(candidate);
+      addedInRound = true;
+      if (selected.length === limit) break;
+    }
+    if (!addedInRound) break;
+  }
+
+  return shuffle(selected);
+};
+
 const generateMakeTen = (
   range: Range,
   regroup: RegroupOption,
   makeTenLeft: string
 ): Problem[] => {
-  const problems: Problem[] = [];
   const candidates: { a: number; b: number }[] = [];
   const aValues: number[] = [];
   if (makeTenLeft === 'mixed') {
@@ -133,24 +162,13 @@ const generateMakeTen = (
     }
   }
 
-  const shuffled = shuffle(candidates);
-  if (shuffled.length === 0) return [];
-  let index = 0;
-  while (problems.length < 20) {
-    if (index >= shuffled.length) {
-      shuffle(shuffled);
-      index = 0;
-    }
-    const { a, b } = shuffled[index++];
-    problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '+', method: 'make-ten' });
-  }
-  return problems;
+  return takeBalancedCandidates(candidates, 20, candidate => candidate.a)
+    .map(({ a, b }, id) => ({ id, type: 'method', num1: a, num2: b, operator: '+', method: 'make-ten' }));
 };
 
 const generateBreakTenOrFlatTen = (
   mode: 'break-ten' | 'flat-ten'
 ): Problem[] => {
-  const problems: Problem[] = [];
   const candidates: { a: number; b: number }[] = [];
   for (let a = 11; a <= 18; a++) {
     for (let b = Math.max(1, a - 9); b <= Math.min(9, a - 1); b++) {
@@ -158,18 +176,8 @@ const generateBreakTenOrFlatTen = (
     }
   }
 
-  const shuffled = shuffle(candidates);
-  if (shuffled.length === 0) return [];
-  let index = 0;
-  while (problems.length < 20) {
-    if (index >= shuffled.length) {
-      shuffle(shuffled);
-      index = 0;
-    }
-    const { a, b } = shuffled[index++];
-    problems.push({ id: problems.length, type: 'method', num1: a, num2: b, operator: '-', method: mode });
-  }
-  return problems;
+  return takeBalancedCandidates(candidates, 20, candidate => candidate.a)
+    .map(({ a, b }, id) => ({ id, type: 'method', num1: a, num2: b, operator: '-', method: mode }));
 };
 
 const generateArithmetic = (
@@ -180,7 +188,7 @@ const generateArithmetic = (
 ): Problem[] => {
   const isVertical = ['vertical-add', 'vertical-sub', 'vertical-mixed'].includes(mode);
   const horizontalCounts: Record<Range, number> = {
-    '1-10': 20, '1-20': 40, '1-30': 60, '1-50': 60, '1-100': 60,
+    '1-10': 20, '1-20': 24, '1-30': 60, '1-50': 30, '1-100': 60,
   };
   const maxProblems = isVertical ? 20 : horizontalCounts[range];
   const practiceBands: Record<Range, [number, number]> = {
@@ -234,6 +242,16 @@ const generateArithmetic = (
 
   const chosen: Candidate[] = [];
   const used = new Set<string>();
+  const candidateKey = (candidate: Candidate): string => {
+    if (!isVertical) {
+      const whole = candidate.operator === '+' ? candidate.num1 + candidate.num2 : candidate.num1;
+      const parts = candidate.operator === '+'
+        ? [candidate.num1, candidate.num2]
+        : [candidate.num2, candidate.num1 - candidate.num2];
+      return `${whole}|${parts.sort((a, b) => a - b).join('|')}`;
+    }
+    return `${candidate.num1}${candidate.operator}${candidate.num2}`;
+  };
   for (let i = 0; i < maxProblems; i++) {
     const desiredOperator: '+' | '-' | undefined = includeAdd && includeSub
       ? (i % 2 === 0 ? '+' : '-')
@@ -255,18 +273,21 @@ const generateArithmetic = (
           ]
         : []),
     ];
-    let pool: Candidate[] = [];
+    let selectionPool: Candidate[] = [];
     for (const filter of filters) {
-      pool = candidates.filter(filter);
-      if (pool.length > 0) break;
-    }
-    if (pool.length === 0) break;
+      const unused = candidates.filter(c =>
+        filter(c) && !used.has(candidateKey(c))
+      );
+      if (unused.length === 0) continue;
 
-    const unused = pool.filter(c => !used.has(`${c.num1}${c.operator}${c.num2}`));
-    const preferred = unused.filter(c => c.num2 !== 1 && (c.operator === '-' || c.num1 !== 1));
-    const selectionPool = preferred.length > 0 ? preferred : (unused.length > 0 ? unused : pool);
+      const preferred = unused.filter(c => c.num2 !== 1 && (c.operator === '-' || c.num1 !== 1));
+      selectionPool = preferred.length > 0 ? preferred : unused;
+      break;
+    }
+    if (selectionPool.length === 0) break;
+
     const selected = selectionPool[Math.floor(Math.random() * selectionPool.length)];
-    used.add(`${selected.num1}${selected.operator}${selected.num2}`);
+    used.add(candidateKey(selected));
     chosen.push(selected);
   }
 

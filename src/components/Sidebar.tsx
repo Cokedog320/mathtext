@@ -318,19 +318,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="regroup" className="text-sm font-bold text-gray-800">{t.regroup}</label>
-                <select 
-                  id="regroup" 
-                  value={regroup} 
-                  onChange={handleRegroupChange}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="mixed">{t.regroupOptions.mixed}</option>
-                  <option value="none">{t.regroupOptions.none}</option>
-                  <option value="only">{t.regroupOptions.only}</option>
-                </select>
-              </div>
+              {range !== '1-10' && (
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="regroup" className="text-sm font-bold text-gray-800">{t.regroup}</label>
+                  <select
+                    id="regroup"
+                    value={regroup}
+                    onChange={handleRegroupChange}
+                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="mixed">{t.regroupOptions.mixed}</option>
+                    <option value="none">{t.regroupOptions.none}</option>
+                    <option value="only">{t.regroupOptions.only}</option>
+                  </select>
+                </div>
+              )}
 
               {isVerticalMode && (
                 <div className="flex flex-col gap-1.5">

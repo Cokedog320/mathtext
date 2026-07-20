@@ -401,7 +401,7 @@ const buildChainedCandidates = (
   };
   const addThenSubtract = operatorPairs['horizontal-chain-mixed'];
   const subtractThenAdd: [ArithmeticOperator, ArithmeticOperator] = ['-', '+'];
-  const retainedPerBalanceGroup = 5;
+  const retainedPerBalanceGroup = range === '1-10' ? Number.POSITIVE_INFINITY : 5;
   type CandidateReservoir = { seen: number; candidates: ChainedCandidate[] };
   const reservoirs = new Map<number, CandidateReservoir>();
   const append = (
@@ -480,65 +480,250 @@ const buildChainedCandidates = (
   return [...reservoirs.values()].flatMap(reservoir => reservoir.candidates);
 };
 
+const selectWithinTenChainedCandidates = (
+  candidates: ChainedCandidate[],
+  limit: number
+): ChainedCandidate[] => {
+  const usesOne = (candidate: ChainedCandidate): boolean =>
+    candidate.operands[1] === 1 || candidate.operands[2] === 1;
+  const operatorKey = (candidate: ChainedCandidate): string => candidate.operators.join('');
+  const operatorKinds = [...new Set(candidates.map(operatorKey))];
+  const operatorTarget = limit / operatorKinds.length;
+  const primaryDistributionCap = 10;
+  const laterOperandCap = 9;
+  const increment = <K>(counts: Map<K, number>, key: K): void => {
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  };
+  const compareScores = (left: number[], right: number[]): number => {
+    for (let index = 0; index < left.length; index++) {
+      if (left[index] !== right[index]) return left[index] - right[index];
+    }
+    return 0;
+  };
+
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const ordered = shuffle(candidates);
+    const selected: ChainedCandidate[] = [];
+    const starts = new Map<number, number>();
+    const results = new Map<number, number>();
+    const seconds = new Map<number, number>();
+    const thirds = new Map<number, number>();
+    const operators = new Map<string, number>();
+    let oneProblems = 0;
+
+    while (selected.length < limit) {
+      const slotsRemaining = limit - selected.length;
+      const oneProblemsNeeded = 2 - oneProblems;
+      let bestScore: number[] | null = null;
+      let bestCandidates: ChainedCandidate[] = [];
+
+      for (const candidate of ordered) {
+        if (selected.includes(candidate)) continue;
+        const [first, second, third] = candidate.operands;
+        const kind = operatorKey(candidate);
+        const oneProblem = usesOne(candidate);
+        const startCap = first === 10 ? 3 : primaryDistributionCap;
+        const resultCap = candidate.result === 10 ? 3 : primaryDistributionCap;
+
+        if (oneProblem && oneProblems >= 2) continue;
+        if (!oneProblem && slotsRemaining === oneProblemsNeeded) continue;
+        if ((operators.get(kind) ?? 0) >= operatorTarget) continue;
+        if ((starts.get(first) ?? 0) >= startCap) continue;
+        if ((results.get(candidate.result) ?? 0) >= resultCap) continue;
+        if ((seconds.get(second) ?? 0) >= laterOperandCap) continue;
+        if ((thirds.get(third) ?? 0) >= laterOperandCap) continue;
+
+        const score = [
+          ((operators.get(kind) ?? 0) + 1) / operatorTarget,
+          ((oneProblem ? oneProblems : selected.length - oneProblems) + 1) /
+            (oneProblem ? 2 : limit - 2),
+          Math.max(
+            ((starts.get(first) ?? 0) + 1) / 4,
+            ((results.get(candidate.result) ?? 0) + 1) / 4
+          ),
+          ((starts.get(first) ?? 0) + 1) / 4 +
+            ((results.get(candidate.result) ?? 0) + 1) / 4,
+          Math.max(
+            ((seconds.get(second) ?? 0) + 1) / laterOperandCap,
+            ((thirds.get(third) ?? 0) + 1) / laterOperandCap
+          ),
+          (starts.get(first) ?? 0) +
+            (results.get(candidate.result) ?? 0) +
+            (seconds.get(second) ?? 0) +
+            (thirds.get(third) ?? 0),
+        ];
+        const comparison = bestScore === null ? -1 : compareScores(score, bestScore);
+        if (comparison < 0) {
+          bestScore = score;
+          bestCandidates = [candidate];
+        } else if (comparison === 0) {
+          bestCandidates.push(candidate);
+        }
+      }
+
+      if (bestCandidates.length === 0) break;
+      const candidate = bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
+      const [first, second, third] = candidate.operands;
+      selected.push(candidate);
+      increment(starts, first);
+      increment(results, candidate.result);
+      increment(seconds, second);
+      increment(thirds, third);
+      increment(operators, operatorKey(candidate));
+      if (usesOne(candidate)) oneProblems += 1;
+    }
+
+    if (selected.length === limit && oneProblems === 2) {
+      return shuffle(selected);
+    }
+  }
+
+  return [];
+};
+
 const selectChainedCandidates = (
   candidates: ChainedCandidate[],
   limit: number,
-  priorSelections: ChainedCandidate[] = []
-): ChainedCandidate[] => takeBalancedAcrossDimensions(candidates, limit, [
-  candidate => candidate.operands[0],
-  candidate => candidate.result,
-], [
-  candidate => candidate.needsRegroup,
-], priorSelections);
+  regroup: RegroupOption
+): ChainedCandidate[] => {
+  const usesOne = (candidate: ChainedCandidate): boolean =>
+    candidate.operands[1] === 1 || candidate.operands[2] === 1;
+  const usesSimplePattern = (candidate: ChainedCandidate): boolean =>
+    [1, 10].includes(candidate.operands[1]) && [1, 10].includes(candidate.operands[2]);
+  const operatorKey = (candidate: ChainedCandidate): string => candidate.operators.join('');
+  const operatorKinds = [...new Set(candidates.map(operatorKey))];
+  const operatorTargets = new Map(
+    operatorKinds.map(kind => [kind, limit / operatorKinds.length])
+  );
+  const primaryCapacity = (group: ChainedCandidate[]): number => Math.min(
+    new Set(group.map(candidate => candidate.operands[0])).size * 3,
+    new Set(group.map(candidate => candidate.result)).size * 3
+  );
+  const regroupingCandidates = candidates.filter(candidate => candidate.needsRegroup);
+  const nonRegroupingCandidates = candidates.filter(candidate => !candidate.needsRegroup);
+  const regroupingTarget = regroup === 'mixed'
+    ? Math.max(
+        limit - primaryCapacity(nonRegroupingCandidates),
+        Math.min(limit / 2, primaryCapacity(regroupingCandidates))
+      )
+    : regroup === 'only' ? limit : 0;
+  const regroupTargets = new Map<boolean, number>([
+    [true, regroupingTarget],
+    [false, limit - regroupingTarget],
+  ]);
+  const increment = <K>(counts: Map<K, number>, key: K): void => {
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  };
+  const compareScores = (left: number[], right: number[]): number => {
+    for (let index = 0; index < left.length; index++) {
+      if (left[index] !== right[index]) return left[index] - right[index];
+    }
+    return 0;
+  };
+
+  const isWithinTen = candidates.every(candidate =>
+    candidate.operands[0] <= 10 && candidate.result <= 10
+  );
+  if (isWithinTen) {
+    return selectWithinTenChainedCandidates(candidates, limit);
+  }
+
+  const primaryCaps = [3, 4];
+
+  for (const primaryCap of primaryCaps) {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const shuffled = shuffle(candidates);
+      const offset = shuffled.length === 0 ? 0 : (attempt * 97) % shuffled.length;
+      const ordered = [...shuffled.slice(offset), ...shuffled.slice(0, offset)];
+      const selected: ChainedCandidate[] = [];
+      const starts = new Map<number, number>();
+      const results = new Map<number, number>();
+      const seconds = new Map<number, number>();
+      const thirds = new Map<number, number>();
+      const operators = new Map<string, number>();
+      const regroupKinds = new Map<boolean, number>();
+      const oneKinds = new Map<boolean, number>();
+      let simplePatterns = 0;
+
+      while (selected.length < limit) {
+        let bestScore: number[] | null = null;
+        let bestCandidates: ChainedCandidate[] = [];
+        for (const candidate of ordered) {
+          if (selected.includes(candidate)) continue;
+          const [first, second, third] = candidate.operands;
+          const kind = operatorKey(candidate);
+          const oneKind = usesOne(candidate);
+          const simplePattern = usesSimplePattern(candidate);
+          const operatorTarget = operatorTargets.get(kind) ?? 0;
+          const regroupTarget = regroupTargets.get(candidate.needsRegroup) ?? 0;
+          const oneTarget = oneKind ? 2 : limit - 2;
+          if ((starts.get(first) ?? 0) >= primaryCap) continue;
+          if ((results.get(candidate.result) ?? 0) >= primaryCap) continue;
+          if ((seconds.get(second) ?? 0) >= 4) continue;
+          if ((thirds.get(third) ?? 0) >= 4) continue;
+          if ((operators.get(kind) ?? 0) >= operatorTarget) continue;
+          if ((regroupKinds.get(candidate.needsRegroup) ?? 0) >= regroupTarget) continue;
+          if ((oneKinds.get(oneKind) ?? 0) >= oneTarget) continue;
+          if (simplePattern && simplePatterns >= 3) continue;
+
+          const quotaLoads = [
+            ((operators.get(kind) ?? 0) + 1) / operatorTarget,
+            ((regroupKinds.get(candidate.needsRegroup) ?? 0) + 1) / regroupTarget,
+            ((oneKinds.get(oneKind) ?? 0) + 1) / oneTarget,
+          ];
+          const distributionLoads = [
+            ((starts.get(first) ?? 0) + 1) / primaryCap,
+            ((results.get(candidate.result) ?? 0) + 1) / primaryCap,
+            ((seconds.get(second) ?? 0) + 1) / 4,
+            ((thirds.get(third) ?? 0) + 1) / 4,
+          ];
+          const score = [
+            Math.max(...quotaLoads),
+            quotaLoads.reduce((sum, load) => sum + load, 0),
+            Math.max(...distributionLoads),
+            distributionLoads.reduce((sum, load) => sum + load, 0),
+          ];
+          const comparison = bestScore === null ? -1 : compareScores(score, bestScore);
+          if (comparison < 0) {
+            bestScore = score;
+            bestCandidates = [candidate];
+          } else if (comparison === 0) {
+            bestCandidates.push(candidate);
+          }
+        }
+        if (bestCandidates.length === 0) break;
+        const candidate = bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
+        const [first, second, third] = candidate.operands;
+        const kind = operatorKey(candidate);
+        const oneKind = usesOne(candidate);
+        const simplePattern = usesSimplePattern(candidate);
+        selected.push(candidate);
+        increment(starts, first);
+        increment(results, candidate.result);
+        increment(seconds, second);
+        increment(thirds, third);
+        increment(operators, kind);
+        increment(regroupKinds, candidate.needsRegroup);
+        increment(oneKinds, oneKind);
+        if (simplePattern) simplePatterns += 1;
+      }
+      if (selected.length === limit) return shuffle(selected);
+    }
+  }
+
+  return [];
+};
 
 const generateChainedArithmetic = (
   range: Range,
   mode: ChainedMode,
   regroup: RegroupOption
 ): Problem[] => {
-  const candidates = buildChainedCandidates(range, mode, regroup);
-  let selected: ChainedCandidate[];
-  if (mode === 'horizontal-chain-mixed') {
-    const plusMinusCandidates: ChainedCandidate[] = [];
-    const minusPlusCandidates: ChainedCandidate[] = [];
-    for (const candidate of candidates) {
-      (candidate.operators[0] === '+' ? plusMinusCandidates : minusPlusCandidates).push(candidate);
-    }
-    const maximumFrequency = (values: number[]): number => {
-      const counts = new Map<number, number>();
-      for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
-      return Math.max(0, ...counts.values());
-    };
-    const attempts = range === '1-10' && regroup === 'mixed' ? 20 : 1;
-    let bestSelection: ChainedCandidate[] = [];
-    let bestConcentration = Number.POSITIVE_INFINITY;
-
-    for (let attempt = 0; attempt < attempts; attempt++) {
-      const plusMinus = selectChainedCandidates(
-        plusMinusCandidates,
-        CHAINED_PROBLEM_COUNT / 2
-      );
-      const minusPlus = selectChainedCandidates(
-        minusPlusCandidates,
-        CHAINED_PROBLEM_COUNT / 2,
-        plusMinus
-      );
-      const combined = [...plusMinus, ...minusPlus];
-      const concentration = Math.max(
-        maximumFrequency(combined.map(candidate => candidate.operands[0])),
-        maximumFrequency(combined.map(candidate => candidate.result))
-      );
-      if (concentration < bestConcentration) {
-        bestSelection = combined;
-        bestConcentration = concentration;
-      }
-      if (concentration <= 3) break;
-    }
-
-    selected = bestSelection;
-  } else {
-    selected = selectChainedCandidates(candidates, CHAINED_PROBLEM_COUNT);
-  }
+  const effectiveRegroup = range === '1-10'
+    ? 'mixed'
+    : regroup;
+  const candidates = buildChainedCandidates(range, mode, effectiveRegroup);
+  const selected = selectChainedCandidates(candidates, CHAINED_PROBLEM_COUNT, effectiveRegroup);
 
   return shuffle(selected).map((candidate, id) => ({
     id,
@@ -560,6 +745,11 @@ const generateArithmetic = (
 
   const includeAdd = mode.includes('-add') || mode.includes('-mixed');
   const includeSub = mode.includes('-sub') || mode.includes('-mixed');
+  const ignoresRegroup = range === '1-10' && !isVertical;
+  const rareFactProbability = 0.35;
+  const allowOnePlusOne = !ignoresRegroup || Math.random() < rareFactProbability;
+  const allowOnePlusTwo = !ignoresRegroup || Math.random() < rareFactProbability;
+  const allowTwoMinusOne = !ignoresRegroup || Math.random() < rareFactProbability;
 
   type Candidate = {
     num1: number;
@@ -576,8 +766,8 @@ const generateArithmetic = (
         const num2 = S - num1;
         if (isVertical && (num1 < 10 || num1 > 99)) continue;
         const isCarry = additionRequiresRegroup(num1, num2);
-        if (regroup === 'none' && isCarry) continue;
-        if (regroup === 'only' && !isCarry) continue;
+        if (!ignoresRegroup && regroup === 'none' && isCarry) continue;
+        if (!ignoresRegroup && regroup === 'only' && !isCarry) continue;
         candidates.push({
           num1, num2, operator: '+', needsRegroup: isCarry,
           lowerDigits: num2 < 10 ? 'one' : 'two',
@@ -591,8 +781,8 @@ const generateArithmetic = (
       for (let num2 = 1; num2 < M; num2++) {
         if (isVertical && (M < 10 || M > 99)) continue;
         const isBorrow = subtractionRequiresRegroup(M, num2);
-        if (regroup === 'none' && isBorrow) continue;
-        if (regroup === 'only' && !isBorrow) continue;
+        if (!ignoresRegroup && regroup === 'none' && isBorrow) continue;
+        if (!ignoresRegroup && regroup === 'only' && !isBorrow) continue;
         candidates.push({
           num1: M, num2, operator: '-', needsRegroup: isBorrow,
           lowerDigits: num2 < 10 ? 'one' : 'two',
@@ -601,10 +791,60 @@ const generateArithmetic = (
     }
   }
 
+  const operatorCycleSize = includeAdd && includeSub ? 2 : 1;
+  const mixedDigitSlots = Math.ceil(maxProblems / operatorCycleSize);
+  const mixedTwoDigitSlots = (() => {
+    if (!isVertical || lowerOperandDigits !== 'mixed') return 0;
+    const distinctTops = (digits: Candidate['lowerDigits']) => new Set(
+      candidates
+        .filter(candidate => candidate.lowerDigits === digits)
+        .map(candidate => `${candidate.operator}|${candidate.num1}`)
+    ).size;
+    const oneDigitTops = distinctTops('one');
+    const twoDigitTops = distinctTops('two');
+    if (oneDigitTops === 0) return mixedDigitSlots;
+    if (twoDigitTops === 0) return 0;
+    return Math.max(
+      1,
+      Math.min(
+        mixedDigitSlots - 1,
+        Math.round(mixedDigitSlots * twoDigitTops / (oneDigitTops + twoDigitTops))
+      )
+    );
+  })();
+  const desiredMixedDigits = (index: number): Candidate['lowerDigits'] =>
+    Math.floor((Math.floor(index / operatorCycleSize) + 1) * mixedTwoDigitSlots / mixedDigitSlots) >
+      Math.floor(Math.floor(index / operatorCycleSize) * mixedTwoDigitSlots / mixedDigitSlots)
+      ? 'two'
+      : 'one';
+
   const chosen: Candidate[] = [];
   const used = new Set<string>();
+  const topOperandCounts = new Map<number, number>();
+  const targetCounts = new Map<number, number>();
+  const reservedTopSelections = new Map<string, number>();
+  if (isVertical && lowerOperandDigits === 'mixed') {
+    for (const digits of ['one', 'two'] as const) {
+      const tops = new Set(
+        candidates
+          .filter(candidate => candidate.lowerDigits === digits)
+          .map(candidate => candidate.num1)
+      );
+      if (tops.size !== 1) continue;
+      const [top] = tops;
+      const reserved = Array.from(
+        { length: maxProblems },
+        (_, index) => desiredMixedDigits(index)
+      ).filter(value => value === digits).length;
+      topOperandCounts.set(top, (topOperandCounts.get(top) ?? 0) + reserved);
+      reservedTopSelections.set(`${top}|${digits}`, reserved);
+    }
+  }
   const candidateKey = (candidate: Candidate): string => {
     if (!isVertical) {
+      if (ignoresRegroup && candidate.operator === '+') {
+        return `${candidate.num1}+${candidate.num2}`;
+      }
       const whole = candidate.operator === '+' ? candidate.num1 + candidate.num2 : candidate.num1;
       const parts = candidate.operator === '+'
         ? [candidate.num1, candidate.num2]
@@ -613,6 +853,16 @@ const generateArithmetic = (
     }
     return `${candidate.num1}${candidate.operator}${candidate.num2}`;
   };
+  const allowsRareFact = (candidate: Candidate): boolean => {
+    if (!ignoresRegroup) return true;
+    if (candidate.operator === '+') {
+      if (candidate.num1 === 1 && candidate.num2 === 1) return allowOnePlusOne;
+      if (candidate.num1 + candidate.num2 === 3) return allowOnePlusTwo;
+      return true;
+    }
+    return candidate.num1 !== 2 || candidate.num2 !== 1 || allowTwoMinusOne;
+  };
+  let addOneSelections = 0;
   for (let i = 0; i < maxProblems; i++) {
     const desiredOperator: '+' | '-' | undefined = includeAdd && includeSub
       ? (i % 2 === 0 ? '+' : '-')
@@ -620,12 +870,16 @@ const generateArithmetic = (
     const desiredDigits: 'one' | 'two' | undefined = !isVertical
       ? undefined
       : lowerOperandDigits === 'mixed'
-        ? (Math.floor(i / (includeAdd && includeSub ? 2 : 1)) % 2 === 0 ? 'one' : 'two')
+        ? desiredMixedDigits(i)
         : lowerOperandDigits;
-    const desiredRegroup = regroup === 'mixed' ? Math.floor(i / 2) % 2 === 0 : regroup === 'only';
+    const desiredRegroup = ignoresRegroup
+      ? undefined
+      : regroup === 'mixed' ? Math.floor(i / 2) % 2 === 0 : regroup === 'only';
 
     const filters = [
-      (c: Candidate) => c.operator === desiredOperator && (!desiredDigits || c.lowerDigits === desiredDigits) && c.needsRegroup === desiredRegroup,
+      (c: Candidate) => c.operator === desiredOperator &&
+        (!desiredDigits || c.lowerDigits === desiredDigits) &&
+        (desiredRegroup === undefined || c.needsRegroup === desiredRegroup),
       (c: Candidate) => c.operator === desiredOperator && (!desiredDigits || c.lowerDigits === desiredDigits),
       ...(lowerOperandDigits === 'mixed'
         ? [
@@ -637,12 +891,40 @@ const generateArithmetic = (
     let selectionPool: Candidate[] = [];
     for (const filter of filters) {
       const unused = candidates.filter(c =>
-        filter(c) && !used.has(candidateKey(c))
+        filter(c) &&
+        allowsRareFact(c) &&
+        !used.has(candidateKey(c)) &&
+        !(
+          ignoresRegroup &&
+          c.operator === '+' &&
+          (c.num1 === 1 || c.num2 === 1) &&
+          addOneSelections >= 2
+        )
       );
       if (unused.length === 0) continue;
 
-      const preferred = unused.filter(c => c.num2 !== 1 && (c.operator === '-' || c.num1 !== 1));
-      selectionPool = preferred.length > 0 ? preferred : unused;
+      const leastUsed = isVertical
+        ? Math.min(...unused.map(candidate => topOperandCounts.get(candidate.num1) ?? 0))
+        : ignoresRegroup
+          ? Math.min(...unused.map(candidate => {
+              const target = candidate.operator === '+'
+                ? candidate.num1 + candidate.num2
+                : candidate.num1;
+              return targetCounts.get(target) ?? 0;
+            }))
+          : 0;
+      const balanced = isVertical
+        ? unused.filter(candidate => (topOperandCounts.get(candidate.num1) ?? 0) === leastUsed)
+        : ignoresRegroup
+          ? unused.filter(candidate => {
+              const target = candidate.operator === '+'
+                ? candidate.num1 + candidate.num2
+                : candidate.num1;
+              return (targetCounts.get(target) ?? 0) === leastUsed;
+            })
+          : unused;
+      const preferred = balanced.filter(c => c.num2 !== 1 && (c.operator === '-' || c.num1 !== 1));
+      selectionPool = preferred.length > 0 ? preferred : balanced;
       break;
     }
     if (selectionPool.length === 0) break;
@@ -650,6 +932,26 @@ const generateArithmetic = (
     const selected = selectionPool[Math.floor(Math.random() * selectionPool.length)];
     used.add(candidateKey(selected));
     chosen.push(selected);
+    if (
+      ignoresRegroup &&
+      selected.operator === '+' &&
+      (selected.num1 === 1 || selected.num2 === 1)
+    ) {
+      addOneSelections += 1;
+    }
+    const reservationKey = `${selected.num1}|${selected.lowerDigits}`;
+    const reserved = reservedTopSelections.get(reservationKey) ?? 0;
+    if (reserved > 0) {
+      reservedTopSelections.set(reservationKey, reserved - 1);
+    } else {
+      topOperandCounts.set(selected.num1, (topOperandCounts.get(selected.num1) ?? 0) + 1);
+    }
+    if (ignoresRegroup) {
+      const target = selected.operator === '+'
+        ? selected.num1 + selected.num2
+        : selected.num1;
+      targetCounts.set(target, (targetCounts.get(target) ?? 0) + 1);
+    }
   }
 
   return shuffle(chosen).map((candidate, id) => ({

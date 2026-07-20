@@ -164,6 +164,15 @@ export const Worksheet: React.FC<WorksheetProps> = ({
 
   const { colClass, heightClass } = renderConfig.getLayoutClass({ bondNumber, isBlankTemplate, range });
   const RendererComponent = renderConfig.component;
+  const fillsPage = mode !== 'number-bonds';
+  const columnCount = mode.startsWith('horizontal-chain-') ? 3 : 4;
+  const rowCount = Math.max(1, Math.ceil(problems.length / columnCount));
+  const problemGridStyle = fillsPage
+    ? {
+        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
+      }
+    : undefined;
 
   return (
     <A4PreviewWrapper>
@@ -187,13 +196,20 @@ export const Worksheet: React.FC<WorksheetProps> = ({
           </div>
         </div>
         
-        <div key={generateCount} className={`flex flex-wrap w-full pt-2 relative z-10 animate-fade-in-up ${
-          mode === 'number-bonds' 
-            ? 'h-[750px] items-center content-center justify-center' 
-            : 'content-start'
-        }`}>
+        <div
+          key={generateCount}
+          style={problemGridStyle}
+          className={`w-full pt-2 relative z-10 animate-fade-in-up ${
+            fillsPage
+              ? 'grid flex-1 min-h-0'
+              : 'flex flex-wrap h-[750px] items-center content-center justify-center'
+          }`}
+        >
           {problems.map((problem, idx) => (
-            <div key={problem.id} className={`${colClass} ${heightClass} flex justify-center items-center break-inside-avoid`}>
+            <div
+              key={problem.id}
+              className={`${fillsPage ? 'min-h-0' : `${colClass} ${heightClass}`} flex justify-center items-center break-inside-avoid`}
+            >
               <RendererComponent 
                 problem={problem} 
                 index={idx}

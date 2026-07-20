@@ -2,11 +2,15 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { Sidebar } from './Sidebar';
-import type { Mode } from '../types';
+import type { Mode, Range } from '../types';
 
-const renderSidebar = (language: 'zh' | 'en', mode: Mode) => renderToStaticMarkup(
+const renderSidebar = (
+  language: 'zh' | 'en',
+  mode: Mode,
+  range: Range = '1-20'
+) => renderToStaticMarkup(
   <Sidebar
-    range="1-20"
+    range={range}
     setRange={vi.fn()}
     mode={mode}
     setMode={vi.fn()}
@@ -65,5 +69,11 @@ describe('Sidebar chained arithmetic settings', () => {
     expect(html).toContain('练习区间');
     expect(html).toContain('进退位');
     expect(html).not.toContain('下方数位数');
+  });
+
+  it('hides regroup controls only within 10', () => {
+    expect(renderSidebar('zh', 'horizontal-chain-add', '1-10')).not.toContain('进退位');
+    expect(renderSidebar('zh', 'horizontal-chain-add', '1-20')).toContain('进退位');
+    expect(renderSidebar('zh', 'horizontal-chain-add', '1-30')).toContain('进退位');
   });
 });

@@ -19,9 +19,9 @@ const PRACTICE_BANDS: Record<Range, [number, number]> = {
 
 const HORIZONTAL_PROBLEM_COUNTS: Record<Range, number> = {
   '1-10': 20,
-  '1-20': 24,
-  '1-30': 60,
-  '1-50': 30,
+  '1-20': 30,
+  '1-30': 50,
+  '1-50': 60,
   '1-100': 60,
 };
 
@@ -841,16 +841,6 @@ const generateArithmetic = (
     }
   }
   const candidateKey = (candidate: Candidate): string => {
-    if (!isVertical) {
-      if (ignoresRegroup && candidate.operator === '+') {
-        return `${candidate.num1}+${candidate.num2}`;
-      }
-      const whole = candidate.operator === '+' ? candidate.num1 + candidate.num2 : candidate.num1;
-      const parts = candidate.operator === '+'
-        ? [candidate.num1, candidate.num2]
-        : [candidate.num2, candidate.num1 - candidate.num2];
-      return `${whole}|${parts.sort((a, b) => a - b).join('|')}`;
-    }
     return `${candidate.num1}${candidate.operator}${candidate.num2}`;
   };
   const allowsRareFact = (candidate: Candidate): boolean => {

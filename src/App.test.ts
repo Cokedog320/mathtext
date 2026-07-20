@@ -137,26 +137,26 @@ describe('generateProblems - Make-Ten Method', () => {
 });
 
 describe('generateProblems - Horizontal Arithmetic', () => {
-  it('should generate 24 problems in horizontal-add mode within 20', () => {
+  it('should generate 30 problems in horizontal-add mode within 20', () => {
     const problems = generateProblems('1-20', 'horizontal-add');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    expect(arithmeticProblems.length).toBe(24);
+    expect(arithmeticProblems.length).toBe(30);
     expect(arithmeticProblems.every(p => p.operator === '+')).toBe(true);
   });
 
-  it('should generate 24 problems in horizontal-sub mode within 20', () => {
+  it('should generate 30 problems in horizontal-sub mode within 20', () => {
     const problems = generateProblems('1-20', 'horizontal-sub');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-    expect(arithmeticProblems.length).toBe(24);
+    expect(arithmeticProblems.length).toBe(30);
     expect(arithmeticProblems.every(p => p.operator === '-')).toBe(true);
   });
 
-  it('should generate 24 problems in horizontal-mixed mode within 20', () => {
+  it('should generate 30 problems in horizontal-mixed mode within 20', () => {
     let hasAdd = false, hasSub = false;
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'horizontal-mixed');
       const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-      expect(arithmeticProblems.length).toBe(24);
+      expect(arithmeticProblems.length).toBe(30);
       hasAdd = arithmeticProblems.some(p => p.operator === '+');
       hasSub = arithmeticProblems.some(p => p.operator === '-');
       if (hasAdd && hasSub) break;
@@ -442,54 +442,63 @@ describe('generateProblems - Chained Arithmetic', () => {
 });
 
 describe('generateProblems - Horizontal Arithmetic Details', () => {
-  it('does not repeat addition facts with the operands swapped', () => {
+  it('generates 30 unique complete subtraction expressions within 20', () => {
+    const problems = generateProblems('1-20', 'horizontal-sub', 'only');
+    const equations = problems.map(problem => {
+      if (problem.type !== 'arithmetic') throw new Error('Expected an arithmetic problem');
+      return `${problem.num1}-${problem.num2}`;
+    });
+
+    expect(problems).toHaveLength(30);
+    expect(new Set(equations).size).toBe(30);
+  });
+
+  it('treats swapped addition operands as distinct complete expressions', () => {
     const random = vi.spyOn(Math, 'random').mockReturnValue(0);
 
     try {
-      const problems = generateProblems('1-50', 'horizontal-add', 'only');
-      const additionFacts = problems.map(problem => {
+      const problems = generateProblems('1-20', 'horizontal-add', 'only');
+      const equations = problems.map(problem => {
         if (problem.type !== 'arithmetic') throw new Error('Expected an arithmetic problem');
-        return [problem.num1, problem.num2].sort((a, b) => a - b).join('+');
+        return `${problem.num1}+${problem.num2}`;
       });
 
-      expect(new Set(additionFacts).size).toBe(additionFacts.length);
+      expect(new Set(equations).size).toBe(equations.length);
+      expect(equations).toEqual(expect.arrayContaining(['5+6', '6+5']));
     } finally {
       random.mockRestore();
     }
   });
 
-  it('does not repeat subtraction facts with the missing part swapped', () => {
+  it('treats different subtrahends in one fact family as distinct expressions', () => {
     const random = vi.spyOn(Math, 'random').mockReturnValue(0);
 
     try {
-      const problems = generateProblems('1-50', 'horizontal-sub', 'only');
-      const subtractionFacts = problems.map(problem => {
+      const problems = generateProblems('1-20', 'horizontal-sub', 'only');
+      const equations = problems.map(problem => {
         if (problem.type !== 'arithmetic') throw new Error('Expected an arithmetic problem');
-        const difference = problem.num1 - problem.num2;
-        return `${problem.num1}|${[problem.num2, difference].sort((a, b) => a - b).join('|')}`;
+        return `${problem.num1}-${problem.num2}`;
       });
 
-      expect(new Set(subtractionFacts).size).toBe(subtractionFacts.length);
+      expect(new Set(equations).size).toBe(equations.length);
+      expect(equations).toEqual(expect.arrayContaining(['13-5', '13-8']));
     } finally {
       random.mockRestore();
     }
   });
 
-  it('does not repeat the same fact across addition and subtraction', () => {
+  it('allows addition and subtraction expressions from the same fact family', () => {
     const random = vi.spyOn(Math, 'random').mockReturnValue(0);
 
     try {
-      const problems = generateProblems('1-50', 'horizontal-mixed', 'only');
-      const arithmeticFacts = problems.map(problem => {
+      const problems = generateProblems('1-20', 'horizontal-mixed', 'only');
+      const equations = problems.map(problem => {
         if (problem.type !== 'arithmetic') throw new Error('Expected an arithmetic problem');
-        const whole = problem.operator === '+' ? problem.num1 + problem.num2 : problem.num1;
-        const parts = problem.operator === '+'
-          ? [problem.num1, problem.num2]
-          : [problem.num2, problem.num1 - problem.num2];
-        return `${whole}|${parts.sort((a, b) => a - b).join('|')}`;
+        return `${problem.num1}${problem.operator}${problem.num2}`;
       });
 
-      expect(new Set(arithmeticFacts).size).toBe(arithmeticFacts.length);
+      expect(new Set(equations).size).toBe(equations.length);
+      expect(equations).toEqual(expect.arrayContaining(['3+8', '11-3']));
     } finally {
       random.mockRestore();
     }
@@ -500,7 +509,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'horizontal-add');
       const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
-      expect(arithmetic.length).toBe(24);
+      expect(arithmetic.length).toBe(30);
       hasCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) > 9);
       hasNoCarry = arithmetic.some(p => (p.num1 % 10) + (p.num2 % 10) <= 9);
       if (hasCarry && hasNoCarry) break;
@@ -514,7 +523,7 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
     for (let i = 0; i < 10; i++) {
       const problems = generateProblems('1-20', 'horizontal-mixed');
       const arithmetic = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
-      expect(arithmetic.length).toBe(24);
+      expect(arithmetic.length).toBe(30);
       hasCarry = arithmetic.some(p => p.operator === '+' && (p.num1 % 10) + (p.num2 % 10) > 9);
       hasBorrow = arithmetic.some(p => p.operator === '-' && (p.num1 % 10) < (p.num2 % 10));
       if (hasCarry && hasBorrow) break;
@@ -533,22 +542,29 @@ describe('generateProblems - Horizontal Arithmetic Details', () => {
 describe('generateProblems - Practice bands and worksheet density', () => {
   const horizontalCountCases = ([
     ['1-10', 20],
-    ['1-20', 24],
-    ['1-30', 60],
-    ['1-50', 30],
+    ['1-20', 30],
+    ['1-30', 50],
+    ['1-50', 60],
     ['1-100', 60],
   ] as const).flatMap(([range, count]) =>
     (['horizontal-add', 'horizontal-sub', 'horizontal-mixed'] as const)
-      .map(mode => [range, mode, count] as const)
+      .flatMap(mode =>
+        (['mixed', 'none', 'only'] as const)
+          .map(regroup => [range, mode, regroup, count] as const)
+      )
   );
 
-  it.each(horizontalCountCases)('generates the horizontal count for %s %s', (range, mode, count) => {
-    expect(generateProblems(range, mode)).toHaveLength(count);
-  });
+  it.each(horizontalCountCases)(
+    'generates the horizontal count for %s %s with %s regrouping',
+    (range, mode, regroup, count) => {
+      expect(generateProblems(range, mode, regroup)).toHaveLength(count);
+    }
+  );
 
   it.each([
-    ['1-20', 'horizontal-add', 5, false, 24],
-    ['1-50', 'horizontal-add', 5, false, 30],
+    ['1-20', 'horizontal-add', 5, false, 30],
+    ['1-30', 'horizontal-add', 5, false, 50],
+    ['1-50', 'horizontal-add', 5, false, 60],
     ['1-100', 'horizontal-add', 5, false, 60],
     ['1-100', 'horizontal-chain-mixed', 5, false, 20],
     ['1-20', 'number-bonds', 7, false, 6],

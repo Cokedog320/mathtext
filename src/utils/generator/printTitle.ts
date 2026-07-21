@@ -33,6 +33,9 @@ export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, 
     'horizontal-chain-add': '连续加法',
     'horizontal-chain-sub': '连续减法',
     'horizontal-chain-mixed': '连续加减混合',
+    'horizontal-fill-add': '横式填空加法',
+    'horizontal-fill-sub': '横式填空减法',
+    'horizontal-fill-mixed': '横式填空加减混合',
   };
   const baseMapEn: Record<string, string> = {
     'vertical-add': 'Addition',
@@ -44,6 +47,9 @@ export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, 
     'horizontal-chain-add': 'Chained Addition',
     'horizontal-chain-sub': 'Chained Subtraction',
     'horizontal-chain-mixed': 'Chained Mixed Arithmetic',
+    'horizontal-fill-add': 'Horizontal Fill Addition',
+    'horizontal-fill-sub': 'Horizontal Fill Subtraction',
+    'horizontal-fill-mixed': 'Horizontal Fill Mixed',
   };
 
   const isArithmetic = Object.keys(baseMapZh).includes(mode);

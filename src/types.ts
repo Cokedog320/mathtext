@@ -1,14 +1,25 @@
 export type Language = 'zh' | 'en';
 export type Range = '1-10' | '1-20' | '1-30' | '1-50' | '1-100';
-export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed' | 'horizontal-chain-add' | 'horizontal-chain-sub' | 'horizontal-chain-mixed';
+export type Mode = 'number-bonds' | 'vertical-add' | 'vertical-sub' | 'vertical-mixed' | 'make-ten' | 'break-ten' | 'flat-ten' | 'horizontal-add' | 'horizontal-sub' | 'horizontal-mixed' | 'horizontal-chain-add' | 'horizontal-chain-sub' | 'horizontal-chain-mixed' | 'horizontal-fill-add' | 'horizontal-fill-sub' | 'horizontal-fill-mixed';
 export type RegroupOption = 'mixed' | 'none' | 'only';
 export type LowerOperandDigits = 'mixed' | 'one' | 'two';
+
+export type HorizontalFillProblem = {
+  id: number;
+  type: 'horizontal-fill';
+  num1: number;
+  num2: number;
+  result: number;
+  operator: '+' | '-';
+  blankPosition: 1 | 2;
+};
 
 export type Problem = 
   | { id: number; type: 'bond'; top: number | string; left: number | string; right: number | string; isBlank?: boolean }
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'arithmetic-chain'; operands: [number, number, number]; operators: ['+' | '-', '+' | '-'] }
-  | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' };
+  | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' }
+  | HorizontalFillProblem;
 
 export const pdfFileNames: Record<Language, Record<Mode, string>> = {
   zh: {
@@ -22,6 +33,9 @@ export const pdfFileNames: Record<Language, Record<Mode, string>> = {
     'horizontal-chain-add': '连续加法.pdf',
     'horizontal-chain-sub': '连续减法.pdf',
     'horizontal-chain-mixed': '连续加减混合.pdf',
+    'horizontal-fill-add': '横式填空加法.pdf',
+    'horizontal-fill-sub': '横式填空减法.pdf',
+    'horizontal-fill-mixed': '横式填空加减混合.pdf',
     'make-ten': '凑十法.pdf',
     'break-ten': '破十法.pdf',
     'flat-ten': '平十法.pdf',
@@ -37,6 +51,9 @@ export const pdfFileNames: Record<Language, Record<Mode, string>> = {
     'horizontal-chain-add': 'chained-addition.pdf',
     'horizontal-chain-sub': 'chained-subtraction.pdf',
     'horizontal-chain-mixed': 'chained-mixed-arithmetic.pdf',
+    'horizontal-fill-add': 'horizontal-fill-addition.pdf',
+    'horizontal-fill-sub': 'horizontal-fill-subtraction.pdf',
+    'horizontal-fill-mixed': 'horizontal-fill-mixed.pdf',
     'make-ten': 'make-ten.pdf',
     'break-ten': 'break-ten.pdf',
     'flat-ten': 'flat-ten.pdf',
@@ -76,6 +93,9 @@ export const translations = {
       'horizontal-chain-add': '连续加法',
       'horizontal-chain-sub': '连续减法',
       'horizontal-chain-mixed': '连续加减混合',
+      'horizontal-fill-add': '加法',
+      'horizontal-fill-sub': '减法',
+      'horizontal-fill-mixed': '加减混合',
       'make-ten': '凑十法',
       'break-ten': '破十法',
       'flat-ten': '平十法',
@@ -109,6 +129,9 @@ export const translations = {
       'horizontal-chain-add': '连续加法',
       'horizontal-chain-sub': '连续减法',
       'horizontal-chain-mixed': '连续加减混合',
+      'horizontal-fill-add': '横式填空（加法）',
+      'horizontal-fill-sub': '横式填空（减法）',
+      'horizontal-fill-mixed': '横式填空（加减混合）',
       'make-ten': '凑十法',
       'break-ten': '破十法',
       'flat-ten': '平十法',
@@ -153,6 +176,9 @@ export const translations = {
       'horizontal-chain-add': 'Chained Addition',
       'horizontal-chain-sub': 'Chained Subtraction',
       'horizontal-chain-mixed': 'Chained Mixed',
+      'horizontal-fill-add': 'Addition',
+      'horizontal-fill-sub': 'Subtraction',
+      'horizontal-fill-mixed': 'Mixed',
       'make-ten': 'Make-Ten Method',
       'break-ten': 'Break-Ten Method',
       'flat-ten': 'Flat-Ten Method',
@@ -186,6 +212,9 @@ export const translations = {
       'horizontal-chain-add': 'Chained Addition',
       'horizontal-chain-sub': 'Chained Subtraction',
       'horizontal-chain-mixed': 'Chained Mixed Arithmetic',
+      'horizontal-fill-add': 'Horizontal Fill (Addition)',
+      'horizontal-fill-sub': 'Horizontal Fill (Subtraction)',
+      'horizontal-fill-mixed': 'Horizontal Fill (Mixed)',
       'make-ten': 'Make-Ten Method',
       'break-ten': 'Break-Ten Method',
       'flat-ten': 'Flat-Ten Method',

@@ -1,10 +1,14 @@
 import { LowerOperandDigits, Mode, Problem, Range, RegroupOption } from '../../types';
 import { generateChainedArithmetic } from './chainedArithmetic';
 import { generateHorizontalArithmetic } from './horizontalArithmetic';
+import { generateHorizontalFillProblems } from './horizontalFill';
 import { generateBreakTenOrFlatTen, generateMakeTen } from './methodProblems';
 import { generateNumberBonds } from './numberBonds';
 import { generateVerticalArithmetic } from './verticalArithmetic';
+import { getRequestedProblemCount } from './worksheetRules';
 
+export { generateHorizontalFillProblems } from './horizontalFill';
+export type { FillGenerationResult } from './horizontalFill';
 export { getPrintTitle } from './printTitle';
 export { shuffle } from './random';
 export { requiresRegroup } from './regroup';
@@ -46,6 +50,12 @@ const GENERATOR_STRATEGIES = {
     generateChainedArithmetic(range, 'horizontal-chain-sub', regroup),
   'horizontal-chain-mixed': ({ range, regroup }) =>
     generateChainedArithmetic(range, 'horizontal-chain-mixed', regroup),
+  'horizontal-fill-add': ({ range, regroup }) =>
+    generateHorizontalFillProblems(range, 'horizontal-fill-add', regroup, getRequestedProblemCount(range, 'horizontal-fill-add')).problems,
+  'horizontal-fill-sub': ({ range, regroup }) =>
+    generateHorizontalFillProblems(range, 'horizontal-fill-sub', regroup, getRequestedProblemCount(range, 'horizontal-fill-sub')).problems,
+  'horizontal-fill-mixed': ({ range, regroup }) =>
+    generateHorizontalFillProblems(range, 'horizontal-fill-mixed', regroup, getRequestedProblemCount(range, 'horizontal-fill-mixed')).problems,
 } satisfies Record<Mode, Generator>;
 
 export const generateProblems = (

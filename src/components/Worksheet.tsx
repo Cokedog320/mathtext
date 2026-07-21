@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Mode, Range, RegroupOption, Language, Problem, translations } from '../types';
 import { getPrintTitle } from '../utils/problemGenerator';
-import { NumberBond, VerticalArithmetic, HorizontalArithmetic, ChainedArithmetic, MethodDiagram } from './ProblemRenderers';
+import { NumberBond, VerticalArithmetic, HorizontalArithmetic, HorizontalFillArithmetic, ChainedArithmetic, MethodDiagram } from './ProblemRenderers';
 
 export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,7 +79,7 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
   'number-bonds': {
     component: ({ problem, hideParts, bondNumber, isBlankTemplate }) => {
       const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
-      return <NumberBond problem={problem} large={isLarge} hideParts={hideParts} />;
+      return <NumberBond problem={problem as any} large={isLarge} hideParts={hideParts} />;
     },
     getLayoutClass: ({ bondNumber, isBlankTemplate }) => {
       const effectiveNumber = (isBlankTemplate || bondNumber === '2-10') ? 10 : bondNumber;
@@ -91,52 +91,64 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
     }
   },
   'make-ten': {
-    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem} index={index} hideTen={hideTen} />,
+    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem as any} index={index} hideTen={hideTen} />,
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
   },
   'break-ten': {
-    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem} index={index} hideTen={hideTen} />,
+    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem as any} index={index} hideTen={hideTen} />,
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
   },
   'flat-ten': {
-    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem} index={index} hideTen={hideTen} />,
+    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem as any} index={index} hideTen={hideTen} />,
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
   },
   'vertical-add': {
-    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem} index={index} regroup={regroup} />,
+    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem as any} index={index} regroup={regroup} />,
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'vertical-sub': {
-    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem} index={index} regroup={regroup} />,
+    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem as any} index={index} regroup={regroup} />,
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'vertical-mixed': {
-    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem} index={index} regroup={regroup} />,
+    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem as any} index={index} regroup={regroup} />,
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'horizontal-add': {
-    component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
+    component: ({ problem, index }) => <HorizontalArithmetic problem={problem as any} index={index} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-sub': {
-    component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
+    component: ({ problem, index }) => <HorizontalArithmetic problem={problem as any} index={index} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-mixed': {
-    component: ({ problem, index }) => <HorizontalArithmetic problem={problem} index={index} />,
+    component: ({ problem, index }) => <HorizontalArithmetic problem={problem as any} index={index} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-chain-add': {
-    component: ({ problem, index }) => <ChainedArithmetic problem={problem} index={index} />,
+    component: ({ problem, index }) => <ChainedArithmetic problem={problem as any} index={index} />,
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   },
   'horizontal-chain-sub': {
-    component: ({ problem, index }) => <ChainedArithmetic problem={problem} index={index} />,
+    component: ({ problem, index }) => <ChainedArithmetic problem={problem as any} index={index} />,
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   },
   'horizontal-chain-mixed': {
-    component: ({ problem, index }) => <ChainedArithmetic problem={problem} index={index} />,
+    component: ({ problem, index }) => <ChainedArithmetic problem={problem as any} index={index} />,
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
+  },
+  'horizontal-fill-add': {
+    component: ({ problem, index }) => <HorizontalFillArithmetic problem={problem as any} index={index} />,
+    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
+  },
+  'horizontal-fill-sub': {
+    component: ({ problem, index }) => <HorizontalFillArithmetic problem={problem as any} index={index} />,
+    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
+  },
+  'horizontal-fill-mixed': {
+    component: ({ problem, index }) => <HorizontalFillArithmetic problem={problem as any} index={index} />,
+    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   }
 };
 

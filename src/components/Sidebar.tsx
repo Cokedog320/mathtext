@@ -63,20 +63,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'horizontal-add', 'horizontal-sub', 'horizontal-mixed',
     'horizontal-chain-add', 'horizontal-chain-sub', 'horizontal-chain-mixed'
   ];
+  const fillModes: Mode[] = [
+    'horizontal-fill-add', 'horizontal-fill-sub', 'horizontal-fill-mixed'
+  ];
   const isVerticalMode = mode?.startsWith('vertical-') ?? false;
 
   // Accordion active sections
   const [methodExpanded, setMethodExpanded] = useState(false);
   const [arithmeticExpanded, setArithmeticExpanded] = useState(false);
+  const [fillExpanded, setFillExpanded] = useState(false);
 
   // Sync expanded status when mode changes externally
   useEffect(() => {
     if (mode && methodModes.includes(mode)) {
       setMethodExpanded(true);
       setArithmeticExpanded(false);
+      setFillExpanded(false);
     } else if (mode && arithmeticModes.includes(mode)) {
       setArithmeticExpanded(true);
       setMethodExpanded(false);
+      setFillExpanded(false);
+    } else if (mode && fillModes.includes(mode)) {
+      setFillExpanded(true);
+      setMethodExpanded(false);
+      setArithmeticExpanded(false);
     }
   }, [mode]);
 
@@ -124,7 +134,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={() => {
                 setMethodExpanded(!methodExpanded);
-                if (!methodExpanded) setArithmeticExpanded(false);
+                if (!methodExpanded) {
+                  setArithmeticExpanded(false);
+                  setFillExpanded(false);
+                }
               }}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
             >
@@ -155,7 +168,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={() => {
                 setArithmeticExpanded(!arithmeticExpanded);
-                if (!arithmeticExpanded) setMethodExpanded(false);
+                if (!arithmeticExpanded) {
+                  setMethodExpanded(false);
+                  setFillExpanded(false);
+                }
               }}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
             >
@@ -177,6 +193,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {t.modes[m]}
                   </button>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Fill-in-the-Blank Practice Accordion */}
+          <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
+            <button
+              onClick={() => {
+                setFillExpanded(!fillExpanded);
+                if (!fillExpanded) {
+                  setMethodExpanded(false);
+                  setArithmeticExpanded(false);
+                }
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
+            >
+              <span>{language === 'zh' ? '✏️ 填空练习' : '✏️ Fill-in-the-Blank'}</span>
+              {fillExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            {fillExpanded && (
+              <div className="p-3 flex flex-col gap-2 bg-white animate-fade-in-up">
+                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
+                  {language === 'zh' ? '横式填空' : 'Horizontal Fill'}
+                </div>
+                <div className="flex flex-col gap-1 pl-2 border-l-2 border-blue-100">
+                  {fillModes.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+                        mode === m
+                          ? 'bg-blue-50 text-blue-600 font-bold'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {t.modes[m]}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -288,7 +343,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {mode && arithmeticModes.includes(mode) && (
+          {mode && (arithmeticModes.includes(mode) || fillModes.includes(mode)) && (
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="range" className="text-sm font-bold text-gray-800">{t.range}</label>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Problem, RegroupOption } from '../types';
+import { HorizontalFillArithmetic as HorizontalFillComponent } from './HorizontalFillArithmetic';
 
 export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
   if (large) {
@@ -90,6 +91,20 @@ export const HorizontalArithmetic: React.FC<{ problem: Extract<Problem, { type: 
         <span>{problem.num2}</span>
         <span>=</span>
         <div className="w-[28px] h-[28px] border border-black bg-white shrink-0"></div>
+      </div>
+    </div>
+  );
+};
+
+export const HorizontalFillArithmetic: React.FC<{
+  problem: Extract<Problem, { type: 'horizontal-fill' }>;
+  index: number;
+}> = ({ problem, index }) => {
+  return (
+    <div className="relative w-[160px] h-full flex items-center justify-between px-2 border border-gray-100 rounded-sm">
+      <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
+      <div className="flex items-center justify-center w-full mt-2 select-none">
+        <HorizontalFillComponent problem={problem} />
       </div>
     </div>
   );

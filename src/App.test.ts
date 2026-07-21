@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { generateProblems, getRequestedProblemCount, requiresRegroup } from './utils/problemGenerator';
 import type { Problem } from './types';
+import { seededRandom } from './test/seededRandom';
 
 type GeneratedChainProblem = Extract<Problem, { type: 'arithmetic-chain' }>;
 
@@ -338,14 +339,7 @@ describe('generateProblems - Chained Arithmetic', () => {
 
       try {
         for (const seed of [0, 1, 2, 3, 4]) {
-          let state = seed;
-          random.mockImplementation(seed === 0
-            ? () => 0
-            : () => {
-                state = (state * 1664525 + 1013904223) >>> 0;
-                return state / 0x100000000;
-              }
-          );
+          random.mockImplementation(seededRandom(seed));
           const problems = generateProblems(range, mode, 'none') as GeneratedChainProblem[];
           const maximumFrequency = (values: number[]) => {
             const counts = new Map<number, number>();
@@ -371,14 +365,7 @@ describe('generateProblems - Chained Arithmetic', () => {
 
     try {
       for (const seed of [0, 1, 2, 3, 4]) {
-        let state = seed;
-        random.mockImplementation(seed === 0
-          ? () => 0
-          : () => {
-              state = (state * 1664525 + 1013904223) >>> 0;
-              return state / 0x100000000;
-            }
-        );
+        random.mockImplementation(seededRandom(seed));
         const problems = generateProblems(
           '1-20',
           'horizontal-chain-add',
@@ -418,14 +405,7 @@ describe('generateProblems - Chained Arithmetic', () => {
 
       try {
         for (const seed of [0, 1, 2]) {
-          let state = seed;
-          random.mockImplementation(seed === 0
-            ? () => 0
-            : () => {
-                state = (state * 1664525 + 1013904223) >>> 0;
-                return state / 0x100000000;
-              }
-          );
+          random.mockImplementation(seededRandom(seed));
           const problems = generateProblems('1-20', mode, regroup) as GeneratedChainProblem[];
           const oneOperandProblems = problems.filter(problem =>
             problem.operands[1] === 1 || problem.operands[2] === 1
@@ -660,14 +640,7 @@ describe('generateProblems - Vertical operand shape', () => {
 
     try {
       for (const seed of [0, 1, 2, 3, 4]) {
-        let state = seed;
-        random.mockImplementation(seed === 0
-          ? () => 0
-          : () => {
-              state = (state * 1664525 + 1013904223) >>> 0;
-              return state / 0x100000000;
-            }
-        );
+        random.mockImplementation(seededRandom(seed));
         const problems = generateProblems(
           '1-20',
           'vertical-sub',

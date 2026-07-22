@@ -34,6 +34,30 @@ describe('generateProblems - Horizontal Arithmetic', () => {
 
 
 describe('generateProblems - Horizontal Arithmetic Details', () => {
+  it.each(([
+    '1-20',
+    '1-30',
+    '1-50',
+    '1-100',
+  ] as const).flatMap(range => (
+    ['horizontal-add', 'horizontal-sub', 'horizontal-mixed'] as const
+  ).map(mode => [range, mode] as const)))(
+    'excludes unit operations for %s %s worksheets',
+    (range, mode) => {
+      const problems = generateProblems(range, mode, 'mixed')
+        .filter((problem): problem is Extract<Problem, { type: 'arithmetic' }> =>
+          problem.type === 'arithmetic'
+        );
+
+      expect(problems).toHaveLength(getRequestedProblemCount(range, mode));
+      expect(problems.every(problem =>
+        problem.operator === '+'
+          ? problem.num1 !== 1 && problem.num2 !== 1
+          : problem.num2 !== 1
+      )).toBe(true);
+    }
+  );
+
   it('generates 30 unique complete subtraction expressions within 20', () => {
     const problems = generateProblems('1-20', 'horizontal-sub', 'only');
     const equations = problems.map(problem => {

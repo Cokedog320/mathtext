@@ -41,6 +41,8 @@ const buildChainedCandidates = (
     third: number,
     operators: [ArithmeticOperator, ArithmeticOperator]
   ) => {
+    if (range !== '1-10' && (second === 1 || third === 1)) return;
+
     const intermediateResult = calculate(first, operators[0], second);
     const result = calculate(intermediateResult, operators[1], third);
     const needsRegroup =
@@ -214,8 +216,6 @@ const selectChainedCandidates = (
   limit: number,
   regroup: RegroupOption
 ): ChainedCandidate[] => {
-  const usesOne = (candidate: ChainedCandidate): boolean =>
-    candidate.operands[1] === 1 || candidate.operands[2] === 1;
   const usesSimplePattern = (candidate: ChainedCandidate): boolean =>
     [1, 10].includes(candidate.operands[1]) && [1, 10].includes(candidate.operands[2]);
   const operatorKey = (candidate: ChainedCandidate): string => candidate.operators.join('');
@@ -270,7 +270,6 @@ const selectChainedCandidates = (
       const thirds = new Map<number, number>();
       const operators = new Map<string, number>();
       const regroupKinds = new Map<boolean, number>();
-      const oneKinds = new Map<boolean, number>();
       let simplePatterns = 0;
 
       while (selected.length < limit) {
@@ -280,26 +279,20 @@ const selectChainedCandidates = (
           if (selected.includes(candidate)) continue;
           const [first, second, third] = candidate.operands;
           const kind = operatorKey(candidate);
-          const oneKind = usesOne(candidate);
           const simplePattern = usesSimplePattern(candidate);
           const operatorTarget = operatorTargets.get(kind) ?? 0;
           const regroupTarget = regroupTargets.get(candidate.needsRegroup) ?? 0;
-          const oneTarget = oneKind
-            ? MAX_VALUE_ONE_OPERAND_PROBLEMS
-            : limit - MAX_VALUE_ONE_OPERAND_PROBLEMS;
           if ((starts.get(first) ?? 0) >= primaryCap) continue;
           if ((results.get(candidate.result) ?? 0) >= primaryCap) continue;
           if ((seconds.get(second) ?? 0) >= 4) continue;
           if ((thirds.get(third) ?? 0) >= 4) continue;
           if ((operators.get(kind) ?? 0) >= operatorTarget) continue;
           if ((regroupKinds.get(candidate.needsRegroup) ?? 0) >= regroupTarget) continue;
-          if ((oneKinds.get(oneKind) ?? 0) >= oneTarget) continue;
           if (simplePattern && simplePatterns >= 3) continue;
 
           const quotaLoads = [
             ((operators.get(kind) ?? 0) + 1) / operatorTarget,
             ((regroupKinds.get(candidate.needsRegroup) ?? 0) + 1) / regroupTarget,
-            ((oneKinds.get(oneKind) ?? 0) + 1) / oneTarget,
           ];
           const distributionLoads = [
             ((starts.get(first) ?? 0) + 1) / primaryCap,
@@ -325,7 +318,6 @@ const selectChainedCandidates = (
         const candidate = bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
         const [first, second, third] = candidate.operands;
         const kind = operatorKey(candidate);
-        const oneKind = usesOne(candidate);
         const simplePattern = usesSimplePattern(candidate);
         selected.push(candidate);
         increment(starts, first);
@@ -334,7 +326,6 @@ const selectChainedCandidates = (
         increment(thirds, third);
         increment(operators, kind);
         increment(regroupKinds, candidate.needsRegroup);
-        increment(oneKinds, oneKind);
         if (simplePattern) simplePatterns += 1;
       }
       if (selected.length === limit) return shuffle(selected);

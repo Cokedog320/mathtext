@@ -40,6 +40,12 @@ export const generateHorizontalArithmetic = (
     return target !== 10 ||
       (targetCounts.get(target) ?? 0) < MAX_WITHIN_TEN_BOUNDARY_TARGET_PROBLEMS;
   };
+  const hasForbiddenUnitOperation = (candidate: ArithmeticCandidate): boolean => {
+    if (ignoresRegroup) return false;
+    return candidate.operator === '+'
+      ? candidate.num1 === 1 || candidate.num2 === 1
+      : candidate.num2 === 1;
+  };
   const allowsRareFact = (candidate: ArithmeticCandidate): boolean => {
     if (!ignoresRegroup) return true;
     if (candidate.operator === '+') {
@@ -69,6 +75,7 @@ export const generateHorizontalArithmetic = (
     for (const filter of filters) {
       const unused = candidates.filter(candidate =>
         filter(candidate) &&
+        !hasForbiddenUnitOperation(candidate) &&
         allowsRareFact(candidate) &&
         !used.has(candidateKey(candidate)) &&
         hasWithinTenTargetCapacity(candidate) &&

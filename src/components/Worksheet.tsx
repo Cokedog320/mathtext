@@ -56,7 +56,7 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
 
 // Layout configurations for different modes
 interface LayoutSettings {
-  bondNumber: number | '2-10';
+  bondNumber: number | 'mixed';
   isBlankTemplate: boolean;
   range: Range;
 }
@@ -68,7 +68,7 @@ interface RenderConfig {
     large?: boolean;
     hideParts?: boolean;
     hideTen?: boolean;
-    bondNumber?: number | '2-10';
+    bondNumber?: number | 'mixed';
     isBlankTemplate?: boolean;
     regroup?: RegroupOption;
   }>;
@@ -82,11 +82,11 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
       return <NumberBond problem={problem as any} large={isLarge} hideParts={hideParts} />;
     },
     getLayoutClass: ({ bondNumber, isBlankTemplate }) => {
-      const effectiveNumber = (isBlankTemplate || bondNumber === '2-10') ? 10 : bondNumber;
+      const effectiveNumber = (isBlankTemplate || bondNumber === 'mixed') ? 10 : bondNumber;
       const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
       return {
-        colClass: effectiveNumber === 2 ? 'w-full' : effectiveNumber === 3 ? 'w-1/2' : 'w-1/3',
-        heightClass: isLarge ? 'h-[320px]' : 'h-[230px]'
+        colClass: bondNumber === 'mixed' ? 'w-1/3' : effectiveNumber === 2 ? 'w-full' : effectiveNumber === 3 ? 'w-1/2' : 'w-1/3',
+        heightClass: bondNumber === 'mixed' ? 'h-[180px]' : isLarge ? 'h-[320px]' : 'h-[230px]'
       };
     }
   },
@@ -157,7 +157,7 @@ interface WorksheetProps {
   range: Range;
   regroup: RegroupOption;
   language: Language;
-  bondNumber: number | '2-10';
+  bondNumber: number | 'mixed';
   isBlankTemplate: boolean;
   hideBondParts: boolean;
   hideTen: boolean;
@@ -177,6 +177,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
   const { colClass, heightClass } = renderConfig.getLayoutClass({ bondNumber, isBlankTemplate, range });
   const RendererComponent = renderConfig.component;
   const fillsPage = mode !== 'number-bonds';
+  const usesMixedBondLayout = mode === 'number-bonds' && bondNumber === 'mixed' && !isBlankTemplate;
   const columnCount = mode.startsWith('horizontal-chain-') ? 3 : 4;
   const rowCount = Math.max(1, Math.ceil(problems.length / columnCount));
   const problemGridStyle = fillsPage
@@ -198,7 +199,9 @@ export const Worksheet: React.FC<WorksheetProps> = ({
             {mode === 'number-bonds'
               ? (isBlankTemplate
                   ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
-                  : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
+                  : bondNumber === 'mixed'
+                    ? (language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition')
+                    : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
               : getPrintTitle(mode, range, regroup, language, t)}
           </h1>
           <div className="flex gap-6 text-sm font-bold text-black whitespace-nowrap flex-shrink-0">
@@ -211,10 +214,10 @@ export const Worksheet: React.FC<WorksheetProps> = ({
         <div
           key={generateCount}
           style={problemGridStyle}
-          className={`w-full pt-2 relative z-10 animate-fade-in-up ${
+          className={`w-full py-2 relative z-10 animate-fade-in-up ${
             fillsPage
               ? 'grid flex-1 min-h-0'
-              : 'flex flex-wrap h-[750px] items-center content-center justify-center'
+              : 'flex flex-wrap flex-1 min-h-0 items-center content-between justify-center'
           }`}
         >
           {problems.map((problem, idx) => (

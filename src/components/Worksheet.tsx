@@ -78,16 +78,39 @@ interface RenderConfig {
 const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
   'number-bonds': {
     component: ({ problem, hideParts, bondNumber, isBlankTemplate }) => {
-      const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
+      const num = typeof bondNumber === 'number' ? bondNumber : 10;
+      const isLarge = num <= 5 && !isBlankTemplate && bondNumber !== 'mixed';
       return <NumberBond problem={problem as any} large={isLarge} hideParts={hideParts} />;
     },
     getLayoutClass: ({ bondNumber, isBlankTemplate }) => {
-      const effectiveNumber = (isBlankTemplate || bondNumber === 'mixed') ? 10 : bondNumber;
-      const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
-      return {
-        colClass: bondNumber === 'mixed' ? 'w-1/3' : effectiveNumber === 2 ? 'w-full' : effectiveNumber === 3 ? 'w-1/2' : 'w-1/3',
-        heightClass: bondNumber === 'mixed' ? 'h-[180px]' : isLarge ? 'h-[320px]' : 'h-[230px]'
-      };
+      if (bondNumber === 'mixed' && !isBlankTemplate) {
+        return { colClass: 'w-1/3', heightClass: 'h-[180px]' };
+      }
+      if (isBlankTemplate) {
+        return { colClass: 'w-1/3', heightClass: 'h-[230px]' };
+      }
+      const num = typeof bondNumber === 'number' ? bondNumber : 10;
+      switch (num) {
+        case 2: // 1 problem
+          return { colClass: 'w-full', heightClass: 'h-[320px]' };
+        case 3: // 2 problems -> 1 row of 2
+          return { colClass: 'w-1/2', heightClass: 'h-[320px]' };
+        case 4: // 3 problems -> 1 row of 3
+          return { colClass: 'w-1/3', heightClass: 'h-[320px]' };
+        case 5: // 4 problems -> 2 rows of 2 (2x2 grid)
+          return { colClass: 'w-1/2', heightClass: 'h-[260px]' };
+        case 6: // 5 problems -> 3 + 2 centered
+          return { colClass: 'w-1/3', heightClass: 'h-[240px]' };
+        case 7: // 6 problems -> 3x2 grid
+          return { colClass: 'w-1/3', heightClass: 'h-[240px]' };
+        case 8: // 7 problems -> 3 + 3 + 1 centered
+          return { colClass: 'w-1/3', heightClass: 'h-[220px]' };
+        case 9: // 8 problems -> 4x2 grid
+          return { colClass: 'w-1/4', heightClass: 'h-[240px]' };
+        case 10: // 9 problems -> 3x3 grid
+        default:
+          return { colClass: 'w-1/3', heightClass: 'h-[220px]' };
+      }
     }
   },
   'make-ten': {

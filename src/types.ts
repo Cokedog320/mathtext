@@ -102,8 +102,8 @@ export const translations = {
     },
     regroupOptions: {
       mixed: '混合',
-      none: '无进/退位',
-      only: '进/退位',
+      none: '不进退位',
+      only: '需进退位',
     },
     lowerOperandDigitOptions: {
       mixed: '一位数与两位数混合',
@@ -150,7 +150,7 @@ export const translations = {
     worksheetTitle: 'Worksheet Settings',
     mode: 'Mode',
     range: 'Practice Band',
-    regroup: 'Regroup',
+    regroup: 'Regrouping',
     lowerOperandDigits: 'Lower Operand Digits',
     makeTenLeft: 'Left Addend',
     hideTen: 'Hide helper "10"',
@@ -185,8 +185,8 @@ export const translations = {
     },
     regroupOptions: {
       mixed: 'Mixed',
-      none: 'No Regroup',
-      only: 'Regroup Only',
+      none: 'Without Regrouping',
+      only: 'With Regrouping',
     },
     lowerOperandDigitOptions: {
       mixed: 'Mixed One- and Two-Digit',

@@ -140,4 +140,48 @@ describe('Horizontal Fill-in-the-Blank Arithmetic Generator', () => {
     expect(resultTruncated.truncated).toBe(true);
     expect(resultTruncated.availableCount).toBe(resultTruncated.problems.length);
   });
+
+  it('keeps ordinary +1 and -1 equations available while de-prioritizing only 1 + 1 and 2 - 1', () => {
+    const addition = generateHorizontalFillProblems(
+      '1-10',
+      'horizontal-fill-add',
+      'mixed',
+      20,
+      () => 0,
+    ).problems;
+    const subtraction = generateHorizontalFillProblems(
+      '1-10',
+      'horizontal-fill-sub',
+      'mixed',
+      20,
+      () => 0,
+    ).problems;
+
+    expect(addition.filter(problem => problem.num1 === 1 || problem.num2 === 1)).toHaveLength(14);
+    expect(subtraction.filter(problem => problem.num2 === 1).length).toBeGreaterThan(1);
+  });
+
+  it('replaces 1 + 1 and 2 - 1 when the low-priority draw rejects them', () => {
+    const rejectLowPriority = () => {
+      let calls = 0;
+      return () => ++calls <= 71 ? 0 : 0.99;
+    };
+    const addition = generateHorizontalFillProblems(
+      '1-10',
+      'horizontal-fill-add',
+      'mixed',
+      20,
+      rejectLowPriority(),
+    ).problems;
+    const subtraction = generateHorizontalFillProblems(
+      '1-10',
+      'horizontal-fill-sub',
+      'mixed',
+      20,
+      rejectLowPriority(),
+    ).problems;
+
+    expect(addition.some(problem => problem.num1 === 1 && problem.num2 === 1)).toBe(false);
+    expect(subtraction.some(problem => problem.num1 === 2 && problem.num2 === 1)).toBe(false);
+  });
 });

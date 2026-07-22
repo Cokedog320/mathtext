@@ -57,6 +57,16 @@ describe('generateProblems - Vertical Arithmetic', () => {
     expect(allHaveCarry).toBe(true);
   });
 
+  it('uses the available 9 carry and 11 no-carry additions in a mixed worksheet within 20', () => {
+    const problems = generateProblems('1-20', 'vertical-add', 'mixed')
+      .filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
+
+    expect(problems).toHaveLength(20);
+    expect(problems.filter(p => (p.num1 % 10) + (p.num2 % 10) >= 10)).toHaveLength(9);
+    expect(problems.filter(p => (p.num1 % 10) + (p.num2 % 10) < 10)).toHaveLength(11);
+    expect(new Set(problems.map(p => `${p.num1}+${p.num2}`)).size).toBe(20);
+  });
+
   it('should generate ONLY no-carry addition problems when regroup is none', () => {
     const problems = generateProblems('1-20', 'vertical-add', 'none');
     const arithmeticProblems = problems.filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic' && p.operator === '+');
@@ -75,6 +85,19 @@ describe('generateProblems - Vertical Arithmetic', () => {
 
     const allHaveBorrow = arithmeticProblems.every(p => (p.num1 % 10) < (p.num2 % 10));
     expect(allHaveBorrow).toBe(true);
+  });
+
+  it('uses all 20 unique regrouping equations for mixed vertical arithmetic within 20', () => {
+    const problems = generateProblems('1-20', 'vertical-mixed', 'only')
+      .filter((p): p is Extract<Problem, { type: 'arithmetic' }> => p.type === 'arithmetic');
+
+    expect(problems).toHaveLength(20);
+    expect(new Set(problems.map(p => `${p.num1}${p.operator}${p.num2}`)).size).toBe(20);
+    expect(problems.filter(p => p.operator === '+')).toHaveLength(9);
+    expect(problems.filter(p => p.operator === '-')).toHaveLength(11);
+    expect(problems.every(p => p.operator === '+'
+      ? (p.num1 % 10) + (p.num2 % 10) >= 10
+      : (p.num1 % 10) < (p.num2 % 10))).toBe(true);
   });
 
   it('should generate ONLY no-borrow subtraction problems when regroup is none', () => {

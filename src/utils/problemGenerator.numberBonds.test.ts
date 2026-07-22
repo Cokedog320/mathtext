@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { generateProblems } from "./problemGenerator";
 
 describe('generateProblems - Number Bonds (Single Number)', () => {
@@ -45,9 +45,9 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
     }
   });
 
-  it('should generate completely blank template of size 9 when isBlankTemplate is true', () => {
+  it('should generate a twelve-problem blank template when isBlankTemplate is true', () => {
     const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', 5, true);
-    expect(problems.length).toBe(9);
+    expect(problems.length).toBe(12);
     for (const p of problems) {
       if (p.type === 'bond') {
         expect(p.top).toBe('');
@@ -58,10 +58,45 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
     }
   });
 
-  it('should generate exactly one problem for each number in 2-10 range when bondNumber is 2-10', () => {
-    const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', '2-10');
-    expect(problems.length).toBe(9);
-    const tops = problems.map(p => p.type === 'bond' ? p.top : 0).sort((a, b) => (a as number) - (b as number));
-    expect(tops).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  it('generates twelve mixed-target problems without forcing the 1 + 1 decomposition', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.1);
+
+    try {
+      const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', 'mixed');
+
+      expect(problems).toHaveLength(12);
+      expect(problems.every(problem =>
+        problem.type === 'bond'
+        && typeof problem.top === 'number'
+        && problem.top >= 3
+        && problem.top <= 10
+      )).toBe(true);
+
+      const targetCounts = problems.reduce<Map<number, number>>((counts, problem) => {
+        if (problem.type === 'bond' && typeof problem.top === 'number') {
+          counts.set(problem.top, (counts.get(problem.top) ?? 0) + 1);
+        }
+        return counts;
+      }, new Map());
+
+      expect([...targetCounts.keys()].sort((a, b) => a - b)).toEqual([3, 4, 5, 6, 7, 8, 9, 10]);
+      expect([...targetCounts.values()].every(count => count <= 2)).toBe(true);
+    } finally {
+      random.mockRestore();
+    }
+  });
+
+  it('includes exactly one target number 2 when the mixed worksheet selects it', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    try {
+      const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', 'mixed');
+      const targetTwos = problems.filter(problem => problem.type === 'bond' && problem.top === 2);
+
+      expect(problems).toHaveLength(12);
+      expect(targetTwos).toHaveLength(1);
+    } finally {
+      random.mockRestore();
+    }
   });
 });

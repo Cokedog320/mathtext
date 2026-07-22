@@ -7,7 +7,8 @@ import type { Mode, Range } from '../types';
 const renderSidebar = (
   language: 'zh' | 'en',
   mode: Mode,
-  range: Range = '1-20'
+  range: Range = '1-20',
+  lowerOperandDigits: 'mixed' | 'one' | 'two' = 'mixed',
 ) => renderToStaticMarkup(
   <Sidebar
     range={range}
@@ -16,7 +17,7 @@ const renderSidebar = (
     setMode={vi.fn()}
     regroup="mixed"
     setRegroup={vi.fn()}
-    lowerOperandDigits="mixed"
+    lowerOperandDigits={lowerOperandDigits}
     setLowerOperandDigits={vi.fn()}
     makeTenLeft="mixed"
     setMakeTenLeft={vi.fn()}
@@ -59,6 +60,30 @@ describe('Sidebar vertical arithmetic settings', () => {
     expect(html).toContain('One Digit');
     expect(html).toContain('Two Digits');
     expect(html).not.toContain('>Within 10<');
+  });
+
+  it('uses the requested regrouping title and option order', () => {
+    const chinese = renderSidebar('zh', 'vertical-sub');
+    const english = renderSidebar('en', 'vertical-sub');
+
+    expect(chinese).toContain('进退位');
+    expect(chinese).toMatch(/不进退位[\s\S]*需进退位[\s\S]*混合/);
+    expect(english).toContain('Regrouping');
+    expect(english).toMatch(/Without Regrouping[\s\S]*With Regrouping[\s\S]*Mixed/);
+  });
+
+  it('hides With Regrouping only for vertical addition within 20', () => {
+    expect(renderSidebar('zh', 'vertical-add', '1-20')).not.toContain('需进退位');
+    expect(renderSidebar('zh', 'vertical-sub', '1-20')).toContain('需进退位');
+    expect(renderSidebar('zh', 'vertical-mixed', '1-20')).toContain('需进退位');
+    expect(renderSidebar('zh', 'vertical-add', '1-30', 'one')).toContain('需进退位');
+  });
+
+  it('hides With Regrouping for mixed or two-digit vertical addition within 30', () => {
+    expect(renderSidebar('zh', 'vertical-add', '1-30', 'mixed')).not.toContain('需进退位');
+    expect(renderSidebar('zh', 'vertical-add', '1-30', 'two')).not.toContain('需进退位');
+    expect(renderSidebar('zh', 'vertical-add', '1-30', 'one')).toContain('需进退位');
+    expect(renderSidebar('zh', 'vertical-add', '1-50', 'two')).toContain('需进退位');
   });
 });
 

@@ -184,8 +184,8 @@ describe('generateProblems - Practice bands and worksheet density', () => {
     ['1-100', 'horizontal-add', 5, false, 60],
     ['1-100', 'horizontal-chain-mixed', 5, false, 20],
     ['1-20', 'number-bonds', 7, false, 6],
-    ['1-20', 'number-bonds', '2-10', false, 9],
-    ['1-20', 'number-bonds', 5, true, 9],
+    ['1-20', 'number-bonds', 'mixed', false, 12],
+    ['1-20', 'number-bonds', 5, true, 12],
   ] as const)(
     'reports the requested count for %s %s with bond target %s and blank=%s',
     (range, mode, bondNumber, isBlankTemplate, count) => {

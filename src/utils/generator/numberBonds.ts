@@ -1,13 +1,42 @@
 import { Problem } from '../../types';
 
+const shuffle = <T>(items: T[]): T[] => {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index--) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+};
+
 export const generateNumberBonds = (
   bondUseType: 'practice' | 'study',
-  bondNumber: number | '2-10',
+  bondNumber: number | 'mixed',
   isBlankTemplate: boolean
 ): Problem[] => {
   const problems: Problem[] = [];
-  if (bondNumber === '2-10' && !isBlankTemplate) {
-    for (let n = 2; n <= 10; n++) {
+  if (isBlankTemplate) {
+    return Array.from({ length: 12 }, (_, id) => ({
+      id,
+      type: 'bond' as const,
+      top: '',
+      left: '',
+      right: '',
+      isBlank: true,
+    }));
+  }
+
+  if (bondNumber === 'mixed' && !isBlankTemplate) {
+    const includesTwo = Math.random() < 0.1;
+    const standardTargets = [3, 4, 5, 6, 7, 8, 9, 10];
+    const extraTargets = shuffle(standardTargets).slice(0, includesTwo ? 3 : 4);
+    const targets = shuffle([
+      ...standardTargets,
+      ...extraTargets,
+      ...(includesTwo ? [2] : []),
+    ]);
+
+    for (const [id, n] of targets.entries()) {
       const k = Math.floor(Math.random() * (n - 1)) + 1;
       const leftVal = k;
       const rightVal = n - k;
@@ -18,12 +47,14 @@ export const generateNumberBonds = (
         left = isLeftKnown ? leftVal : '';
         right = isLeftKnown ? '' : rightVal;
       }
-      problems.push({ id: n - 2, type: 'bond', top: n, left, right });
+      problems.push({ id, type: 'bond', top: n, left, right });
     }
     return problems;
   }
 
-  const targetNumber = (isBlankTemplate || bondNumber === '2-10') ? 10 : bondNumber;
+  const targetNumber = bondNumber;
+  if (typeof targetNumber !== 'number') return problems;
+
   for (let k = 1; k < targetNumber; k++) {
     const leftVal = k;
     const rightVal = targetNumber - k;
@@ -37,10 +68,9 @@ export const generateNumberBonds = (
     problems.push({
       id: k - 1,
       type: 'bond',
-      top: isBlankTemplate ? '' : targetNumber,
-      left: isBlankTemplate ? '' : left,
-      right: isBlankTemplate ? '' : right,
-      isBlank: isBlankTemplate
+      top: targetNumber,
+      left,
+      right,
     });
   }
   return problems;

@@ -1,8 +1,8 @@
 # MathText
 
-一个用于生成小学数学练习题的小工具，支持数字组合、竖式/横式加减、凑十/破十/平十法等多种题型，可一键打印或导出 PDF。
+一个用于生成小学数学练习题的小工具，支持数字组合、竖式/横式加减、连续算式、算式填空及凑十/破十/平十法，可一键打印或导出 PDF。
 
-A small tool for generating elementary math practice worksheets. It supports number bonds, vertical/horizontal addition & subtraction, make-ten / break-ten / flat-ten methods, and can print or export PDFs with one click.
+A small tool for generating elementary math practice worksheets. It supports number bonds, vertical and horizontal arithmetic, chained arithmetic, fill-in-the-blank equations, and make-ten / break-ten / flat-ten methods. Worksheets can be printed or exported as PDFs.
 
 ## 功能特性 / Features
 
@@ -11,9 +11,12 @@ A small tool for generating elementary math practice worksheets. It supports num
   - 竖式加法、竖式减法、竖式混合 / Vertical addition, subtraction, mixed
   - 横式加法、横式减法、横式混合 / Horizontal addition, subtraction, mixed
   - 连续加法、连续减法、连续加减混合 / Chained addition, subtraction, mixed
+  - 横式填空（加法、减法、加减混合）/ Horizontal fill-in-the-blank equations
   - 凑十法、破十法、平十法 / Make-ten, break-ten, flat-ten methods
 - **练习区间 / Practice bands**：10以内（2–10）、20以内（11–20）、30以内（21–30）、50以内（31–50）、100以内（51–100）
-- **进退位控制 / Regrouping control**：混合、无进/退位、仅进/退位
+- **竖式配置 / Vertical arithmetic settings**：可选择下方操作数为一位数、两位数或混合；混合进退位练习始终显示记录框，不会泄露题目类型
+- **进退位控制 / Regrouping control**：不进退位、需进退位、混合。会自动隐藏会退化为少量重复题的竖式加法组合，并在切换配置后保留仍然有效的选择
+- **题目多样性 / Variety safeguards**：混合练习优先生成完整且不重复的题目；填空题会降低 `1 + 1` 和 `2 - 1` 的出现率，同时保留其他含 1 的练习
 - **打印与导出 / Print & export**：打印预览、直接打印、下载 PDF
 - **中英双语界面 / Bilingual UI**：中文与英文一键切换
 - **响应式布局 / Responsive layout**：桌面与移动端均可使用
@@ -50,12 +53,13 @@ The dev server runs at `http://localhost:3000` by default.
 
 ```
 mathtext/
-├── src/              # 前端源码 / Frontend source
-│   ├── App.tsx       # 主要组件与题目生成逻辑 / Main component & problem generator
-│   ├── App.test.ts   # 单元测试 / Unit tests
-│   ├── main.tsx      # 应用入口 / App entry
-│   └── index.css     # 全局样式 / Global styles
-├── docs/             # 设计文档与决策记录 / Design docs & ADRs
+├── src/                    # 前端源码 / Frontend source
+│   ├── components/          # 界面与习题渲染 / UI and problem renderers
+│   ├── utils/generator/     # 题目生成规则 / Generation rules
+│   ├── *.test.ts            # 单元测试 / Unit tests
+│   ├── App.tsx              # 应用状态与编排 / App state and orchestration
+│   └── main.tsx             # 应用入口 / App entry
+├── CONTEXT.md               # 项目术语与规则 / Project vocabulary and rules
 ├── index.html        # HTML 入口 / HTML entry
 ├── package.json      # 依赖与脚本 / Dependencies & scripts
 ├── tsconfig.json     # TypeScript 配置 / TypeScript config

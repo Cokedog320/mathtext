@@ -22,11 +22,11 @@ export const MAX_VALUE_ONE_OPERAND_PROBLEMS = 1;
 export const getRequestedProblemCount = (
   range: Range,
   mode: Mode,
-  bondNumber: number | '2-10' = 5,
+  bondNumber: number | 'mixed' = 5,
   isBlankTemplate = false
 ): number => {
   if (mode === 'number-bonds') {
-    return isBlankTemplate || bondNumber === '2-10' ? 9 : bondNumber - 1;
+    return isBlankTemplate || bondNumber === 'mixed' ? 12 : bondNumber - 1;
   }
   if (mode.startsWith('horizontal-chain-')) return CHAINED_PROBLEM_COUNT;
   if (mode.startsWith('vertical-')) return 20;

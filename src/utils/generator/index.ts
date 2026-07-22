@@ -19,7 +19,7 @@ type GeneratorOptions = {
   regroup: RegroupOption;
   makeTenLeft: string;
   bondUseType: 'practice' | 'study';
-  bondNumber: number | '2-10';
+  bondNumber: number | 'mixed';
   isBlankTemplate: boolean;
   lowerOperandDigits: LowerOperandDigits;
 };
@@ -64,7 +64,7 @@ export const generateProblems = (
   regroup: RegroupOption = 'mixed',
   makeTenLeft: string = 'mixed',
   bondUseType: 'practice' | 'study' = 'practice',
-  bondNumber: number | '2-10' = 5,
+  bondNumber: number | 'mixed' = 5,
   isBlankTemplate: boolean = false,
   lowerOperandDigits: LowerOperandDigits = 'mixed'
 ): Problem[] => GENERATOR_STRATEGIES[mode]({

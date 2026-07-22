@@ -62,12 +62,12 @@ export const VerticalArithmetic: React.FC<{
       <div className="grid grid-cols-[30px_42px_42px] grid-rows-[26px_45px_45px_4px] items-center text-center font-mono text-black">
         <span />
         {showWorkBoxes && problem.operator === '+' ? (
-          <span data-work-box="carry-tens" className="mx-auto h-[22px] w-[22px] border border-black bg-white" />
+          <span data-work-box="carry-tens" className="fill-box mx-auto" />
         ) : showWorkBoxes && problem.operator === '-' ? (
-          <span data-work-box="borrow-tens" className="mx-auto h-[22px] w-[22px] border border-black bg-white" />
+          <span data-work-box="borrow-tens" className="fill-box mx-auto" />
         ) : <span />}
         {showWorkBoxes && problem.operator === '-' ? (
-          <span data-work-box="borrow-ones" className="mx-auto h-[22px] w-[22px] border border-black bg-white" />
+          <span data-work-box="borrow-ones" className="fill-box mx-auto" />
         ) : <span />}
 
         <span />
@@ -93,7 +93,7 @@ export const HorizontalArithmetic: React.FC<{ problem: Extract<Problem, { type: 
         <span>{problem.operator}</span>
         <span>{problem.num2}</span>
         <span>=</span>
-        <div className="w-[28px] h-[28px] border border-black bg-white shrink-0"></div>
+        <span className="fill-box shrink-0" aria-label="answer" />
       </div>
     </div>
   );
@@ -120,7 +120,7 @@ export const ChainedArithmetic: React.FC<{
   return (
     <div className="relative w-[220px] h-full flex items-center justify-between px-2 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className="flex items-center justify-center gap-2 w-full text-xl font-normal text-black mt-2 select-none whitespace-nowrap">
+      <div className={`flex items-center justify-center gap-2 w-full ${HORIZONTAL_FILL_TEXT_STYLE} mt-2 select-none whitespace-nowrap`}>
         <span>{problem.operands[0]}</span>
         <span>{problem.operators[0]}</span>
         <span>{problem.operands[1]}</span>

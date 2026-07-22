@@ -11,6 +11,30 @@ export type FillGenerationResult = {
   truncated: boolean;
 };
 
+const isLowPriorityCandidate = (candidate: FillCandidate): boolean =>
+  (candidate.operator === '+' && candidate.num1 === 1 && candidate.num2 === 1)
+  || (candidate.operator === '-' && candidate.num1 === 2 && candidate.num2 === 1);
+
+const selectCandidates = (
+  pool: FillCandidate[],
+  requestedCount: number,
+  randomFn?: () => number,
+): FillCandidate[] => {
+  const selected = pool.slice(0, requestedCount);
+  const remaining = pool.slice(requestedCount);
+  const random = randomFn ?? Math.random;
+
+  for (let index = 0; index < selected.length; index++) {
+    if (!isLowPriorityCandidate(selected[index]) || random() < 0.25) continue;
+
+    const replacementIndex = remaining.findIndex(candidate => !isLowPriorityCandidate(candidate));
+    if (replacementIndex < 0) continue;
+    selected[index] = remaining.splice(replacementIndex, 1)[0];
+  }
+
+  return selected;
+};
+
 export const generateHorizontalFillProblems = (
   range: Range,
   mode: FillMode,
@@ -24,11 +48,11 @@ export const generateHorizontalFillProblems = (
   if (mode === 'horizontal-fill-add') {
     const pool = shuffle(buildFillCandidates(range, '+', regroup), randomFn);
     availableCount = pool.length;
-    selectedCandidates = pool.slice(0, requestedCount);
+    selectedCandidates = selectCandidates(pool, requestedCount, randomFn);
   } else if (mode === 'horizontal-fill-sub') {
     const pool = shuffle(buildFillCandidates(range, '-', regroup), randomFn);
     availableCount = pool.length;
-    selectedCandidates = pool.slice(0, requestedCount);
+    selectedCandidates = selectCandidates(pool, requestedCount, randomFn);
   } else {
     // horizontal-fill-mixed
     const addPool = shuffle(buildFillCandidates(range, '+', regroup), randomFn);
@@ -38,19 +62,22 @@ export const generateHorizontalFillProblems = (
     const targetAdd = Math.ceil(requestedCount / 2);
     const targetSub = Math.floor(requestedCount / 2);
 
-    const takenAdd = addPool.slice(0, targetAdd);
-    const takenSub = subPool.slice(0, targetSub);
+    const takenAdd = selectCandidates(addPool, targetAdd, randomFn);
+    const takenSub = selectCandidates(subPool, targetSub, randomFn);
 
     let combined = [...takenAdd, ...takenSub];
 
     // If one pool had fewer candidates than requested target, fill deficit from remaining of the other pool
     if (combined.length < requestedCount) {
-      const remainingAdd = addPool.slice(takenAdd.length);
-      const remainingSub = subPool.slice(takenSub.length);
+      const remainingAdd = addPool.filter(candidate => !takenAdd.includes(candidate));
+      const remainingSub = subPool.filter(candidate => !takenSub.includes(candidate));
       const remainingCombined = shuffle([...remainingAdd, ...remainingSub], randomFn);
 
       const deficit = requestedCount - combined.length;
-      combined = [...combined, ...remainingCombined.slice(0, deficit)];
+      combined = [
+        ...combined,
+        ...selectCandidates(remainingCombined, deficit, randomFn),
+      ];
     }
 
     selectedCandidates = shuffle(combined, randomFn);

@@ -90,6 +90,22 @@ export const generateVerticalArithmetic = (
             (candidate: ArithmeticCandidate) => candidate.operator === desiredOperator,
           ]
         : []),
+      ...(includeAdd && includeSub
+        ? [
+            (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
+              candidate.lowerDigits === desiredDigits &&
+              candidate.needsRegroup === desiredRegroup,
+            (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
+              candidate.lowerDigits === desiredDigits,
+            ...(lowerOperandDigits === 'mixed'
+              ? [
+                  (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
+                    candidate.needsRegroup === desiredRegroup,
+                  (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator,
+                ]
+              : []),
+          ]
+        : []),
     ];
 
     let selectionPool: ArithmeticCandidate[] = [];

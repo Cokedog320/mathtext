@@ -1,7 +1,8 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ChainedArithmetic, VerticalArithmetic } from './ProblemRenderers';
+import { HORIZONTAL_FILL_TEXT_STYLE } from './HorizontalFillArithmetic';
+import { ChainedArithmetic, HorizontalArithmetic, VerticalArithmetic } from './ProblemRenderers';
 
 const renderVertical = (operator: '+' | '-', regroup: 'mixed' | 'none' | 'only') =>
   renderToStaticMarkup(
@@ -48,5 +49,18 @@ describe('ChainedArithmetic', () => {
     const visibleText = markup.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
 
     expect(visibleText).toContain('1.8+2-3=');
+  });
+});
+
+describe('HorizontalArithmetic', () => {
+  it('uses the shared text style for ordinary and fill arithmetic', () => {
+    const markup = renderToStaticMarkup(
+      <HorizontalArithmetic
+        problem={{ id: 1, type: 'arithmetic', num1: 8, num2: 2, operator: '+' }}
+        index={0}
+      />,
+    );
+
+    expect(markup).toContain(HORIZONTAL_FILL_TEXT_STYLE);
   });
 });

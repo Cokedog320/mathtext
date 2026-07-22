@@ -5,11 +5,13 @@ interface Props {
   problem: HorizontalFillProblem;
 }
 
+export const HORIZONTAL_FILL_TEXT_STYLE = 'text-xl md:text-2xl font-semibold text-gray-800 tracking-wide';
+
 export const HorizontalFillArithmetic: React.FC<Props> = ({ problem }) => {
   const { num1, num2, result, operator, blankPosition } = problem;
 
   return (
-    <div className="flex items-center justify-start text-xl md:text-2xl font-semibold text-gray-800 tracking-wide select-none">
+    <div className={`flex items-center justify-start ${HORIZONTAL_FILL_TEXT_STYLE} select-none`}>
       {blankPosition === 1 ? (
         <>
           <span className="fill-box" aria-label="blank" />

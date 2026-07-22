@@ -5,7 +5,12 @@ import {
   HorizontalArithmeticMode,
 } from './arithmeticCandidates';
 import { shuffle } from './random';
-import { HORIZONTAL_PROBLEM_COUNTS } from './worksheetRules';
+import {
+  HORIZONTAL_PROBLEM_COUNTS,
+  MAX_VALUE_ONE_OPERAND_PROBLEMS,
+} from './worksheetRules';
+
+const MAX_WITHIN_TEN_BOUNDARY_TARGET_PROBLEMS = 3;
 
 export const generateHorizontalArithmetic = (
   range: Range,
@@ -27,6 +32,14 @@ export const generateHorizontalArithmetic = (
   const targetCounts = new Map<number, number>();
   const candidateKey = (candidate: ArithmeticCandidate): string =>
     `${candidate.num1}${candidate.operator}${candidate.num2}`;
+  const targetFor = (candidate: ArithmeticCandidate): number =>
+    candidate.operator === '+' ? candidate.num1 + candidate.num2 : candidate.num1;
+  const hasWithinTenTargetCapacity = (candidate: ArithmeticCandidate): boolean => {
+    if (!ignoresRegroup) return true;
+    const target = targetFor(candidate);
+    return target !== 10 ||
+      (targetCounts.get(target) ?? 0) < MAX_WITHIN_TEN_BOUNDARY_TARGET_PROBLEMS;
+  };
   const allowsRareFact = (candidate: ArithmeticCandidate): boolean => {
     if (!ignoresRegroup) return true;
     if (candidate.operator === '+') {
@@ -37,6 +50,7 @@ export const generateHorizontalArithmetic = (
     return candidate.num1 !== 2 || candidate.num2 !== 1 || allowTwoMinusOne;
   };
   let addOneSelections = 0;
+  let subtractOneSelections = 0;
 
   for (let index = 0; index < maxProblems; index++) {
     const desiredOperator: '+' | '-' = includeAdd && includeSub
@@ -57,28 +71,30 @@ export const generateHorizontalArithmetic = (
         filter(candidate) &&
         allowsRareFact(candidate) &&
         !used.has(candidateKey(candidate)) &&
+        hasWithinTenTargetCapacity(candidate) &&
         !(
           ignoresRegroup &&
-          candidate.operator === '+' &&
-          (candidate.num1 === 1 || candidate.num2 === 1) &&
-          addOneSelections >= 2
+          (
+              (candidate.operator === '+' &&
+              (candidate.num1 === 1 || candidate.num2 === 1) &&
+              addOneSelections >= MAX_VALUE_ONE_OPERAND_PROBLEMS) ||
+            (candidate.operator === '-' &&
+              candidate.num2 === 1 &&
+              subtractOneSelections >= MAX_VALUE_ONE_OPERAND_PROBLEMS)
+          )
         )
       );
       if (unused.length === 0) continue;
 
       const leastUsed = ignoresRegroup
         ? Math.min(...unused.map(candidate => {
-            const target = candidate.operator === '+'
-              ? candidate.num1 + candidate.num2
-              : candidate.num1;
+            const target = targetFor(candidate);
             return targetCounts.get(target) ?? 0;
           }))
         : 0;
       const balanced = ignoresRegroup
         ? unused.filter(candidate => {
-            const target = candidate.operator === '+'
-              ? candidate.num1 + candidate.num2
-              : candidate.num1;
+            const target = targetFor(candidate);
             return (targetCounts.get(target) ?? 0) === leastUsed;
           })
         : unused;
@@ -100,10 +116,11 @@ export const generateHorizontalArithmetic = (
     ) {
       addOneSelections += 1;
     }
+    if (ignoresRegroup && selected.operator === '-' && selected.num2 === 1) {
+      subtractOneSelections += 1;
+    }
     if (ignoresRegroup) {
-      const target = selected.operator === '+'
-        ? selected.num1 + selected.num2
-        : selected.num1;
+      const target = targetFor(selected);
       targetCounts.set(target, (targetCounts.get(target) ?? 0) + 1);
     }
   }

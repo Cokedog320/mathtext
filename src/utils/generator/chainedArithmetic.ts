@@ -1,7 +1,11 @@
 import { Mode, Problem, Range, RegroupOption } from '../../types';
 import { shuffle } from './random';
 import { ArithmeticOperator, matchesRegroup, requiresRegroup } from './regroup';
-import { CHAINED_PROBLEM_COUNT, PRACTICE_BANDS } from './worksheetRules';
+import {
+  CHAINED_PROBLEM_COUNT,
+  MAX_VALUE_ONE_OPERAND_PROBLEMS,
+  PRACTICE_BANDS,
+} from './worksheetRules';
 
 type ChainedMode = Extract<Mode, 'horizontal-chain-add' | 'horizontal-chain-sub' | 'horizontal-chain-mixed'>;
 type ChainedCandidate = {
@@ -116,7 +120,7 @@ const selectWithinTenChainedCandidates = (
   const operatorKey = (candidate: ChainedCandidate): string => candidate.operators.join('');
   const operatorKinds = [...new Set(candidates.map(operatorKey))];
   const operatorTarget = limit / operatorKinds.length;
-  const primaryDistributionCap = 10;
+  const primaryDistributionCap = 5;
   const laterOperandCap = 9;
   const increment = <K>(counts: Map<K, number>, key: K): void => {
     counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -139,8 +143,6 @@ const selectWithinTenChainedCandidates = (
     let oneProblems = 0;
 
     while (selected.length < limit) {
-      const slotsRemaining = limit - selected.length;
-      const oneProblemsNeeded = 2 - oneProblems;
       let bestScore: number[] | null = null;
       let bestCandidates: ChainedCandidate[] = [];
 
@@ -152,8 +154,7 @@ const selectWithinTenChainedCandidates = (
         const startCap = first === 10 ? 3 : primaryDistributionCap;
         const resultCap = candidate.result === 10 ? 3 : primaryDistributionCap;
 
-        if (oneProblem && oneProblems >= 2) continue;
-        if (!oneProblem && slotsRemaining === oneProblemsNeeded) continue;
+        if (oneProblem && oneProblems >= MAX_VALUE_ONE_OPERAND_PROBLEMS) continue;
         if ((operators.get(kind) ?? 0) >= operatorTarget) continue;
         if ((starts.get(first) ?? 0) >= startCap) continue;
         if ((results.get(candidate.result) ?? 0) >= resultCap) continue;
@@ -163,7 +164,7 @@ const selectWithinTenChainedCandidates = (
         const score = [
           ((operators.get(kind) ?? 0) + 1) / operatorTarget,
           ((oneProblem ? oneProblems : selected.length - oneProblems) + 1) /
-            (oneProblem ? 2 : limit - 2),
+            (oneProblem ? MAX_VALUE_ONE_OPERAND_PROBLEMS : limit - MAX_VALUE_ONE_OPERAND_PROBLEMS),
           Math.max(
             ((starts.get(first) ?? 0) + 1) / 4,
             ((results.get(candidate.result) ?? 0) + 1) / 4
@@ -200,7 +201,7 @@ const selectWithinTenChainedCandidates = (
       if (usesOne(candidate)) oneProblems += 1;
     }
 
-    if (selected.length === limit && oneProblems === 2) {
+    if (selected.length === limit) {
       return shuffle(selected);
     }
   }
@@ -283,7 +284,9 @@ const selectChainedCandidates = (
           const simplePattern = usesSimplePattern(candidate);
           const operatorTarget = operatorTargets.get(kind) ?? 0;
           const regroupTarget = regroupTargets.get(candidate.needsRegroup) ?? 0;
-          const oneTarget = oneKind ? 2 : limit - 2;
+          const oneTarget = oneKind
+            ? MAX_VALUE_ONE_OPERAND_PROBLEMS
+            : limit - MAX_VALUE_ONE_OPERAND_PROBLEMS;
           if ((starts.get(first) ?? 0) >= primaryCap) continue;
           if ((results.get(candidate.result) ?? 0) >= primaryCap) continue;
           if ((seconds.get(second) ?? 0) >= 4) continue;

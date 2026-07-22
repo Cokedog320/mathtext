@@ -17,6 +17,7 @@ export const HORIZONTAL_PROBLEM_COUNTS: Record<Range, number> = {
 };
 
 export const CHAINED_PROBLEM_COUNT = 20;
+export const MAX_VALUE_ONE_OPERAND_PROBLEMS = 1;
 
 export const getRequestedProblemCount = (
   range: Range,

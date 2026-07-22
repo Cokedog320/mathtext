@@ -237,7 +237,7 @@ describe('generateProblems - Chained Arithmetic', () => {
     'only',
     'mixed',
   ] as const).map(regroup => [mode, regroup] as const)))(
-    'limits one-valued later operands to two problems for %s with %s regrouping',
+    'limits one-valued later operands to at most one problem for %s with %s regrouping',
     (mode, regroup) => {
       const random = vi.spyOn(Math, 'random');
 
@@ -250,7 +250,7 @@ describe('generateProblems - Chained Arithmetic', () => {
           );
 
           expect(problems).toHaveLength(20);
-          expect(oneOperandProblems).toHaveLength(2);
+          expect(oneOperandProblems.length).toBeLessThanOrEqual(1);
         }
       } finally {
         random.mockRestore();

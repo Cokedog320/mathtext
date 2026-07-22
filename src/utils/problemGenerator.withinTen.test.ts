@@ -23,7 +23,7 @@ describe('generateProblems - 1-10 Range', () => {
     })).toBe(true);
   });
 
-  it('limits add-one facts to at most two distinct horizontal addition problems', () => {
+  it('limits add-one facts to at most one distinct horizontal addition problem', () => {
     const problems = generateProblems('1-10', 'horizontal-add', 'mixed')
       .filter((problem): problem is Extract<Problem, { type: 'arithmetic' }> =>
         problem.type === 'arithmetic'
@@ -35,7 +35,20 @@ describe('generateProblems - 1-10 Range', () => {
 
     expect(problems).toHaveLength(20);
     expect(new Set(equations).size).toBe(20);
-    expect(addOneProblems.length).toBeLessThanOrEqual(2);
+    expect(addOneProblems.length).toBeLessThanOrEqual(1);
+  });
+
+  it('limits subtract-one facts to at most one distinct horizontal subtraction problem', () => {
+    const problems = generateProblems('1-10', 'horizontal-sub', 'mixed')
+      .filter((problem): problem is Extract<Problem, { type: 'arithmetic' }> =>
+        problem.type === 'arithmetic'
+      );
+    const equations = problems.map(problem => `${problem.num1}-${problem.num2}`);
+    const subtractOneProblems = problems.filter(problem => problem.num2 === 1);
+
+    expect(problems).toHaveLength(20);
+    expect(new Set(equations).size).toBe(20);
+    expect(subtractOneProblems.length).toBeLessThanOrEqual(1);
   });
 
   it('does not force the smallest add-one and subtract-one facts into every worksheet', () => {
@@ -64,7 +77,7 @@ describe('generateProblems - 1-10 Range', () => {
       random.mockReturnValue(0);
       expect(includesRareFacts()).toEqual({
         onePlusOne: true,
-        onePlusTwo: true,
+        onePlusTwo: false,
         twoMinusOne: true,
       });
 
@@ -79,7 +92,7 @@ describe('generateProblems - 1-10 Range', () => {
     }
   });
 
-  it('limits one-valued later addends to two chained addition problems', () => {
+  it('limits one-valued later addends to at most one chained addition problem', () => {
     const problems = generateProblems(
       '1-10',
       'horizontal-chain-add',
@@ -90,10 +103,10 @@ describe('generateProblems - 1-10 Range', () => {
     );
 
     expect(problems).toHaveLength(20);
-    expect(addOneProblems).toHaveLength(2);
+    expect(addOneProblems.length).toBeLessThanOrEqual(1);
   });
 
-  it('limits one-valued subtrahends to two chained subtraction problems', () => {
+  it('limits one-valued subtrahends to at most one chained subtraction problem', () => {
     const problems = generateProblems(
       '1-10',
       'horizontal-chain-sub',
@@ -104,7 +117,7 @@ describe('generateProblems - 1-10 Range', () => {
     );
 
     expect(problems).toHaveLength(20);
-    expect(subtractOneProblems).toHaveLength(2);
+    expect(subtractOneProblems.length).toBeLessThanOrEqual(1);
   });
 
   it.each(['none', 'only', 'mixed'] as const)(

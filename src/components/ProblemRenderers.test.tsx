@@ -70,13 +70,17 @@ describe('HorizontalArithmetic', () => {
   it('uses compact typography that keeps ordinary equations inside their cards', () => {
     const markup = renderToStaticMarkup(
       <HorizontalArithmetic
-        problem={{ id: 1, type: 'arithmetic', num1: 99, num2: 97, operator: '-' }}
+        problem={{ id: 1, type: 'arithmetic', num1: 100, num2: 99, operator: '-' }}
         index={0}
       />,
     );
 
-    expect(markup).toContain('gap-1.5');
-    expect(markup).toContain('text-xl');
+    expect(markup).toContain('px-1');
+    expect(markup).toContain('gap-1');
+    expect(markup).toContain('text-lg');
+    expect(markup).toContain('whitespace-nowrap');
+    expect(markup).not.toContain('gap-1.5');
+    expect(markup).not.toContain('text-xl');
     expect(markup).not.toContain('gap-2.5');
     expect(markup).not.toContain('md:text-2xl');
     expect(markup).toContain('fill-box');

@@ -86,9 +86,9 @@ export const VerticalArithmetic: React.FC<{
 
 export const HorizontalArithmetic: React.FC<{ problem: Extract<Problem, { type: 'arithmetic' }>; index: number }> = ({ problem, index }) => {
   return (
-    <div className="relative w-[160px] h-full flex items-center justify-between px-2 border border-gray-100 rounded-sm">
+    <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className="flex items-center justify-center gap-1.5 w-full text-xl font-semibold text-gray-800 mt-2 select-none">
+      <div className="flex min-w-0 items-center justify-center gap-1 w-full text-lg font-semibold text-gray-800 mt-2 select-none whitespace-nowrap">
         <span>{problem.num1}</span>
         <span>{problem.operator}</span>
         <span>{problem.num2}</span>

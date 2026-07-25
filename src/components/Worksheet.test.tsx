@@ -71,6 +71,20 @@ describe('Worksheet arithmetic layout', () => {
     expect(markup).toContain('grid-template-rows:repeat(7, minmax(0, 1fr))');
     expect(markup).toContain('flex-1');
   });
+
+  it('uses the shared 1-20 count and medium typography for chained worksheets', () => {
+    const problems: Problem[] = Array.from({ length: 30 }, (_, id) => ({
+      id,
+      type: 'arithmetic-chain',
+      operands: [12, 3, 2],
+      operators: ['+', '-'],
+    }));
+    const markup = renderWorksheet('horizontal-chain-add', problems, 5, false, '1-20');
+
+    expect(markup).toContain('grid-template-rows:repeat(10, minmax(0, 1fr))');
+    expect(markup).toContain('gap-1.5');
+    expect(markup).toContain('text-xl');
+  });
 });
 
 describe('Worksheet mixed number-bond layout', () => {

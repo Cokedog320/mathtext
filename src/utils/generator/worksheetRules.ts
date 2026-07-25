@@ -16,7 +16,6 @@ export const HORIZONTAL_PROBLEM_COUNTS: Record<Range, number> = {
   '1-100': 60,
 };
 
-export const CHAINED_PROBLEM_COUNT = 20;
 export const MAX_VALUE_ONE_OPERAND_PROBLEMS = 1;
 
 export const getRequestedProblemCount = (
@@ -28,7 +27,7 @@ export const getRequestedProblemCount = (
   if (mode === 'number-bonds') {
     return isBlankTemplate || bondNumber === 'mixed' ? 12 : bondNumber - 1;
   }
-  if (mode.startsWith('horizontal-chain-')) return CHAINED_PROBLEM_COUNT;
+  if (mode.startsWith('horizontal-chain-')) return HORIZONTAL_PROBLEM_COUNTS[range];
   if (mode.startsWith('vertical-')) return 20;
   if (mode.startsWith('horizontal-')) return HORIZONTAL_PROBLEM_COUNTS[range];
   return 20;

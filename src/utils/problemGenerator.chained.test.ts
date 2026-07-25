@@ -1,11 +1,37 @@
 import { describe, expect, it, vi } from "vitest";
 import { generateProblems, requiresRegroup } from "./problemGenerator";
-import type { Problem } from "../types";
+import type { Problem, Range } from "../types";
 import { seededRandom } from "../test/seededRandom";
 
 type GeneratedChainProblem = Extract<Problem, { type: "arithmetic-chain" }>;
+const chainProblemCounts: Record<Range, number> = {
+  '1-10': 20,
+  '1-20': 30,
+  '1-30': 50,
+  '1-50': 60,
+  '1-100': 60,
+};
+const chainLaterOperandCaps: Record<Range, number> = {
+  '1-10': 9,
+  '1-20': 6,
+  '1-30': 6,
+  '1-50': 4,
+  '1-100': 4,
+};
 
 describe('generateProblems - Chained Arithmetic', () => {
+  it.each((Object.keys(chainProblemCounts) as Range[]).flatMap(range => ([
+    'horizontal-chain-add',
+    'horizontal-chain-sub',
+    'horizontal-chain-mixed',
+  ] as const).map(mode => [range, mode] as const))) (
+    'uses the shared horizontal count for %s %s',
+    (range, mode) => {
+      const problems = generateProblems(range, mode) as GeneratedChainProblem[];
+      expect(problems).toHaveLength(chainProblemCounts[range]);
+    }
+  );
+
   const stepRegroups = (left: number, operator: '+' | '-', right: number) => {
     let remainingLeft = left;
     let remainingRight = right;
@@ -43,7 +69,7 @@ describe('generateProblems - Chained Arithmetic', () => {
       `${problem.operands[0]}${problem.operators[0]}${problem.operands[1]}${problem.operators[1]}${problem.operands[2]}`
     );
 
-    expect(problems).toHaveLength(20);
+    expect(problems).toHaveLength(chainProblemCounts['1-20']);
     expect(problems.every(problem => problem.type === 'arithmetic-chain')).toBe(true);
     expect(problems.every(problem => problem.operators[0] === '+' && problem.operators[1] === '+')).toBe(true);
     expect(problems.every(problem => {
@@ -59,7 +85,7 @@ describe('generateProblems - Chained Arithmetic', () => {
       `${problem.operands[0]}${problem.operators[0]}${problem.operands[1]}${problem.operators[1]}${problem.operands[2]}`
     );
 
-    expect(problems).toHaveLength(20);
+    expect(problems).toHaveLength(chainProblemCounts['1-20']);
     expect(problems.every(problem => problem.operators[0] === '-' && problem.operators[1] === '-')).toBe(true);
     expect(problems.every(problem => problem.operands[0] >= 11 && problem.operands[0] <= 20)).toBe(true);
     expect(problems.every(problem => {
@@ -75,9 +101,9 @@ describe('generateProblems - Chained Arithmetic', () => {
       `${problem.operands[0]}${problem.operators[0]}${problem.operands[1]}${problem.operators[1]}${problem.operands[2]}`
     );
 
-    expect(problems).toHaveLength(20);
-    expect(problems.filter(problem => problem.operators.join('') === '+-')).toHaveLength(10);
-    expect(problems.filter(problem => problem.operators.join('') === '-+')).toHaveLength(10);
+    expect(problems).toHaveLength(chainProblemCounts['1-20']);
+    expect(problems.filter(problem => problem.operators.join('') === '+-')).toHaveLength(chainProblemCounts['1-20'] / 2);
+    expect(problems.filter(problem => problem.operators.join('') === '-+')).toHaveLength(chainProblemCounts['1-20'] / 2);
     expect(problems.every(problem => {
       const [first, second, third] = problem.operands;
       const intermediate = problem.operators[0] === '+' ? first + second : first - second;
@@ -95,9 +121,9 @@ describe('generateProblems - Chained Arithmetic', () => {
     const withoutRegroup = generateProblems('1-20', mode, 'none') as Extract<Problem, { type: 'arithmetic-chain' }>[];
     const withRegroup = generateProblems('1-20', mode, 'only') as Extract<Problem, { type: 'arithmetic-chain' }>[];
 
-    expect(withoutRegroup).toHaveLength(20);
+    expect(withoutRegroup).toHaveLength(chainProblemCounts['1-20']);
     expect(withoutRegroup.every(problem => regroupSteps(problem).every(value => !value))).toBe(true);
-    expect(withRegroup).toHaveLength(20);
+    expect(withRegroup).toHaveLength(chainProblemCounts['1-20']);
     expect(withRegroup.every(problem => regroupSteps(problem).some(Boolean))).toBe(true);
   });
 
@@ -109,9 +135,9 @@ describe('generateProblems - Chained Arithmetic', () => {
     const withoutRegroup = generateProblems('1-100', mode, 'none') as GeneratedChainProblem[];
     const withRegroup = generateProblems('1-100', mode, 'only') as GeneratedChainProblem[];
 
-    expect(withoutRegroup).toHaveLength(20);
+    expect(withoutRegroup).toHaveLength(chainProblemCounts['1-100']);
     expect(withoutRegroup.every(problem => regroupSteps(problem).every(value => !value))).toBe(true);
-    expect(withRegroup).toHaveLength(20);
+    expect(withRegroup).toHaveLength(chainProblemCounts['1-100']);
     expect(withRegroup.every(problem => regroupSteps(problem).some(Boolean))).toBe(true);
   });
 
@@ -127,7 +153,7 @@ describe('generateProblems - Chained Arithmetic', () => {
     'balances regrouping and non-regrouping problems for %s %s',
     (range, mode) => {
       const problems = generateProblems(range, mode) as GeneratedChainProblem[];
-      expect(problems.filter(problem => regroupSteps(problem).some(Boolean))).toHaveLength(10);
+      expect(problems.filter(problem => regroupSteps(problem).some(Boolean))).toHaveLength(chainProblemCounts[range] / 2);
     }
   );
 
@@ -185,8 +211,8 @@ describe('generateProblems - Chained Arithmetic', () => {
             return Math.max(...counts.values());
           };
 
-          expect(maximumFrequency(problems.map(problem => problem.operands[1]))).toBeLessThanOrEqual(4);
-          expect(maximumFrequency(problems.map(problem => problem.operands[2]))).toBeLessThanOrEqual(4);
+          expect(maximumFrequency(problems.map(problem => problem.operands[1]))).toBeLessThanOrEqual(chainLaterOperandCaps[range]);
+          expect(maximumFrequency(problems.map(problem => problem.operands[2]))).toBeLessThanOrEqual(chainLaterOperandCaps[range]);
           const simpleOperandPatterns = problems.filter(problem =>
             [1, 10].includes(problem.operands[1]) && [1, 10].includes(problem.operands[2])
           );
@@ -218,9 +244,9 @@ describe('generateProblems - Chained Arithmetic', () => {
           [1, 10].includes(problem.operands[1]) && [1, 10].includes(problem.operands[2])
         );
 
-        expect(problems.filter(problem => regroupSteps(problem).some(Boolean))).toHaveLength(10);
-        expect(maximumFrequency(problems.map(problem => problem.operands[1]))).toBeLessThanOrEqual(4);
-        expect(maximumFrequency(problems.map(problem => problem.operands[2]))).toBeLessThanOrEqual(4);
+        expect(problems.filter(problem => regroupSteps(problem).some(Boolean))).toHaveLength(chainProblemCounts['1-20'] / 2);
+        expect(maximumFrequency(problems.map(problem => problem.operands[1]))).toBeLessThanOrEqual(chainLaterOperandCaps['1-20']);
+        expect(maximumFrequency(problems.map(problem => problem.operands[2]))).toBeLessThanOrEqual(chainLaterOperandCaps['1-20']);
         expect(simpleOperandPatterns.length).toBeLessThanOrEqual(3);
       }
     } finally {
@@ -249,7 +275,7 @@ describe('generateProblems - Chained Arithmetic', () => {
             problem.operands[1] === 1 || problem.operands[2] === 1
           );
 
-          expect(problems).toHaveLength(20);
+          expect(problems).toHaveLength(chainProblemCounts['1-20']);
           expect(oneOperandProblems).toHaveLength(0);
         }
       } finally {

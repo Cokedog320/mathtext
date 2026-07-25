@@ -17,6 +17,8 @@
 - 连续减法 (`horizontal-chain-sub`)
 - 连续加减混合 (`horizontal-chain-mixed`)
 
+连续算式的题量与普通横式加减共用 `HORIZONTAL_PROBLEM_COUNTS`：10 以内 20 题、20 以内 30 题、30 以内 50 题、50 和 100 以内各 60 题。
+
 该范围由 `Mode`、侧栏选择、`generateChainedArithmetic`、`ChainedArithmetic` 渲染器、打印标题和对应生成器/组件测试共同维护。后续若要移除或扩展连续算式，必须同时更新这些公开入口与本 ADR。
 
 ## 后果 (Consequences)

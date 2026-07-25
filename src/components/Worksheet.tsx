@@ -131,15 +131,15 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-chain-add': {
-    component: ({ problem, index }) => <ChainedArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <ChainedArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   },
   'horizontal-chain-sub': {
-    component: ({ problem, index }) => <ChainedArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <ChainedArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   },
   'horizontal-chain-mixed': {
-    component: ({ problem, index }) => <ChainedArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <ChainedArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   },
   'horizontal-fill-add': {

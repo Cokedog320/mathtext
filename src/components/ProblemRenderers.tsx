@@ -2,7 +2,6 @@ import React from 'react';
 import { Problem, Range, RegroupOption } from '../types';
 import {
   HorizontalFillArithmetic as HorizontalFillComponent,
-  HORIZONTAL_FILL_TEXT_STYLE,
 } from './HorizontalFillArithmetic';
 
 export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
@@ -84,21 +83,21 @@ export const VerticalArithmetic: React.FC<{
   );
 };
 
+const getHorizontalTypographyClass = (range: Range): string => range === '1-10'
+  ? 'gap-2 text-2xl'
+  : range === '1-20'
+    ? 'gap-1.5 text-xl'
+    : 'gap-1 text-lg';
+
 export const HorizontalArithmetic: React.FC<{
   problem: Extract<Problem, { type: 'arithmetic' }>;
   index: number;
   range: Range;
 }> = ({ problem, index, range }) => {
-  const typographyClass = range === '1-10'
-    ? 'gap-2 text-2xl'
-    : range === '1-20'
-      ? 'gap-1.5 text-xl'
-      : 'gap-1 text-lg';
-
   return (
     <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className={`flex min-w-0 items-center justify-center ${typographyClass} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
+      <div className={`flex min-w-0 items-center justify-center ${getHorizontalTypographyClass(range)} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
         <span>{problem.num1}</span>
         <span>{problem.operator}</span>
         <span>{problem.num2}</span>
@@ -126,11 +125,12 @@ export const HorizontalFillArithmetic: React.FC<{
 export const ChainedArithmetic: React.FC<{
   problem: Extract<Problem, { type: 'arithmetic-chain' }>;
   index: number;
-}> = ({ problem, index }) => {
+  range: Range;
+}> = ({ problem, index, range }) => {
   return (
     <div className="relative w-[220px] h-full flex items-center justify-between px-2 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className={`flex items-center justify-center gap-2 w-full ${HORIZONTAL_FILL_TEXT_STYLE} mt-2 select-none whitespace-nowrap`}>
+      <div className={`flex items-center justify-center ${getHorizontalTypographyClass(range)} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
         <span>{problem.operands[0]}</span>
         <span>{problem.operators[0]}</span>
         <span>{problem.operands[1]}</span>

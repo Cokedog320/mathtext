@@ -1,7 +1,6 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { HORIZONTAL_FILL_TEXT_STYLE } from './HorizontalFillArithmetic';
 import { ChainedArithmetic, HorizontalArithmetic, MethodDiagram, VerticalArithmetic } from './ProblemRenderers';
 
 const renderVertical = (
@@ -57,14 +56,34 @@ describe('ChainedArithmetic', () => {
           operators: ['+', '-'],
         }}
         index={0}
+        range="1-10"
       />,
     );
     const visibleText = markup.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
 
     expect(visibleText).toContain('1.8+2-3=');
-    expect(markup).toContain(HORIZONTAL_FILL_TEXT_STYLE);
+    expect(markup).toContain('gap-2');
+    expect(markup).toContain('text-2xl');
     expect(markup).toContain('fill-box');
     expect(markup).not.toContain('w-[28px] h-[28px]');
+  });
+
+  it('uses compact typography for longer chained worksheets', () => {
+    const markup = renderToStaticMarkup(
+      <ChainedArithmetic
+        problem={{
+          id: 1,
+          type: 'arithmetic-chain',
+          operands: [100, 20, 10],
+          operators: ['+', '-'],
+        }}
+        index={0}
+        range="1-100"
+      />,
+    );
+
+    expect(markup).toContain('gap-1');
+    expect(markup).toContain('text-lg');
   });
 });
 

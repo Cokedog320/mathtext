@@ -2,7 +2,7 @@ import { Mode, Problem, Range, RegroupOption } from '../../types';
 import { shuffle } from './random';
 import { ArithmeticOperator, matchesRegroup, requiresRegroup } from './regroup';
 import {
-  CHAINED_PROBLEM_COUNT,
+  HORIZONTAL_PROBLEM_COUNTS,
   MAX_VALUE_ONE_OPERAND_PROBLEMS,
   PRACTICE_BANDS,
 } from './worksheetRules';
@@ -211,6 +211,74 @@ const selectWithinTenChainedCandidates = (
   return [];
 };
 
+const selectExpandedChainedCandidates = (
+  candidates: ChainedCandidate[],
+  limit: number,
+  regroup: RegroupOption,
+): ChainedCandidate[] => {
+  const operatorKey = (candidate: ChainedCandidate): string => candidate.operators.join('');
+  const operatorKinds = [...new Set(candidates.map(operatorKey))];
+  const operatorTargets = new Map(
+    operatorKinds.map(kind => [kind, limit / operatorKinds.length]),
+  );
+  const regroupingTarget = regroup === 'mixed'
+    ? Math.min(Math.floor(limit / 2), candidates.filter(candidate => candidate.needsRegroup).length)
+    : regroup === 'only' ? limit : 0;
+  const regroupTargets = new Map<boolean, number>([
+    [true, regroupingTarget],
+    [false, limit - regroupingTarget],
+  ]);
+  const usesSimplePattern = (candidate: ChainedCandidate): boolean =>
+    [1, 10].includes(candidate.operands[1]) && [1, 10].includes(candidate.operands[2]);
+  const laterOperandCap = limit === 30 || limit === 50 ? 6 : 4;
+  const primaryCaps = [3, 4, 5, 6, 8, 10];
+  const attemptsPerPrimaryCap = limit > 20 ? 3 : 10;
+
+  for (const primaryCap of primaryCaps) {
+    for (let attempt = 0; attempt < attemptsPerPrimaryCap; attempt++) {
+      const selected: ChainedCandidate[] = [];
+      const starts = new Map<number, number>();
+      const results = new Map<number, number>();
+      const seconds = new Map<number, number>();
+      const thirds = new Map<number, number>();
+      const operators = new Map<string, number>();
+      const regroupKinds = new Map<boolean, number>();
+      let simplePatterns = 0;
+
+      const shuffled = shuffle(candidates);
+      const offset = shuffled.length === 0 ? 0 : (attempt * 97) % shuffled.length;
+      const ordered = [...shuffled.slice(offset), ...shuffled.slice(0, offset)];
+      for (const candidate of ordered) {
+        if (selected.length === limit) break;
+        const [first, second, third] = candidate.operands;
+        const kind = operatorKey(candidate);
+        const operatorTarget = operatorTargets.get(kind) ?? 0;
+        const regroupTarget = regroupTargets.get(candidate.needsRegroup) ?? 0;
+        if ((starts.get(first) ?? 0) >= primaryCap) continue;
+        if ((results.get(candidate.result) ?? 0) >= primaryCap) continue;
+        if ((seconds.get(second) ?? 0) >= laterOperandCap) continue;
+        if ((thirds.get(third) ?? 0) >= laterOperandCap) continue;
+        if ((operators.get(kind) ?? 0) >= operatorTarget) continue;
+        if ((regroupKinds.get(candidate.needsRegroup) ?? 0) >= regroupTarget) continue;
+        if (usesSimplePattern(candidate) && simplePatterns >= 3) continue;
+
+        selected.push(candidate);
+        starts.set(first, (starts.get(first) ?? 0) + 1);
+        results.set(candidate.result, (results.get(candidate.result) ?? 0) + 1);
+        seconds.set(second, (seconds.get(second) ?? 0) + 1);
+        thirds.set(third, (thirds.get(third) ?? 0) + 1);
+        operators.set(kind, (operators.get(kind) ?? 0) + 1);
+        regroupKinds.set(candidate.needsRegroup, (regroupKinds.get(candidate.needsRegroup) ?? 0) + 1);
+        if (usesSimplePattern(candidate)) simplePatterns += 1;
+      }
+
+      if (selected.length === limit) return shuffle(selected);
+    }
+  }
+
+  return [];
+};
+
 const selectChainedCandidates = (
   candidates: ChainedCandidate[],
   limit: number,
@@ -254,6 +322,10 @@ const selectChainedCandidates = (
   );
   if (isWithinTen) {
     return selectWithinTenChainedCandidates(candidates, limit);
+  }
+
+  if (limit > 20) {
+    return selectExpandedChainedCandidates(candidates, limit, regroup);
   }
 
   const primaryCaps = [3, 4];
@@ -344,7 +416,7 @@ export const generateChainedArithmetic = (
     ? 'mixed'
     : regroup;
   const candidates = buildChainedCandidates(range, mode, effectiveRegroup);
-  const selected = selectChainedCandidates(candidates, CHAINED_PROBLEM_COUNT, effectiveRegroup);
+  const selected = selectChainedCandidates(candidates, HORIZONTAL_PROBLEM_COUNTS[range], effectiveRegroup);
 
   return shuffle(selected).map((candidate, id) => ({
     id,

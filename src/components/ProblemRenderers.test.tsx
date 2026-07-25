@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { HORIZONTAL_FILL_TEXT_STYLE } from './HorizontalFillArithmetic';
-import { ChainedArithmetic, HorizontalArithmetic, VerticalArithmetic } from './ProblemRenderers';
+import { ChainedArithmetic, HorizontalArithmetic, MethodDiagram, VerticalArithmetic } from './ProblemRenderers';
 
 const renderVertical = (
   operator: '+' | '-',
@@ -67,15 +67,34 @@ describe('ChainedArithmetic', () => {
 });
 
 describe('HorizontalArithmetic', () => {
-  it('uses the shared text style for ordinary and fill arithmetic', () => {
+  it('uses compact typography that keeps ordinary equations inside their cards', () => {
     const markup = renderToStaticMarkup(
       <HorizontalArithmetic
-        problem={{ id: 1, type: 'arithmetic', num1: 8, num2: 2, operator: '+' }}
+        problem={{ id: 1, type: 'arithmetic', num1: 99, num2: 97, operator: '-' }}
         index={0}
       />,
     );
 
-    expect(markup).toContain(HORIZONTAL_FILL_TEXT_STYLE);
+    expect(markup).toContain('gap-1.5');
+    expect(markup).toContain('text-xl');
+    expect(markup).not.toContain('gap-2.5');
+    expect(markup).not.toContain('md:text-2xl');
     expect(markup).toContain('fill-box');
+  });
+});
+
+describe('MethodDiagram', () => {
+  it('matches the make-ten connector geometry used by dev', () => {
+    const markup = renderToStaticMarkup(
+      <MethodDiagram
+        problem={{ id: 1, type: 'method', num1: 7, num2: 3, operator: '+', method: 'make-ten' }}
+      />,
+    );
+
+    expect(markup).toContain('x1="120" y1="88" x2="120" y2="116"');
+    expect(markup).toContain('x1="72" y1="116" x2="120" y2="116"');
+    expect(markup).toContain('x1="120" y1="116" x2="164" y2="116"');
+    expect(markup).toContain('x1="164" y1="116" x2="164" y2="30"');
+    expect(markup).toContain('x="96" y="112"');
   });
 });

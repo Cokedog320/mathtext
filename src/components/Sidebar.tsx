@@ -104,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`no-print w-full lg:w-[380px] lg:shrink-0 bg-white/80 backdrop-blur-md lg:border-r border-gray-200 lg:min-h-screen lg:sticky lg:top-0 z-20 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-53px)] lg:max-h-screen ${
         activeTab === 'settings' ? 'flex' : 'hidden lg:flex'
       }`}
@@ -248,9 +248,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="bondNumber" className="text-sm font-bold text-gray-700">{t.bondNumber}</label>
-                <select 
-                  id="bondNumber" 
-                  value={bondNumber} 
+                <select
+                  id="bondNumber"
+                  value={bondNumber}
                   disabled={isBlankTemplate}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -307,9 +307,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-800">{t.makeTenLeft}</label>
-                <select 
-                  id="makeTenLeft" 
-                  value={makeTenLeft} 
+                <select
+                  id="makeTenLeft"
+                  value={makeTenLeft}
                   onChange={(e) => setMakeTenLeft(e.target.value)}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
@@ -352,9 +352,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex flex-col gap-5 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="range" className="text-sm font-bold text-gray-800">{t.range}</label>
-                <select 
-                  id="range" 
-                  value={range} 
+                <select
+                  id="range"
+                  value={range}
                   onChange={handleRangeChange}
                   className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
                 >
@@ -416,16 +416,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sticky Bottom Buttons */}
       <div className="p-6 border-t border-gray-200 bg-white/60 flex flex-col gap-3">
-        <button 
+        <button
           onClick={handleRegenerate}
           disabled={!hasWorksheet}
           className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 font-semibold cursor-pointer"
         >
-          <Dices size={18} className="group-hover:rotate-180 transition-transform duration-500" /> 
+          <Dices size={18} className="group-hover:rotate-180 transition-transform duration-500" />
           {t.regenerate}
         </button>
 
-        <button 
+        <button
           onClick={() => setActiveTab('preview')}
           className="lg:hidden w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl transition-all duration-200 font-semibold cursor-pointer"
         >
@@ -433,20 +433,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         <div className="hidden lg:flex gap-3">
-          <button 
+          <button
             onClick={handlePrint}
             disabled={!hasWorksheet}
             className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 text-emerald-700 py-2.5 rounded-xl hover:bg-emerald-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
           >
-            <Printer size={16} /> 
+            <Printer size={16} />
             {t.print}
           </button>
-          <button 
+          <button
             onClick={handleDownloadPdf}
             disabled={!hasWorksheet || isGeneratingPdf}
             className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
           >
-            <Download size={16} /> 
+            <Download size={16} />
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : 'Generating...') : t.downloadPdf}
           </button>
         </div>

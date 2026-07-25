@@ -14,7 +14,7 @@ export type HorizontalFillProblem = {
   blankPosition: 1 | 2;
 };
 
-export type Problem = 
+export type Problem =
   | { id: number; type: 'bond'; top: number | string; left: number | string; right: number | string; isBlank?: boolean }
   | { id: number; type: 'arithmetic'; num1: number; num2: number; operator: '+' | '-' }
   | { id: number; type: 'arithmetic-chain'; operands: [number, number, number]; operators: ['+' | '-', '+' | '-'] }

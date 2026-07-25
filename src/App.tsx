@@ -45,11 +45,11 @@ export default function App() {
   }, [language]);
 
   const regenerate = (
-    r = range, 
-    m = mode, 
-    rg = regroup, 
-    mtl = makeTenLeft, 
-    but = bondUseType, 
+    r = range,
+    m = mode,
+    rg = regroup,
+    mtl = makeTenLeft,
+    but = bondUseType,
     bn = bondNumber,
     bt = isBlankTemplate,
     lod = lowerOperandDigits
@@ -168,8 +168,8 @@ export default function App() {
         <button
           onClick={() => setActiveTab('settings')}
           className={`flex-1 py-4 text-center font-bold text-sm transition-all duration-200 ${
-            activeTab === 'settings' 
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' 
+            activeTab === 'settings'
+              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
               : 'text-gray-500 hover:text-gray-750'
           }`}
         >
@@ -178,8 +178,8 @@ export default function App() {
         <button
           onClick={() => setActiveTab('preview')}
           className={`flex-1 py-4 text-center font-bold text-sm transition-all duration-200 ${
-            activeTab === 'preview' 
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30' 
+            activeTab === 'preview'
+              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
               : 'text-gray-500 hover:text-gray-750'
           }`}
         >
@@ -210,14 +210,14 @@ export default function App() {
       />
 
       {/* Preview area */}
-      <div 
+      <div
         className={`flex-1 flex-col items-center py-6 px-4 lg:py-10 z-10 overflow-y-auto bg-slate-100/40 min-h-[calc(100vh-53px)] lg:min-h-screen print-preview-container ${
           activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
         }`}
       >
         {/* Floating action bar for Mobile Preview Tab */}
         <div className="lg:hidden w-full max-w-[400px] mb-4 flex gap-3 no-print">
-          <button 
+          <button
             onClick={handleRegenerate}
             disabled={!hasWorksheet}
             className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
@@ -225,20 +225,20 @@ export default function App() {
             <Dices size={16} />
             {t.mobileRegenerate}
           </button>
-          <button 
+          <button
             onClick={handlePrint}
             disabled={!hasWorksheet}
             className="flex-1 flex items-center justify-center gap-1 bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
-            <Printer size={16} /> 
+            <Printer size={16} />
             {t.mobilePrint}
           </button>
-          <button 
+          <button
             onClick={handleDownloadPdf}
             disabled={!hasWorksheet || isGeneratingPdf}
             className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >
-            <Download size={16} /> 
+            <Download size={16} />
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : '...') : t.mobileDownload}
           </button>
         </div>

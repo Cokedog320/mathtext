@@ -23,7 +23,7 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => {
@@ -33,14 +33,14 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="w-full flex justify-center items-start overflow-hidden py-4 print-preview-wrapper"
       style={{ height: `${1123 * scale + 32}px` }}
     >
-      <div 
-        style={{ 
-          transform: `scale(${scale})`, 
+      <div
+        style={{
+          transform: `scale(${scale})`,
           transformOrigin: 'top center',
           width: '794px',
           height: '1123px',
@@ -192,7 +192,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
 
   return (
     <A4PreviewWrapper>
-      <div 
+      <div
         ref={worksheetRef}
         id="worksheet"
         className="print-area w-[794px] h-[1123px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] py-8 px-12 flex flex-col relative shrink-0 overflow-hidden transition-shadow duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
@@ -213,7 +213,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
             <span>{t.score}: ____ / {problems.length}</span>
           </div>
         </div>
-        
+
         <div
           key={generateCount}
           style={problemGridStyle}
@@ -228,8 +228,8 @@ export const Worksheet: React.FC<WorksheetProps> = ({
               key={problem.id}
               className={`${fillsPage ? 'min-h-0' : `${colClass} ${heightClass}`} flex justify-center items-center break-inside-avoid`}
             >
-              <RendererComponent 
-                problem={problem} 
+              <RendererComponent
+                problem={problem}
                 index={idx}
                 hideParts={hideBondParts}
                 bondNumber={bondNumber}

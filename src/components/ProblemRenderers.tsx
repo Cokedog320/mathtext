@@ -1,5 +1,5 @@
 import React from 'react';
-import { Problem, RegroupOption } from '../types';
+import { Problem, Range, RegroupOption } from '../types';
 import {
   HorizontalFillArithmetic as HorizontalFillComponent,
   HORIZONTAL_FILL_TEXT_STYLE,
@@ -84,11 +84,21 @@ export const VerticalArithmetic: React.FC<{
   );
 };
 
-export const HorizontalArithmetic: React.FC<{ problem: Extract<Problem, { type: 'arithmetic' }>; index: number }> = ({ problem, index }) => {
+export const HorizontalArithmetic: React.FC<{
+  problem: Extract<Problem, { type: 'arithmetic' }>;
+  index: number;
+  range: Range;
+}> = ({ problem, index, range }) => {
+  const typographyClass = range === '1-10'
+    ? 'gap-2 text-2xl'
+    : range === '1-20'
+      ? 'gap-1.5 text-xl'
+      : 'gap-1 text-lg';
+
   return (
     <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
       <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className="flex min-w-0 items-center justify-center gap-1 w-full text-lg font-semibold text-gray-800 mt-2 select-none whitespace-nowrap">
+      <div className={`flex min-w-0 items-center justify-center ${typographyClass} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
         <span>{problem.num1}</span>
         <span>{problem.operator}</span>
         <span>{problem.num2}</span>
@@ -127,7 +137,7 @@ export const ChainedArithmetic: React.FC<{
         <span>{problem.operators[1]}</span>
         <span>{problem.operands[2]}</span>
         <span>=</span>
-        <div className="w-[28px] h-[28px] border border-black bg-white shrink-0"></div>
+        <span className="fill-box shrink-0" aria-label="answer" />
       </div>
     </div>
   );

@@ -63,17 +63,33 @@ describe('ChainedArithmetic', () => {
 
     expect(visibleText).toContain('1.8+2-3=');
     expect(markup).toContain(HORIZONTAL_FILL_TEXT_STYLE);
+    expect(markup).toContain('fill-box');
+    expect(markup).not.toContain('w-[28px] h-[28px]');
   });
 });
 
 describe('HorizontalArithmetic', () => {
-  it('uses compact typography that keeps ordinary equations inside their cards', () => {
-    const markup = renderToStaticMarkup(
+  const renderHorizontal = (range: '1-10' | '1-20' | '1-100', num1 = 100, num2 = 99) =>
+    renderToStaticMarkup(
       <HorizontalArithmetic
-        problem={{ id: 1, type: 'arithmetic', num1: 100, num2: 99, operator: '-' }}
+        problem={{ id: 1, type: 'arithmetic', num1, num2, operator: '-' }}
         index={0}
+        range={range}
       />,
     );
+
+  it('uses larger typography for the 1-10 and 1-20 worksheets', () => {
+    const tenMarkup = renderHorizontal('1-10', 8, 2);
+    const twentyMarkup = renderHorizontal('1-20', 19, 10);
+
+    expect(tenMarkup).toContain('gap-2');
+    expect(tenMarkup).toContain('text-2xl');
+    expect(twentyMarkup).toContain('gap-1.5');
+    expect(twentyMarkup).toContain('text-xl');
+  });
+
+  it('uses compact typography that keeps ordinary equations inside their cards', () => {
+    const markup = renderHorizontal('1-100');
 
     expect(markup).toContain('px-1');
     expect(markup).toContain('gap-1');

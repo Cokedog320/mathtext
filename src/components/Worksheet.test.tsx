@@ -2,18 +2,19 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Worksheet } from './Worksheet';
-import type { Problem } from '../types';
+import type { Problem, Range } from '../types';
 
 const renderWorksheet = (
   mode: 'horizontal-add' | 'horizontal-chain-add' | 'number-bonds',
   problems: Problem[],
   bondNumber: number | 'mixed' = 5,
   isBlankTemplate = false,
+  range: Range = '1-10',
 ) =>
   renderToStaticMarkup(
     <Worksheet
       mode={mode}
-      range="1-10"
+      range={range}
       regroup="mixed"
       language="zh"
       bondNumber={bondNumber}
@@ -40,6 +41,21 @@ describe('Worksheet arithmetic layout', () => {
     expect(markup).toContain('grid-template-columns:repeat(4, minmax(0, 1fr))');
     expect(markup).toContain('grid-template-rows:repeat(5, minmax(0, 1fr))');
     expect(markup).toContain('flex-1');
+    expect(markup).toContain('text-2xl');
+  });
+
+  it('uses the medium horizontal typography for 1-20 worksheets', () => {
+    const problems: Problem[] = [{
+      id: 0,
+      type: 'arithmetic',
+      num1: 19,
+      num2: 10,
+      operator: '-',
+    }];
+    const markup = renderWorksheet('horizontal-add', problems, 5, false, '1-20');
+
+    expect(markup).toContain('gap-1.5');
+    expect(markup).toContain('text-xl');
   });
 
   it('fills the page with a three-column, seven-row grid for 20 chained problems', () => {

@@ -71,6 +71,7 @@ interface RenderConfig {
     bondNumber?: number | 'mixed';
     isBlankTemplate?: boolean;
     regroup?: RegroupOption;
+    range?: Range;
   }>;
   getLayoutClass: (settings: LayoutSettings) => { colClass: string; heightClass: string };
 }
@@ -118,15 +119,15 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
     getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
   },
   'horizontal-add': {
-    component: ({ problem, index }) => <HorizontalArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <HorizontalArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-sub': {
-    component: ({ problem, index }) => <HorizontalArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <HorizontalArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-mixed': {
-    component: ({ problem, index }) => <HorizontalArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <HorizontalArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-chain-add': {
@@ -236,6 +237,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
                 isBlankTemplate={isBlankTemplate}
                 hideTen={hideTen}
                 regroup={regroup}
+                range={range}
               />
             </div>
           ))}

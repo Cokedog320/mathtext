@@ -1,8 +1,10 @@
 # MathText
 
+Live demo: https://mathtext.pages.dev/
+
 一个面向小学数学练习题生成的工作流工具。当前版本已经能生成一批基础练习题并支持打印/导出 PDF，但它仍然是一个“正在持续完善”的项目，而不是一个完整的数学题库产品。
 
-A workflow tool for generating elementary math worksheets. The current build can already create a useful set of practice sheets and support print/PDF export, but it is still an actively evolving project rather than a complete math worksheet product.
+English version: [README.en.md](README.en.md)
 
 ## 当前状态 / Current Status
 

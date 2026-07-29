@@ -33,14 +33,16 @@
         <svg className="absolute inset-0" width="180" height="160" viewBox="0 0 180 160">
           {method === 'make-ten' ? (
             <>
-              {/* Horizontal line from 10 box (bottom center 58, 130) to answer column (164) at y=130 */}
-              <line x1="58" y1="130" x2="164" y2="130" stroke="black" strokeWidth="1.5" />
-              {/* Vertical line from part2 box (bottom center 120, 88) down to meet the horizontal line at y=130 */}
-              <line x1="120" y1="88" x2="120" y2="130" stroke="black" strokeWidth="1.5" />
-              {/* Vertical line from y=130 up to the bottom of the answer box (y=30) at x=164 */}
-              <line x1="164" y1="130" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
-              {/* Plus sign centered between the 10 box and the vertical drop line */}
-              <text x="89" y="122" fontSize="20" fontWeight="normal" fill="black" textAnchor="middle">+</text>
+              {/* Vertical line from part2 box (bottom center 120, 88) down to the merge line at y=116 */}
+              <line x1="120" y1="88" x2="120" y2="116" stroke="black" strokeWidth="1.5" />
+              {/* Horizontal line from the 10 box right midpoint (72, 116) to the merge column at x=120 */}
+              <line x1="72" y1="116" x2="120" y2="116" stroke="black" strokeWidth="1.5" />
+              {/* Plus sign centered between the 10 box right midpoint and the merge line */}
+              <text x="96" y="112" fontSize="20" fontWeight="normal" fill="black" textAnchor="middle">+</text>
+              {/* Horizontal line from the merge column to the answer box */}
+              <line x1="120" y1="116" x2="164" y2="116" stroke="black" strokeWidth="1.5" />
+              {/* Vertical line from the answer-box merge point up to the answer box */}
+              <line x1="164" y1="116" x2="164" y2="30" stroke="black" strokeWidth="1.5" />
             </>
           ) : method === 'break-ten' ? (
   ```

@@ -41,10 +41,11 @@
 - 加号位于 `x=96, y=112`
 - 汇合线从 `y=116` 上接答案框
 
-仓库旧设计文档记录的 `y=130`、加号 `(89,122)` 坐标在实际布局中位置不正确。当前实现以实际页面布局和人工确认结果为准，不作为合并缺陷。
+仓库旧设计文档此前记录了 `y=130`、加号 `(89,122)` 的坐标，但这些坐标已与当前实现不一致。当前实现以 `src/components/ProblemRenderers.tsx` 里的实际 SVG 坐标和人工确认结果为准，不作为合并缺陷。
 
-现有组件测试已经锁定当前有效坐标。后续应更新
-`docs/superpowers/specs/2026-07-05-make-ten-styling-design.md`，避免旧设计稿再次被误认为当前规范。
+现有组件测试已经锁定当前有效坐标。已同步更新
+`docs/superpowers/specs/2026-07-05-make-ten-styling-design.md` 与
+`docs/superpowers/plans/2026-07-05-make-ten-styling-fix.md`，避免旧设计稿再次被误认为当前规范。
 
 ## 4. 相对 Dev 的整理成果
 

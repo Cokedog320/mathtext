@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Dices, Printer, Download, FileQuestion } from 'lucide-react';
 
 import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, pdfFileNames } from './types';
-import { generateProblems, getPrintTitle, getRequestedProblemCount } from './utils/problemGenerator';
+import { generateProblems, getRequestedProblemCount } from './utils/problemGenerator';
 import { DEFAULT_REGROUP_OPTION, normalizeRegroupOption } from './utils/regroupOptions';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
@@ -143,8 +143,6 @@ export default function App() {
           : bondNumber === 'mixed'
             ? (language === 'zh' ? '混合数字的分解与组合.pdf' : 'mixed-decomposition-composition.pdf')
             : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`);
-      } else if (range === '20-regroup') {
-        fileName = `${getPrintTitle(mode, range, regroup, language, t)}.pdf`;
       }
       pdf.save(fileName);
     } catch (error) {

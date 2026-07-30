@@ -7,8 +7,6 @@ import { generateNumberBonds } from './numberBonds';
 import { generateVerticalArithmetic } from './verticalArithmetic';
 import { getRequestedProblemCount } from './worksheetRules';
 
-export { generateHorizontalFillProblems } from './horizontalFill';
-export type { FillGenerationResult } from './horizontalFill';
 export { getPrintTitle } from './printTitle';
 export { shuffle } from './random';
 export { requiresRegroup } from './regroup';

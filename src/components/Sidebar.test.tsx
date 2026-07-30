@@ -35,7 +35,7 @@ const renderSidebar = (
     setLanguage={vi.fn()}
     isGeneratingPdf={false}
     hasWorksheet
-    handleRegenerate={vi.fn()}
+    regenerate={vi.fn()}
     handlePrint={vi.fn()}
     handleDownloadPdf={vi.fn()}
     activeTab="settings"

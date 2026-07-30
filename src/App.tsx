@@ -44,19 +44,19 @@ export default function App() {
     localStorage.setItem(LANGUAGE_KEY, language);
   }, [language]);
 
-  const regenerate = (
-    r = range,
-    m = mode,
-    rg = regroup,
-    mtl = makeTenLeft,
-    but = bondUseType,
-    bn = bondNumber,
-    bt = isBlankTemplate,
-    lod = lowerOperandDigits
-  ) => {
-    if (!m) return;
-    const generated = generateProblems(r, m, rg, mtl, but, bn, bt, lod);
-    const requestedCount = getRequestedProblemCount(r, m, bn, bt);
+  const regenerate = () => {
+    if (!mode) return;
+    const generated = generateProblems(
+      range,
+      mode,
+      regroup,
+      makeTenLeft,
+      bondUseType,
+      bondNumber,
+      isBlankTemplate,
+      lowerOperandDigits,
+    );
+    const requestedCount = getRequestedProblemCount(range, mode, bondNumber, isBlankTemplate);
     setProblems(generated);
     setGenerationLimit(
       generated.length < requestedCount
@@ -68,13 +68,9 @@ export default function App() {
 
   useEffect(() => {
     if (mode) {
-      regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits);
+      regenerate();
     }
   }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits]);
-
-  const handleRegenerate = () => {
-    if (mode) regenerate();
-  };
 
   const handleRangeChange = (nextRange: Range) => {
     setRange(nextRange);
@@ -200,7 +196,7 @@ export default function App() {
         language={language} setLanguage={setLanguage}
         isGeneratingPdf={isGeneratingPdf}
         hasWorksheet={hasWorksheet}
-        handleRegenerate={handleRegenerate}
+        regenerate={regenerate}
         handlePrint={handlePrint}
         handleDownloadPdf={handleDownloadPdf}
         activeTab={activeTab}
@@ -216,7 +212,7 @@ export default function App() {
         {/* Floating action bar for Mobile Preview Tab */}
         <div className="lg:hidden w-full max-w-[400px] mb-4 flex gap-3 no-print">
           <button
-            onClick={handleRegenerate}
+            onClick={regenerate}
             disabled={!hasWorksheet}
             className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
           >

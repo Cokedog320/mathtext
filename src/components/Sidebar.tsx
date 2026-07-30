@@ -28,7 +28,7 @@ interface SidebarProps {
   setLanguage: (lang: Language) => void;
   isGeneratingPdf: boolean;
   hasWorksheet: boolean;
-  handleRegenerate: () => void;
+  regenerate: () => void;
   handlePrint: () => void;
   handleDownloadPdf: () => void;
   activeTab: 'settings' | 'preview';
@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   language, setLanguage,
   isGeneratingPdf,
   hasWorksheet,
-  handleRegenerate,
+  regenerate,
   handlePrint,
   handleDownloadPdf,
   activeTab,
@@ -74,24 +74,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     : regroupOptions;
 
   // Accordion active sections
-  const [methodExpanded, setMethodExpanded] = useState(false);
-  const [arithmeticExpanded, setArithmeticExpanded] = useState(false);
-  const [fillExpanded, setFillExpanded] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<'method' | 'arithmetic' | 'fill' | null>(null);
 
   // Sync expanded status when mode changes externally
   useEffect(() => {
     if (mode && methodModes.includes(mode)) {
-      setMethodExpanded(true);
-      setArithmeticExpanded(false);
-      setFillExpanded(false);
+      setExpandedSection('method');
     } else if (mode && arithmeticModes.includes(mode)) {
-      setArithmeticExpanded(true);
-      setMethodExpanded(false);
-      setFillExpanded(false);
+      setExpandedSection('arithmetic');
     } else if (mode && fillModes.includes(mode)) {
-      setFillExpanded(true);
-      setMethodExpanded(false);
-      setArithmeticExpanded(false);
+      setExpandedSection('fill');
     }
   }, [mode]);
 
@@ -138,18 +130,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
             <button
               onClick={() => {
-                setMethodExpanded(!methodExpanded);
-                if (!methodExpanded) {
-                  setArithmeticExpanded(false);
-                  setFillExpanded(false);
-                }
+                setExpandedSection(section => section === 'method' ? null : 'method');
               }}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
             >
               <span>{language === 'zh' ? '🧠 方法训练' : '🧠 Method Training'}</span>
-              {methodExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {expandedSection === 'method' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
-            {methodExpanded && (
+            {expandedSection === 'method' && (
               <div className="p-2 flex flex-col gap-1 bg-white animate-fade-in-up">
                 {methodModes.map((m) => (
                   <button
@@ -172,18 +160,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
             <button
               onClick={() => {
-                setArithmeticExpanded(!arithmeticExpanded);
-                if (!arithmeticExpanded) {
-                  setMethodExpanded(false);
-                  setFillExpanded(false);
-                }
+                setExpandedSection(section => section === 'arithmetic' ? null : 'arithmetic');
               }}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
             >
               <span>{language === 'zh' ? '📝 算式练习' : '📝 Arithmetic Practice'}</span>
-              {arithmeticExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {expandedSection === 'arithmetic' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
-            {arithmeticExpanded && (
+            {expandedSection === 'arithmetic' && (
               <div className="p-2 flex flex-col gap-1 bg-white animate-fade-in-up">
                 {arithmeticModes.map((m) => (
                   <button
@@ -206,18 +190,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
             <button
               onClick={() => {
-                setFillExpanded(!fillExpanded);
-                if (!fillExpanded) {
-                  setMethodExpanded(false);
-                  setArithmeticExpanded(false);
-                }
+                setExpandedSection(section => section === 'fill' ? null : 'fill');
               }}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
             >
               <span>{language === 'zh' ? '✏️ 填空练习' : '✏️ Fill-in-the-Blank'}</span>
-              {fillExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {expandedSection === 'fill' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
-            {fillExpanded && (
+            {expandedSection === 'fill' && (
               <div className="p-3 flex flex-col gap-2 bg-white animate-fade-in-up">
                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
                   {language === 'zh' ? '横式填空' : 'Horizontal Fill'}
@@ -417,7 +397,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sticky Bottom Buttons */}
       <div className="p-6 border-t border-gray-200 bg-white/60 flex flex-col gap-3">
         <button
-          onClick={handleRegenerate}
+          onClick={regenerate}
           disabled={!hasWorksheet}
           className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 font-semibold cursor-pointer"
         >

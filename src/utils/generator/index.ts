@@ -5,7 +5,7 @@ import { generateHorizontalFillProblems } from './horizontalFill';
 import { generateBreakTenOrFlatTen, generateMakeTen } from './methodProblems';
 import { generateNumberBonds } from './numberBonds';
 import { generateVerticalArithmetic } from './verticalArithmetic';
-import { getRequestedProblemCount } from './worksheetRules';
+import { getRequestedProblemCount, normalizeRangeForMode } from './worksheetRules';
 
 export { getPrintTitle } from './printTitle';
 export { shuffle } from './random';
@@ -66,7 +66,7 @@ export const generateProblems = (
   isBlankTemplate: boolean = false,
   lowerOperandDigits: LowerOperandDigits = 'mixed'
 ): Problem[] => GENERATOR_STRATEGIES[mode]({
-  range,
+  range: normalizeRangeForMode(range, mode),
   regroup,
   makeTenLeft,
   bondUseType,

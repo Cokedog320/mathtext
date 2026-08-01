@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mode, Range, RegroupOption, LowerOperandDigits, Language, translations } from '../types';
 import { isRegroupOptionAvailable } from '../utils/regroupOptions';
+import { isExtendedVerticalRange } from '../utils/generator/worksheetRules';
 import { Dices, Printer, Download, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface SidebarProps {
@@ -68,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'horizontal-fill-add', 'horizontal-fill-sub', 'horizontal-fill-mixed'
   ];
   const isVerticalMode = mode?.startsWith('vertical-') ?? false;
+  const isExtendedRange = isExtendedVerticalRange(range);
   const regroupOptions: RegroupOption[] = ['none', 'only', 'mixed'];
   const availableRegroupOptions = mode
     ? regroupOptions.filter(option => isRegroupOptionAvailable(range, mode, option, lowerOperandDigits))
@@ -355,6 +357,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <option value="1-100">
                     {language === 'zh' ? '100以内' : 'Within 100'}
                   </option>
+                  {isVerticalMode && (
+                    <>
+                      <option value="1-200">
+                        {language === 'zh' ? '200以内' : 'Within 200'}
+                      </option>
+                      <option value="1-500">
+                        {language === 'zh' ? '500以内' : 'Within 500'}
+                      </option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -374,7 +386,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
 
-              {isVerticalMode && (
+              {isVerticalMode && !isExtendedRange && (
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="lowerOperandDigits" className="text-sm font-bold text-gray-800">{t.lowerOperandDigits}</label>
                   <select

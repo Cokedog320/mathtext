@@ -1,19 +1,23 @@
 import { Language, Mode, Range, RegroupOption } from '../../types';
+import { normalizeRangeForMode } from './worksheetRules';
 
 export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, language: Language, t: any): string => {
+  const normalizedRange = normalizeRangeForMode(range, mode);
   const rangeMap: Record<Range, {zh: string, en: string}> = {
     '1-10': {zh: '10以内', en: 'Within 10'},
     '1-20': {zh: '20以内', en: 'Within 20'},
     '1-30': {zh: '30以内', en: 'Within 30'},
     '1-50': {zh: '50以内', en: 'Within 50'},
-    '1-100': {zh: '100以内', en: 'Within 100'}
+    '1-100': {zh: '100以内', en: 'Within 100'},
+    '1-200': {zh: '200以内', en: 'Within 200'},
+    '1-500': {zh: '500以内', en: 'Within 500'},
   };
-  const rZh = rangeMap[range].zh;
-  const rEn = rangeMap[range].en;
+  const rZh = rangeMap[normalizedRange].zh;
+  const rEn = rangeMap[normalizedRange].en;
 
   let regroupZh = '';
   let regroupEn = '';
-  if (range !== '1-10') {
+  if (normalizedRange !== '1-10') {
     if (regroup === 'none') {
       regroupZh = mode.includes('-add') ? '不进位' : (mode.includes('-sub') ? '不退位' : '无进退位');
       regroupEn = mode.includes('-add') ? 'No Carry' : (mode.includes('-sub') ? 'No Borrow' : 'No Regroup');

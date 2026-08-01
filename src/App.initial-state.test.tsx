@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
+import { normalizeRangeForMode } from './utils/generator/worksheetRules';
 
 const getButtons = (html: string) =>
   [...html.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/g)].map((match) => ({
@@ -28,6 +29,14 @@ afterEach(() => {
 });
 
 describe('App initial state', () => {
+  it('normalizes extended ranges away from non-vertical modes', () => {
+    expect(normalizeRangeForMode('1-200', 'horizontal-add')).toBe('1-100');
+    expect(normalizeRangeForMode('1-500', 'horizontal-chain-add')).toBe('1-100');
+    expect(normalizeRangeForMode('1-200', 'horizontal-fill-add')).toBe('1-100');
+    expect(normalizeRangeForMode('1-200', 'vertical-add')).toBe('1-200');
+    expect(normalizeRangeForMode('1-500', 'vertical-mixed')).toBe('1-500');
+  });
+
   it('waits for a problem type before showing a worksheet or enabling worksheet actions', () => {
     const html = renderToStaticMarkup(<App />);
     const buttons = getButtons(html);

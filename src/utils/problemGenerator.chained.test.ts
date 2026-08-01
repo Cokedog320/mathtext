@@ -4,14 +4,15 @@ import type { Problem, Range } from "../types";
 import { seededRandom } from "../test/seededRandom";
 
 type GeneratedChainProblem = Extract<Problem, { type: "arithmetic-chain" }>;
-const chainProblemCounts: Record<Range, number> = {
+type LegacyHorizontalRange = Exclude<Range, '1-200' | '1-500'>;
+const chainProblemCounts: Record<LegacyHorizontalRange, number> = {
   '1-10': 20,
   '1-20': 30,
   '1-30': 50,
   '1-50': 60,
   '1-100': 60,
 };
-const chainLaterOperandCaps: Record<Range, number> = {
+const chainLaterOperandCaps: Record<LegacyHorizontalRange, number> = {
   '1-10': 9,
   '1-20': 6,
   '1-30': 6,
@@ -20,7 +21,7 @@ const chainLaterOperandCaps: Record<Range, number> = {
 };
 
 describe('generateProblems - Chained Arithmetic', () => {
-  it.each((Object.keys(chainProblemCounts) as Range[]).flatMap(range => ([
+  it.each((Object.keys(chainProblemCounts) as LegacyHorizontalRange[]).flatMap(range => ([
     'horizontal-chain-add',
     'horizontal-chain-sub',
     'horizontal-chain-mixed',

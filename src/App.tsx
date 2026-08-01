@@ -6,6 +6,7 @@ import { Dices, Printer, Download, FileQuestion } from 'lucide-react';
 import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, pdfFileNames } from './types';
 import { generateProblems, getRequestedProblemCount } from './utils/problemGenerator';
 import { DEFAULT_REGROUP_OPTION, normalizeRegroupOption } from './utils/regroupOptions';
+import { normalizeRangeForMode } from './utils/generator/worksheetRules';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
 
@@ -73,9 +74,10 @@ export default function App() {
   }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits]);
 
   const handleRangeChange = (nextRange: Range) => {
-    setRange(nextRange);
+    const normalizedRange = mode ? normalizeRangeForMode(nextRange, mode) : nextRange;
+    setRange(normalizedRange);
     if (mode) {
-      setRegroup(normalizeRegroupOption(nextRange, mode, regroup, lowerOperandDigits));
+      setRegroup(normalizeRegroupOption(normalizedRange, mode, regroup, lowerOperandDigits));
     }
   };
 
@@ -84,9 +86,10 @@ export default function App() {
 
     setProblems([]);
     setGenerationLimit(null);
-    const nextRange = nextMode.startsWith('vertical-') && (range === '1-10' || (range === '1-20' && lowerOperandDigits === 'two'))
+    const adjustedRange = nextMode.startsWith('vertical-') && (range === '1-10' || (range === '1-20' && lowerOperandDigits === 'two'))
       ? (lowerOperandDigits === 'two' ? '1-30' : '1-20')
       : range;
+    const nextRange = normalizeRangeForMode(adjustedRange, nextMode);
     if (nextRange !== range) {
       setRange(nextRange);
     }

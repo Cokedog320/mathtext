@@ -48,34 +48,45 @@ export const VerticalArithmetic: React.FC<{
   regroup: RegroupOption;
 }> = ({ problem, index, regroup }) => {
   const showWorkBoxes = regroup !== 'none';
-  const topTens = Math.floor(problem.num1 / 10);
-  const topOnes = problem.num1 % 10;
-  const lowerTens = problem.num2 >= 10 ? Math.floor(problem.num2 / 10) : '';
-  const lowerOnes = problem.num2 % 10;
+  const result = problem.operator === '+'
+    ? problem.num1 + problem.num2
+    : problem.num1 - problem.num2;
+  const digitCount = Math.max(
+    String(problem.num1).length,
+    String(problem.num2).length,
+    String(result).length,
+  );
+  const topDigits = String(problem.num1).padStart(digitCount, ' ').split('');
+  const lowerDigits = String(problem.num2).padStart(digitCount, ' ').split('');
+  const placeNames = ['ones', 'tens', 'hundreds'].slice(0, digitCount).reverse();
+  const gridColumns = digitCount === 3
+    ? 'grid-cols-[30px_42px_42px_42px]'
+    : 'grid-cols-[30px_42px_42px]';
+  const spanColumns = digitCount === 3 ? 'col-span-4' : 'col-span-3';
 
   return (
-    <div className="relative w-[150px] h-[185px] flex items-center justify-center border border-gray-100 rounded-sm">
+    <div className={`relative ${digitCount === 3 ? 'w-[180px]' : 'w-[150px]'} h-[185px] flex items-center justify-center border border-gray-100 rounded-sm`}>
       <span className="absolute top-2 left-2 text-[10px] text-gray-400">{index + 1}.</span>
-      <div className="grid grid-cols-[30px_42px_42px] grid-rows-[26px_45px_45px_4px] items-center text-center font-mono text-black">
+      <div className={`grid ${gridColumns} grid-rows-[26px_45px_45px_4px] items-center text-center font-mono text-black`}>
         <span />
-        {showWorkBoxes && problem.operator === '+' ? (
-          <span data-work-box="carry-tens" className="fill-box mx-auto" />
-        ) : showWorkBoxes && problem.operator === '-' ? (
-          <span data-work-box="borrow-tens" className="fill-box mx-auto" />
-        ) : <span />}
-        {showWorkBoxes && problem.operator === '-' ? (
-          <span data-work-box="borrow-ones" className="fill-box mx-auto" />
-        ) : <span />}
+        {placeNames.map((place, placeIndex) => {
+          const shouldShow = showWorkBoxes && (problem.operator === '-' || placeIndex < placeNames.length - 1);
+          return shouldShow
+            ? <span key={place} data-work-box={`${problem.operator === '+' ? 'carry' : 'borrow'}-${place}`} className="fill-box mx-auto" />
+            : <span key={place} />;
+        })}
 
         <span />
-        <span className="text-4xl">{topTens}</span>
-        <span className="text-4xl">{topOnes}</span>
+        {topDigits.map((digit, digitIndex) => (
+          <span key={`top-${digitIndex}`} className="text-4xl">{digit}</span>
+        ))}
 
         <span className="text-4xl">{problem.operator}</span>
-        <span className="text-4xl">{lowerTens}</span>
-        <span className="text-4xl">{lowerOnes}</span>
+        {lowerDigits.map((digit, digitIndex) => (
+          <span key={`lower-${digitIndex}`} className="text-4xl">{digit}</span>
+        ))}
 
-        <span className="col-span-3 h-[3px] w-full bg-black" />
+        <span className={`${spanColumns} h-[3px] w-full bg-black`} />
       </div>
     </div>
   );

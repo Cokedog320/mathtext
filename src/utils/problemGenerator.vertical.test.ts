@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { generateProblems } from "./problemGenerator";
+import { generateProblems, getPrintTitle, requiresRegroup } from "./problemGenerator";
 import type { Problem } from "../types";
 import { seededRandom } from "../test/seededRandom";
+import { PRACTICE_BANDS } from "./generator/worksheetRules";
 
 describe('generateProblems - Vertical Arithmetic', () => {
   it('should generate a mix of carry and no-carry addition problems', () => {
@@ -199,5 +200,86 @@ describe('generateProblems - Vertical operand shape', () => {
     } finally {
       random.mockRestore();
     }
+  });
+});
+
+describe('generateProblems - Extended vertical ranges', () => {
+  const ranges = ['1-200', '1-500'] as const;
+  const modes = ['vertical-add', 'vertical-sub', 'vertical-mixed'] as const;
+  const minTargetFor = (range: (typeof ranges)[number]) => PRACTICE_BANDS[range][0];
+  const maxTargetFor = (range: (typeof ranges)[number]) => PRACTICE_BANDS[range][1];
+  const asArithmeticProblems = (
+    range: (typeof ranges)[number],
+    mode: (typeof modes)[number],
+    regroup: 'mixed' | 'none' | 'only' = 'mixed',
+  ) => generateProblems(range, mode, regroup)
+      .filter((problem): problem is Extract<Problem, { type: 'arithmetic' }> => problem.type === 'arithmetic');
+  const targetFor = (problem: Extract<Problem, { type: 'arithmetic' }>) =>
+    problem.operator === '+' ? problem.num1 + problem.num2 : problem.num1;
+  const withSeed = <T,>(seed: number, callback: () => T): T => {
+    const random = vi.spyOn(Math, 'random').mockImplementation(seededRandom(seed));
+    try {
+      return callback();
+    } finally {
+      random.mockRestore();
+    }
+  };
+
+  it.each(ranges.flatMap(range => modes.map(mode => [range, mode] as const)))
+    ('keeps every %s %s worksheet within the new vertical rules', (range, mode) => {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const problems = withSeed(seed, () => asArithmeticProblems(range, mode));
+        const targets = problems.map(targetFor);
+        const equations = problems.map(problem => `${problem.num1}${problem.operator}${problem.num2}`);
+
+        expect(problems, `${range} ${mode} seed ${seed}`).toHaveLength(20);
+        expect(new Set(targets).size).toBe(20);
+        expect(new Set(equations).size).toBe(20);
+        expect(problems.every(problem => problem.num1 > 0 && problem.num2 > 0)).toBe(true);
+        expect(problems.every(problem => targetFor(problem) >= minTargetFor(range) && targetFor(problem) <= maxTargetFor(range))).toBe(true);
+        expect(problems.filter(problem => problem.num2 < 10)).toHaveLength(2);
+        expect(problems.filter(problem => problem.num2 >= 10)).toHaveLength(18);
+        expect(problems.filter(problem => problem.num2 >= 1 && problem.num2 <= 5).length).toBeLessThanOrEqual(1);
+      }
+    });
+
+  it.each(ranges)('samples %s target values without a high-end bias', (range) => {
+    const targets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].flatMap(seed =>
+      withSeed(seed, () => asArithmeticProblems(range, 'vertical-mixed').map(targetFor))
+    );
+    const average = targets.reduce((sum, target) => sum + target, 0) / targets.length;
+    const midpoint = (minTargetFor(range) + maxTargetFor(range)) / 2;
+    const tolerance = maxTargetFor(range) * 0.2;
+
+    expect(average).toBeGreaterThan(midpoint - tolerance);
+    expect(average).toBeLessThan(midpoint + tolerance);
+  });
+
+  it.each(ranges.flatMap(range => modes.flatMap(mode =>
+    (['none', 'only'] as const).map(regroup => [range, mode, regroup] as const)
+  )))('generates 20 %s %s problems for %s regrouping', (range, mode, regroup) => {
+    for (const seed of [1, 2, 3]) {
+      const problems = withSeed(seed, () => asArithmeticProblems(range, mode, regroup));
+
+      expect(problems, `${range} ${mode} ${regroup} seed ${seed}`).toHaveLength(20);
+      expect(problems.filter(problem => problem.num2 < 10)).toHaveLength(2);
+      expect(problems.filter(problem => problem.num2 >= 10)).toHaveLength(18);
+      expect(problems.every(problem => requiresRegroup(problem.num1, problem.operator, problem.num2) === (regroup === 'only'))).toBe(true);
+    }
+  });
+
+  it('checks regrouping across the hundreds place', () => {
+    expect(requiresRegroup(198, '+', 27)).toBe(true);
+    expect(requiresRegroup(198, '+', 1)).toBe(false);
+    expect(requiresRegroup(402, '-', 187)).toBe(true);
+    expect(requiresRegroup(432, '-', 210)).toBe(false);
+  });
+
+  it('uses the extended range in vertical print titles', () => {
+    const translations = { printTitles: {} };
+
+    expect(getPrintTitle('vertical-add', '1-200', 'none', 'zh', translations)).toBe('200以内不进位加法');
+    expect(getPrintTitle('vertical-sub', '1-500', 'only', 'en', translations)).toBe('Borrowing Subtraction Within 500');
+    expect(getPrintTitle('horizontal-add', '1-200', 'mixed', 'en', translations)).toBe('Addition Within 100');
   });
 });

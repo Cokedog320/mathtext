@@ -218,4 +218,23 @@ describe('generateProblems - Practice bands and worksheet density', () => {
       problem.type === 'arithmetic' && problem.num1 >= 31 && problem.num1 <= 50
     )).toBe(true);
   });
+
+  it.each([
+    'horizontal-add',
+    'horizontal-sub',
+    'horizontal-mixed',
+    'horizontal-chain-add',
+    'horizontal-fill-add',
+  ] as const)('normalizes %s away from extended ranges at the public seam', (mode) => {
+    const problems = generateProblems('1-200', mode);
+    const numbers = problems.flatMap(problem => {
+      if (problem.type === 'arithmetic') return [problem.num1, problem.num2];
+      if (problem.type === 'arithmetic-chain') return problem.operands;
+      if (problem.type === 'horizontal-fill') return [problem.num1, problem.num2, problem.result];
+      return [];
+    });
+
+    expect(problems).toHaveLength(getRequestedProblemCount('1-100', mode));
+    expect(numbers.every(number => number <= 100)).toBe(true);
+  });
 });

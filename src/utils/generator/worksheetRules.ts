@@ -6,6 +6,8 @@ export const PRACTICE_BANDS: Record<Range, [number, number]> = {
   '1-30': [21, 30],
   '1-50': [31, 50],
   '1-100': [51, 100],
+  '1-200': [100, 200],
+  '1-500': [100, 500],
 };
 
 export const HORIZONTAL_PROBLEM_COUNTS: Record<Range, number> = {
@@ -14,9 +16,19 @@ export const HORIZONTAL_PROBLEM_COUNTS: Record<Range, number> = {
   '1-30': 50,
   '1-50': 60,
   '1-100': 60,
+  '1-200': 60,
+  '1-500': 60,
 };
 
 export const MAX_VALUE_ONE_OPERAND_PROBLEMS = 1;
+
+export type ExtendedVerticalRange = Extract<Range, '1-200' | '1-500'>;
+
+export const isExtendedVerticalRange = (range: Range): range is ExtendedVerticalRange =>
+  range === '1-200' || range === '1-500';
+
+export const normalizeRangeForMode = (range: Range, mode: Mode): Range =>
+  mode.startsWith('vertical-') || !isExtendedVerticalRange(range) ? range : '1-100';
 
 export const getRequestedProblemCount = (
   range: Range,

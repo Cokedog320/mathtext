@@ -1,6 +1,5 @@
 import React from 'react';
 import { Problem, Range, RegroupOption } from '../types';
-export { HorizontalFillArithmetic } from './HorizontalFillArithmetic';
 
 export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
   if (large) {
@@ -112,6 +111,27 @@ export const HorizontalArithmetic: React.FC<{
         <span>{problem.num2}</span>
         <span>=</span>
         <span className="fill-box shrink-0" aria-label="answer" />
+      </div>
+    </div>
+  );
+};
+
+export const HorizontalFillArithmetic: React.FC<{
+  problem: Extract<Problem, { type: 'horizontal-fill' }>;
+  index: number;
+  range: Range;
+}> = ({ problem, index, range }) => {
+  const { num1, num2, result, operator, blankPosition } = problem;
+
+  return (
+    <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
+      <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
+      <div className={`flex min-w-0 items-center justify-center ${getHorizontalTypographyClass(range)} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
+        {blankPosition === 1 ? <span className="fill-box shrink-0" aria-label="blank" /> : <span>{num1}</span>}
+        <span>{operator}</span>
+        {blankPosition === 2 ? <span className="fill-box shrink-0" aria-label="blank" /> : <span>{num2}</span>}
+        <span>=</span>
+        <span>{result}</span>
       </div>
     </div>
   );

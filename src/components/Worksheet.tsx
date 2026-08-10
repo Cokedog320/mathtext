@@ -143,15 +143,15 @@ const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
     getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
   },
   'horizontal-fill-add': {
-    component: ({ problem, index }) => <HorizontalFillArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <HorizontalFillArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-fill-sub': {
-    component: ({ problem, index }) => <HorizontalFillArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <HorizontalFillArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   },
   'horizontal-fill-mixed': {
-    component: ({ problem, index }) => <HorizontalFillArithmetic problem={problem as any} index={index} />,
+    component: ({ problem, index, range = '1-100' }) => <HorizontalFillArithmetic problem={problem as any} index={index} range={range} />,
     getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
   }
 };

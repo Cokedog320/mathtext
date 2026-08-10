@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ChainedArithmetic, HorizontalArithmetic, MethodDiagram, VerticalArithmetic } from './ProblemRenderers';
+import { ChainedArithmetic, HorizontalArithmetic, HorizontalFillArithmetic, MethodDiagram, VerticalArithmetic } from './ProblemRenderers';
 
 const renderVertical = (
   operator: '+' | '-',
@@ -151,6 +151,39 @@ describe('HorizontalArithmetic', () => {
     expect(markup).not.toContain('gap-2.5');
     expect(markup).not.toContain('md:text-2xl');
     expect(markup).toContain('fill-box');
+  });
+});
+
+describe('HorizontalFillArithmetic', () => {
+  const renderFill = (range: '1-10' | '1-20' | '1-100') =>
+    renderToStaticMarkup(
+      <HorizontalFillArithmetic
+        problem={{
+          id: 1,
+          type: 'horizontal-fill',
+          num1: 12,
+          num2: 7,
+          result: 19,
+          operator: '+',
+          blankPosition: 2,
+        }}
+        index={0}
+        range={range}
+      />,
+    );
+
+  it('uses the same range-based typography and spacing as horizontal arithmetic', () => {
+    const tenMarkup = renderFill('1-10');
+    const hundredMarkup = renderFill('1-100');
+
+    expect(tenMarkup).toContain('px-1');
+    expect(tenMarkup).toContain('gap-2');
+    expect(tenMarkup).toContain('text-2xl');
+    expect(hundredMarkup).toContain('gap-1');
+    expect(hundredMarkup).toContain('text-lg');
+    expect(hundredMarkup).toContain('whitespace-nowrap');
+    expect(hundredMarkup).not.toContain('tracking-wide');
+    expect(hundredMarkup).not.toContain('md:text-2xl');
   });
 });
 

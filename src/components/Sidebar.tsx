@@ -145,7 +145,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => toggleGroup(group.label)}
                 className="w-full flex items-center justify-between text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 cursor-pointer hover:text-stone-600 transition-colors"
               >
-                {group.label}
+                {group.label}{!expandedGroups.has(group.label) && mode && group.modes.includes(mode) ? ` · ${t.modes[mode]}` : ''}
                 {expandedGroups.has(group.label) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               </button>
               {expandedGroups.has(group.label) && (

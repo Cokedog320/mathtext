@@ -45,6 +45,15 @@ const renderSidebar = (
 
 const renderVerticalSidebar = (language: 'zh' | 'en') => renderSidebar(language, 'vertical-add');
 
+describe('Sidebar exercise type selection', () => {
+  it('shows the selected exercise type when its group is collapsed while retaining its configuration', () => {
+    const html = renderSidebar('zh', 'vertical-add');
+
+    expect(html).toContain('算式练习 · 竖排加法');
+    expect(html).toContain('练习区间');
+  });
+});
+
 describe('Sidebar vertical arithmetic settings', () => {
   it('shows the lower-operand selector and omits Within 10 in Chinese', () => {
     const html = renderVerticalSidebar('zh');

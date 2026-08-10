@@ -141,6 +141,10 @@ export const translations = {
     blankTemplate: '空白模板模式',
     selectProblemType: '请选择习题类型',
     selectProblemTypeHint: '从左侧选择一种练习，习题预览将在这里显示。',
+    sectionMethod: '方法训练',
+    sectionArithmetic: '算式练习',
+    sectionFill: '填空练习',
+    sectionConfig: '题目配置',
     limitedProblemCount: (actual: number, requested: number) =>
       `当前配置最多可生成 ${actual} 道不重复题，少于计划的 ${requested} 道。`,
   },
@@ -224,6 +228,10 @@ export const translations = {
     blankTemplate: 'Blank Template Mode',
     selectProblemType: 'Select a problem type',
     selectProblemTypeHint: 'Choose an exercise from the left to see its worksheet preview here.',
+    sectionMethod: 'Method Training',
+    sectionArithmetic: 'Arithmetic Practice',
+    sectionFill: 'Fill-in-the-Blank',
+    sectionConfig: 'Problem Settings',
     limitedProblemCount: (actual: number, requested: number) =>
       `This configuration has ${actual} unique problems, fewer than the requested ${requested}.`,
   },

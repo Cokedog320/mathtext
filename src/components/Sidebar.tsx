@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mode, Range, RegroupOption, LowerOperandDigits, Language, translations } from '../types';
 import { isRegroupOptionAvailable } from '../utils/regroupOptions';
 import { isExtendedVerticalRange } from '../utils/generator/worksheetRules';
-import { Dices, Printer, Download, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Dices, Printer, Download, Settings2, ChevronRight, ChevronDown } from 'lucide-react';
 
 interface SidebarProps {
   range: Range;
@@ -75,161 +75,107 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ? regroupOptions.filter(option => isRegroupOptionAvailable(range, mode, option, lowerOperandDigits))
     : regroupOptions;
 
-  // Accordion active sections
-  const [expandedSection, setExpandedSection] = useState<'method' | 'arithmetic' | 'fill' | null>(null);
+  const modeGroups: { label: string; modes: Mode[] }[] = [
+    { label: t.sectionMethod, modes: methodModes },
+    { label: t.sectionArithmetic, modes: arithmeticModes },
+    { label: t.sectionFill, modes: fillModes },
+  ];
 
-  // Sync expanded status when mode changes externally
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = (label: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  // Auto-expand the group containing the current mode
   useEffect(() => {
-    if (mode && methodModes.includes(mode)) {
-      setExpandedSection('method');
-    } else if (mode && arithmeticModes.includes(mode)) {
-      setExpandedSection('arithmetic');
-    } else if (mode && fillModes.includes(mode)) {
-      setExpandedSection('fill');
+    if (!mode) return;
+    const group = modeGroups.find(g => g.modes.includes(mode));
+    if (group) {
+      setExpandedGroups(prev => {
+        if (prev.has(group.label)) return prev;
+        const next = new Set(prev);
+        next.add(group.label);
+        return next;
+      });
     }
   }, [mode]);
 
-  const handleRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRange(e.target.value as Range);
-  };
-
-  const handleRegroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRegroup(e.target.value as RegroupOption);
-  };
-
   return (
     <div
-      className={`no-print w-full lg:w-[380px] lg:shrink-0 bg-white/80 backdrop-blur-md lg:border-r border-gray-200 lg:min-h-screen lg:sticky lg:top-0 z-20 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-53px)] lg:max-h-screen ${
+      className={`no-print w-full lg:w-[380px] lg:shrink-0 bg-white lg:border-r border-stone-200 lg:min-h-screen lg:sticky lg:top-0 z-20 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-53px)] lg:max-h-screen ${
         activeTab === 'settings' ? 'flex' : 'hidden lg:flex'
       }`}
     >
       <div className="p-6 flex flex-col gap-6">
-        <div className="flex items-center justify-between border-b border-gray-200/60 pb-4">
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm border border-blue-200/50">
+            <div className="p-2 bg-amber-100 text-amber-700 rounded-lg border border-amber-200/50">
               <Settings2 size={20} />
             </div>
-            <h2 className="text-xl font-bold text-gray-800">{t.worksheetTitle}</h2>
+            <h2 className="text-xl font-bold text-stone-800">{t.worksheetTitle}</h2>
           </div>
-          <button
-            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
-            className="relative w-16 h-8 rounded-full bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
-            aria-label={language === 'zh' ? 'Switch to English' : '切换到中文'}
-          >
-            <span
-              className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center text-xs font-bold transition-transform duration-200 ${
-                language === 'en' ? 'translate-x-8' : 'translate-x-0'
-              }`}
-            >
-              {language === 'zh' ? '中' : 'EN'}
-            </span>
-          </button>
+          <div className="flex rounded-lg border border-stone-200 overflow-hidden">
+            {(['zh', 'en'] as const).map(lang => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                  language === lang
+                    ? 'bg-amber-700 text-white'
+                    : 'bg-white text-stone-500 hover:bg-stone-50'
+                }`}
+                aria-label={lang === 'zh' ? '切换到中文' : 'Switch to English'}
+              >
+                {lang === 'zh' ? '中' : 'EN'}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Menu Navigation */}
-        <div className="flex flex-col gap-3">
-          {/* Method Training Accordion */}
-          <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
-            <button
-              onClick={() => {
-                setExpandedSection(section => section === 'method' ? null : 'method');
-              }}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
-            >
-              <span>{language === 'zh' ? '🧠 方法训练' : '🧠 Method Training'}</span>
-              {expandedSection === 'method' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-            {expandedSection === 'method' && (
-              <div className="p-2 flex flex-col gap-1 bg-white animate-fade-in-up">
-                {methodModes.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setMode(m)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
-                      mode === m
-                        ? 'bg-blue-50 text-blue-600 font-bold'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {t.modes[m]}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Arithmetic Practice Accordion */}
-          <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
-            <button
-              onClick={() => {
-                setExpandedSection(section => section === 'arithmetic' ? null : 'arithmetic');
-              }}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
-            >
-              <span>{language === 'zh' ? '📝 算式练习' : '📝 Arithmetic Practice'}</span>
-              {expandedSection === 'arithmetic' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-            {expandedSection === 'arithmetic' && (
-              <div className="p-2 flex flex-col gap-1 bg-white animate-fade-in-up">
-                {arithmeticModes.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setMode(m)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
-                      mode === m
-                        ? 'bg-blue-50 text-blue-600 font-bold'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {t.modes[m]}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Fill-in-the-Blank Practice Accordion */}
-          <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm bg-white">
-            <button
-              onClick={() => {
-                setExpandedSection(section => section === 'fill' ? null : 'fill');
-              }}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100/70 transition-all text-sm font-bold text-gray-700 cursor-pointer"
-            >
-              <span>{language === 'zh' ? '✏️ 填空练习' : '✏️ Fill-in-the-Blank'}</span>
-              {expandedSection === 'fill' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-            {expandedSection === 'fill' && (
-              <div className="p-3 flex flex-col gap-2 bg-white animate-fade-in-up">
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                  {language === 'zh' ? '横式填空' : 'Horizontal Fill'}
-                </div>
-                <div className="flex flex-col gap-1 pl-2 border-l-2 border-blue-100">
-                  {fillModes.map((m) => (
+        {/* Mode grid */}
+        <div className="flex flex-col gap-4">
+          {modeGroups.map(group => (
+            <div key={group.label}>
+              <button
+                onClick={() => toggleGroup(group.label)}
+                className="w-full flex items-center justify-between text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 cursor-pointer hover:text-stone-600 transition-colors"
+              >
+                {group.label}
+                {expandedGroups.has(group.label) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {expandedGroups.has(group.label) && (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {group.modes.map(m => (
                     <button
                       key={m}
                       onClick={() => setMode(m)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+                      className={`text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                         mode === m
-                          ? 'bg-blue-50 text-blue-600 font-bold'
-                          : 'text-gray-600 hover:bg-gray-50'
+                          ? 'bg-amber-100 text-amber-800 font-bold border border-amber-300'
+                          : 'text-stone-600 hover:bg-stone-50 border border-transparent'
                       }`}
                     >
                       {t.modes[m]}
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Configurations based on mode selection */}
-        <div className="flex flex-col gap-5 border-t border-gray-100 pt-5">
+        {/* Config section */}
+        <div className="flex flex-col gap-5 border-t border-stone-200 pt-5">
+          <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">{t.sectionConfig}</div>
           {mode === 'number-bonds' && (
-            <div className="flex flex-col gap-5 animate-fade-in-up">
+            <div className="flex flex-col gap-4 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="bondNumber" className="text-sm font-bold text-gray-700">{t.bondNumber}</label>
+                <label htmlFor="bondNumber" className="text-sm font-bold text-stone-700">{t.bondNumber}</label>
                 <select
                   id="bondNumber"
                   value={bondNumber}
@@ -238,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     const val = e.target.value;
                     setBondNumber(val === 'mixed' ? 'mixed' : parseInt(val, 10));
                   }}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 font-medium text-stone-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {[2, 3, 4, 5, 6, 7, 8, 9, 10, 'mixed'].map(n => (
                     <option key={n} value={n}>{n === 'mixed' ? (language === 'zh' ? '混合' : 'Mixed') : n}</option>
@@ -246,54 +192,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </select>
               </div>
 
-              <div className="flex flex-col gap-2 pt-2">
-                <div className="flex items-center gap-2.5">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="bondUseTypeStudy"
                     checked={bondUseType === 'study' && !isBlankTemplate}
                     disabled={isBlankTemplate}
                     onChange={(e) => setBondUseType(e.target.checked ? 'study' : 'practice')}
-                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-4 h-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500/50 cursor-pointer accent-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <label htmlFor="bondUseTypeStudy" className={`text-sm font-semibold text-gray-700 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.bondUseTypeStudy}</label>
+                  <label htmlFor="bondUseTypeStudy" className={`text-sm font-medium text-stone-700 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.bondUseTypeStudy}</label>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="hideBondParts"
                     checked={hideBondParts && !isBlankTemplate}
                     disabled={isBlankTemplate}
                     onChange={(e) => setHideBondParts(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-4 h-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500/50 cursor-pointer accent-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <label htmlFor="hideBondParts" className={`text-sm font-semibold text-gray-700 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.hideBondParts}</label>
+                  <label htmlFor="hideBondParts" className={`text-sm font-medium text-stone-700 cursor-pointer select-none ${isBlankTemplate ? 'opacity-50 cursor-not-allowed' : ''}`}>{t.hideBondParts}</label>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="isBlankTemplate"
                     checked={isBlankTemplate}
                     onChange={(e) => setIsBlankTemplate(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                    className="w-4 h-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500/50 cursor-pointer accent-amber-700"
                   />
-                  <label htmlFor="isBlankTemplate" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">{t.blankTemplate}</label>
+                  <label htmlFor="isBlankTemplate" className="text-sm font-medium text-stone-700 cursor-pointer select-none">{t.blankTemplate}</label>
                 </div>
               </div>
             </div>
           )}
 
           {mode === 'make-ten' && (
-            <div className="flex flex-col gap-5 animate-fade-in-up">
+            <div className="flex flex-col gap-4 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="makeTenLeft" className="text-sm font-bold text-gray-800">{t.makeTenLeft}</label>
+                <label htmlFor="makeTenLeft" className="text-sm font-bold text-stone-700">{t.makeTenLeft}</label>
                 <select
                   id="makeTenLeft"
                   value={makeTenLeft}
                   onChange={(e) => setMakeTenLeft(e.target.value)}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 font-medium text-stone-700 cursor-pointer"
                 >
                   <option value="mixed">{t.makeTenLeftOptions.mixed}</option>
                   <option value="9">{t.makeTenLeftOptions['9']}</option>
@@ -304,101 +250,100 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </select>
               </div>
 
-              <div className="flex items-center gap-2.5 pt-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="hideTen"
                   checked={hideTen}
                   onChange={(e) => setHideTen(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                  className="w-4 h-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500/50 cursor-pointer accent-amber-700"
                 />
-                <label htmlFor="hideTen" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">{t.hideTen}</label>
+                <label htmlFor="hideTen" className="text-sm font-medium text-stone-700 cursor-pointer select-none">{t.hideTen}</label>
               </div>
             </div>
           )}
 
           {['break-ten', 'flat-ten'].includes(mode) && (
-            <div className="flex items-center gap-2.5 pt-2 animate-fade-in-up">
+            <div className="flex items-center gap-2 animate-fade-in-up">
               <input
                 type="checkbox"
                 id="hideTen"
                 checked={hideTen}
                 onChange={(e) => setHideTen(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/50 cursor-pointer accent-blue-600"
+                className="w-4 h-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500/50 cursor-pointer accent-amber-700"
               />
-              <label htmlFor="hideTen" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">{t.hideTen}</label>
+              <label htmlFor="hideTen" className="text-sm font-medium text-stone-700 cursor-pointer select-none">{t.hideTen}</label>
             </div>
           )}
 
           {mode && (arithmeticModes.includes(mode) || fillModes.includes(mode)) && (
-            <div className="flex flex-col gap-5 animate-fade-in-up">
+            <div className="flex flex-col gap-4 animate-fade-in-up">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="range" className="text-sm font-bold text-gray-800">{t.range}</label>
-                <select
-                  id="range"
-                  value={range}
-                  onChange={handleRangeChange}
-                  className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-                >
-                  {!isVerticalMode && (
-                    <option value="1-10">
-                      {language === 'zh' ? '10以内' : 'Within 10'}
-                    </option>
-                  )}
-                  <option value="1-20" disabled={isVerticalMode && lowerOperandDigits === 'two'}>
-                    {language === 'zh' ? '20以内' : 'Within 20'}
-                  </option>
-                  <option value="1-30">
-                    {language === 'zh' ? '30以内' : 'Within 30'}
-                  </option>
-                  <option value="1-50">
-                    {language === 'zh' ? '50以内' : 'Within 50'}
-                  </option>
-                  <option value="1-100">
-                    {language === 'zh' ? '100以内' : 'Within 100'}
-                  </option>
-                  {isVerticalMode && (
-                    <>
-                      <option value="1-200">
-                        {language === 'zh' ? '200以内' : 'Within 200'}
-                      </option>
-                      <option value="1-500">
-                        {language === 'zh' ? '500以内' : 'Within 500'}
-                      </option>
-                    </>
-                  )}
-                </select>
+                <label className="text-sm font-bold text-stone-700">{t.range}</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {([
+                    ...(!isVerticalMode ? ['1-10' as Range] : []),
+                    '1-20' as Range,
+                    '1-30' as Range,
+                    '1-50' as Range,
+                    '1-100' as Range,
+                    ...(isVerticalMode ? ['1-200' as Range, '1-500' as Range] : []),
+                  ]).map(r => (
+                    <button
+                      key={r}
+                      onClick={() => setRange(r)}
+                      disabled={r === '1-20' && isVerticalMode && lowerOperandDigits === 'two'}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                        range === r
+                          ? 'bg-amber-700 text-white'
+                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      }`}
+                    >
+                      {language === 'zh' ? `${r.split('-')[1]}以内` : `≤${r.split('-')[1]}`}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {range !== '1-10' && (
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="regroup" className="text-sm font-bold text-gray-800">{t.regroup}</label>
-                  <select
-                    id="regroup"
-                    value={regroup}
-                    onChange={handleRegroupChange}
-                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <label className="text-sm font-bold text-stone-700">{t.regroup}</label>
+                  <div className="flex flex-wrap gap-1.5">
                     {availableRegroupOptions.map(option => (
-                      <option key={option} value={option}>{t.regroupOptions[option]}</option>
+                      <button
+                        key={option}
+                        onClick={() => setRegroup(option)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                          regroup === option
+                            ? 'bg-amber-700 text-white'
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        }`}
+                      >
+                        {t.regroupOptions[option]}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
               )}
 
               {isVerticalMode && !isExtendedRange && (
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="lowerOperandDigits" className="text-sm font-bold text-gray-800">{t.lowerOperandDigits}</label>
-                  <select
-                    id="lowerOperandDigits"
-                    value={lowerOperandDigits}
-                    onChange={(event) => setLowerOperandDigits(event.target.value as LowerOperandDigits)}
-                    className="w-full border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium text-gray-700 cursor-pointer transition-all duration-200"
-                  >
-                    <option value="mixed">{t.lowerOperandDigitOptions.mixed}</option>
-                    <option value="one">{t.lowerOperandDigitOptions.one}</option>
-                    <option value="two">{t.lowerOperandDigitOptions.two}</option>
-                  </select>
+                  <label className="text-sm font-bold text-stone-700">{t.lowerOperandDigits}</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['mixed', 'one', 'two'] as LowerOperandDigits[]).map(d => (
+                      <button
+                        key={d}
+                        onClick={() => setLowerOperandDigits(d)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                          lowerOperandDigits === d
+                            ? 'bg-amber-700 text-white'
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        }`}
+                      >
+                        {t.lowerOperandDigitOptions[d]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -407,19 +352,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Sticky Bottom Buttons */}
-      <div className="p-6 border-t border-gray-200 bg-white/60 flex flex-col gap-3">
+      <div className="p-6 border-t border-stone-200 flex flex-col gap-3">
         <button
           onClick={regenerate}
           disabled={!hasWorksheet}
-          className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:shadow-md disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 font-semibold cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 bg-amber-700 text-white py-3 rounded-lg hover:bg-amber-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold cursor-pointer transition-colors"
         >
-          <Dices size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+          <Dices size={18} />
           {t.regenerate}
         </button>
 
         <button
           onClick={() => setActiveTab('preview')}
-          className="lg:hidden w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl transition-all duration-200 font-semibold cursor-pointer"
+          className="lg:hidden w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 py-3 rounded-lg font-semibold cursor-pointer transition-colors"
         >
           {t.viewPreview} 📄
         </button>
@@ -428,7 +373,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={handlePrint}
             disabled={!hasWorksheet}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 text-emerald-700 py-2.5 rounded-xl hover:bg-emerald-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-stone-300 text-stone-700 py-2.5 rounded-lg hover:bg-stone-50 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer transition-colors"
           >
             <Printer size={16} />
             {t.print}
@@ -436,7 +381,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={handleDownloadPdf}
             disabled={!hasWorksheet || isGeneratingPdf}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-purple-200 text-purple-700 py-2.5 rounded-xl hover:bg-purple-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-stone-300 text-stone-700 py-2.5 rounded-lg hover:bg-stone-50 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer transition-colors"
           >
             <Download size={16} />
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : 'Generating...') : t.downloadPdf}

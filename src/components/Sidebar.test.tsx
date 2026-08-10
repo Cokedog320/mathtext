@@ -93,8 +93,8 @@ describe('Sidebar vertical arithmetic settings', () => {
     expect(chinese).toContain('200以内');
     expect(chinese).toContain('500以内');
     expect(chinese).not.toContain('下方数位数');
-    expect(english).toContain('Within 200');
-    expect(english).toContain('Within 500');
+    expect(english).toContain('≤200');
+    expect(english).toContain('≤500');
     expect(english).not.toContain('Lower Operand Digits');
   });
 

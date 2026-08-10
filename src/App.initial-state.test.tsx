@@ -43,8 +43,6 @@ describe('App initial state', () => {
 
     expect(html).toContain('请选择习题类型');
     expect(html).not.toContain('id="worksheet"');
-    expect(html).not.toContain('数字组合');
-    expect(html).not.toContain('凑十法');
 
     expectDisabledButtons(buttons, ['重新生成题目', '直接打印', '下载 PDF', '换一批', '打印', '下载']);
   });
@@ -62,8 +60,6 @@ describe('App initial state', () => {
     expect(html).toContain('Select a problem type');
     expect(html).toContain('Choose an exercise from the left to see its worksheet preview here.');
     expect(html).not.toContain('id="worksheet"');
-    expect(html).not.toContain('Number Bonds');
-    expect(html).not.toContain('Make-Ten Method');
     expectDisabledButtons(buttons, ['Regenerate Problems', 'Print', 'Download PDF', 'New Set', 'Download']);
   });
 });

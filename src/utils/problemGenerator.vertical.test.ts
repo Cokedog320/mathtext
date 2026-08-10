@@ -289,5 +289,11 @@ describe('generateProblems - Extended vertical ranges', () => {
     expect(getPrintTitle('horizontal-add', '1-100', 'none', 'en', translations)).toBe(
       'Addition to 100\nNo Regrouping',
     );
+    expect(getPrintTitle('vertical-add', '1-100', 'none', 'en', translations)).toBe(
+      'No Carry Addition Within 100',
+    );
+    expect(getPrintTitle('horizontal-chain-add', '1-20', 'none', 'en', translations)).toBe(
+      'No Carry Chained Addition Within 20',
+    );
   });
 });

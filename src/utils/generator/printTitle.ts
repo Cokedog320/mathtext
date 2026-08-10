@@ -61,6 +61,9 @@ export const getPrintTitle = (mode: Mode, range: Range, regroup: RegroupOption, 
     if (language === 'zh') {
       return `${rZh}${regroupZh}${baseMapZh[mode]}`;
     } else {
+      if (regroupEn === 'No Carry') {
+        return `${baseMapEn[mode]} to ${rEn.replace('Within ', '')}\nNo Regrouping`;
+      }
       return regroupEn ? `${regroupEn} ${baseMapEn[mode]} ${rEn}` : `${baseMapEn[mode]} ${rEn}`;
     }
   }

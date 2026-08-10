@@ -190,6 +190,13 @@ export const Worksheet: React.FC<WorksheetProps> = ({
         gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
       }
     : undefined;
+  const worksheetTitle = mode === 'number-bonds'
+    ? (isBlankTemplate
+        ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
+        : bondNumber === 'mixed'
+          ? (language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition')
+          : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
+    : getPrintTitle(mode, range, regroup, language, t);
 
   return (
     <A4PreviewWrapper>
@@ -199,14 +206,8 @@ export const Worksheet: React.FC<WorksheetProps> = ({
         className="print-area w-[794px] h-[1123px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] py-8 px-12 flex flex-col relative shrink-0 overflow-hidden transition-shadow duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] ring-1 ring-black/5"
       >
         <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2 relative z-10 gap-4">
-          <h1 className="text-3xl font-black tracking-widest text-black">
-            {mode === 'number-bonds'
-              ? (isBlankTemplate
-                  ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
-                  : bondNumber === 'mixed'
-                    ? (language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition')
-                    : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
-              : getPrintTitle(mode, range, regroup, language, t)}
+          <h1 className={`text-3xl font-black tracking-widest text-black ${worksheetTitle.includes('\n') ? 'whitespace-pre' : ''}`}>
+            {worksheetTitle}
           </h1>
           <div className="flex gap-6 text-sm font-bold text-black whitespace-nowrap flex-shrink-0">
             <span>{t.date}: ________________</span>

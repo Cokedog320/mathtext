@@ -282,4 +282,12 @@ describe('generateProblems - Extended vertical ranges', () => {
     expect(getPrintTitle('vertical-sub', '1-500', 'only', 'en', translations)).toBe('Borrowing Subtraction Within 500');
     expect(getPrintTitle('horizontal-add', '1-200', 'mixed', 'en', translations)).toBe('Addition Within 100');
   });
+
+  it('uses a concise two-line English title for addition without regrouping', () => {
+    const translations = { printTitles: {} };
+
+    expect(getPrintTitle('horizontal-add', '1-100', 'none', 'en', translations)).toBe(
+      'Addition to 100\nNo Regrouping',
+    );
+  });
 });

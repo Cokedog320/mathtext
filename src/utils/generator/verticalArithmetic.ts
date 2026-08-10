@@ -5,6 +5,80 @@ import {
   VerticalArithmeticMode,
 } from './arithmeticCandidates';
 import { shuffle } from './random';
+import { isExtendedVerticalRange } from './worksheetRules';
+
+const targetFor = (candidate: ArithmeticCandidate): number =>
+  candidate.operator === '+' ? candidate.num1 + candidate.num2 : candidate.num1;
+
+const candidateKey = (candidate: ArithmeticCandidate): string =>
+  `${candidate.num1}${candidate.operator}${candidate.num2}`;
+
+const generateExtendedVerticalArithmetic = (
+  range: Range,
+  mode: VerticalArithmeticMode,
+  regroup: RegroupOption,
+): Problem[] => {
+  const maxProblems = 20;
+  const includeAdd = mode.includes('-add') || mode.includes('-mixed');
+  const includeSub = mode.includes('-sub') || mode.includes('-mixed');
+  const candidates = buildArithmeticCandidates(range, mode, regroup, true);
+  const oneDigitSlots = new Set(
+    shuffle(Array.from({ length: maxProblems }, (_, index) => index)).slice(0, 2),
+  );
+  const usedTargets = new Set<number>();
+  const usedCandidates = new Set<string>();
+  const chosen: ArithmeticCandidate[] = [];
+  let smallOneDigitCount = 0;
+
+  for (let index = 0; index < maxProblems; index++) {
+    const desiredOperator: '+' | '-' = includeAdd && includeSub
+      ? (index % 2 === 0 ? '+' : '-')
+      : includeAdd ? '+' : '-';
+    const desiredDigits = oneDigitSlots.has(index) ? 'one' : 'multi';
+    const desiredRegroup = regroup === 'mixed'
+      ? Math.floor(index / 2) % 2 === 0
+      : regroup === 'only';
+    const operators: ('+' | '-')[] = [desiredOperator];
+    if (includeAdd && includeSub) operators.push(desiredOperator === '+' ? '-' : '+');
+    const filters = operators.flatMap(operator => [
+      (candidate: ArithmeticCandidate) => candidate.operator === operator &&
+        candidate.needsRegroup === desiredRegroup,
+      (candidate: ArithmeticCandidate) => candidate.operator === operator,
+    ]);
+
+    let selected: ArithmeticCandidate | undefined;
+    for (const filter of filters) {
+      const eligible = candidates.filter(candidate => {
+        const isOneDigit = candidate.lowerDigits === 'one';
+        if ((desiredDigits === 'one') !== isOneDigit) return false;
+        if (isOneDigit && candidate.num2 <= 5 && smallOneDigitCount >= 1) return false;
+        if (usedTargets.has(targetFor(candidate)) || usedCandidates.has(candidateKey(candidate))) return false;
+        return filter(candidate);
+      });
+      if (eligible.length === 0) continue;
+
+      const targets = [...new Set(eligible.map(targetFor))];
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      const targetCandidates = eligible.filter(candidate => targetFor(candidate) === target);
+      selected = targetCandidates[Math.floor(Math.random() * targetCandidates.length)];
+      break;
+    }
+
+    if (!selected) break;
+    chosen.push(selected);
+    usedTargets.add(targetFor(selected));
+    usedCandidates.add(candidateKey(selected));
+    if (selected.lowerDigits === 'one' && selected.num2 <= 5) smallOneDigitCount += 1;
+  }
+
+  return shuffle(chosen).map((candidate, id) => ({
+    id,
+    type: 'arithmetic',
+    num1: candidate.num1,
+    num2: candidate.num2,
+    operator: candidate.operator,
+  }));
+};
 
 export const generateVerticalArithmetic = (
   range: Range,
@@ -12,6 +86,10 @@ export const generateVerticalArithmetic = (
   regroup: RegroupOption,
   lowerOperandDigits: LowerOperandDigits
 ): Problem[] => {
+  if (isExtendedVerticalRange(range)) {
+    return generateExtendedVerticalArithmetic(range, mode, regroup);
+  }
+
   const maxProblems = 20;
   const includeAdd = mode.includes('-add') || mode.includes('-mixed');
   const includeSub = mode.includes('-sub') || mode.includes('-mixed');
@@ -64,9 +142,6 @@ export const generateVerticalArithmetic = (
       reservedTopSelections.set(`${top}|${digits}`, reserved);
     }
   }
-  const candidateKey = (candidate: ArithmeticCandidate): string =>
-    `${candidate.num1}${candidate.operator}${candidate.num2}`;
-
   for (let index = 0; index < maxProblems; index++) {
     const desiredOperator: '+' | '-' = includeAdd && includeSub
       ? (index % 2 === 0 ? '+' : '-')

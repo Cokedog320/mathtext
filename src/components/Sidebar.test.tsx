@@ -35,7 +35,7 @@ const renderSidebar = (
     setLanguage={vi.fn()}
     isGeneratingPdf={false}
     hasWorksheet
-    handleRegenerate={vi.fn()}
+    regenerate={vi.fn()}
     handlePrint={vi.fn()}
     handleDownloadPdf={vi.fn()}
     activeTab="settings"
@@ -84,6 +84,30 @@ describe('Sidebar vertical arithmetic settings', () => {
     expect(renderSidebar('zh', 'vertical-add', '1-30', 'two')).not.toContain('需进退位');
     expect(renderSidebar('zh', 'vertical-add', '1-30', 'one')).toContain('需进退位');
     expect(renderSidebar('zh', 'vertical-add', '1-50', 'two')).toContain('需进退位');
+  });
+
+  it('offers Within 200 and Within 500 only for extended vertical practice', () => {
+    const chinese = renderSidebar('zh', 'vertical-add', '1-200');
+    const english = renderSidebar('en', 'vertical-sub', '1-500');
+
+    expect(chinese).toContain('200以内');
+    expect(chinese).toContain('500以内');
+    expect(chinese).not.toContain('下方数位数');
+    expect(english).toContain('≤200');
+    expect(english).toContain('≤500');
+    expect(english).not.toContain('Lower Operand Digits');
+  });
+
+  it('does not expose the extended ranges to horizontal or fill-in practice', () => {
+    for (const mode of [
+      'horizontal-add',
+      'horizontal-chain-add',
+      'horizontal-fill-add',
+    ] as const) {
+      const html = renderSidebar('zh', mode, '1-200');
+      expect(html).not.toContain('200以内');
+      expect(html).not.toContain('500以内');
+    }
   });
 });
 

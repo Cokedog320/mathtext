@@ -43,6 +43,38 @@ describe('VerticalArithmetic work boxes', () => {
     expect(renderVertical('-', 'mixed', 43, 12)).toContain('data-work-box="borrow-tens"');
     expect(renderVertical('-', 'mixed', 43, 12)).toContain('data-work-box="borrow-ones"');
   });
+
+  it('renders three aligned columns and carry boxes for three-digit addition', () => {
+    const markup = renderVertical('+', 'mixed', 198, 27);
+    const visibleText = markup.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
+
+    expect(visibleText).toContain('1.198+27');
+    expect(markup).toContain('grid-cols-[30px_42px_42px_42px]');
+    expect(markup.match(/data-work-box=/g)).toHaveLength(2);
+    expect(markup).toContain('data-work-box="carry-hundreds"');
+    expect(markup).toContain('data-work-box="carry-tens"');
+    expect(markup).not.toContain('data-work-box="carry-ones"');
+  });
+
+  it('uses the three-digit result width for two-digit addition operands', () => {
+    const markup = renderVertical('+', 'mixed', 99, 99);
+
+    expect(markup).toContain('grid-cols-[30px_42px_42px_42px]');
+    expect(markup.match(/data-work-box=/g)).toHaveLength(2);
+    expect(markup).toContain('data-work-box="carry-hundreds"');
+    expect(markup).toContain('data-work-box="carry-tens"');
+  });
+
+  it('renders three rewrite boxes for three-digit subtraction', () => {
+    const markup = renderVertical('-', 'only', 402, 187);
+    const visibleText = markup.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
+
+    expect(visibleText).toContain('1.402-187');
+    expect(markup.match(/data-work-box=/g)).toHaveLength(3);
+    expect(markup).toContain('data-work-box="borrow-hundreds"');
+    expect(markup).toContain('data-work-box="borrow-tens"');
+    expect(markup).toContain('data-work-box="borrow-ones"');
+  });
 });
 
 describe('ChainedArithmetic', () => {

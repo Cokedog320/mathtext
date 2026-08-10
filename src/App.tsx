@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
-import { Dices, Printer, Download, FileQuestion } from 'lucide-react';
+import { Dices, Printer, Download } from 'lucide-react';
 
 import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, pdfFileNames } from './types';
 import { generateProblems, getRequestedProblemCount } from './utils/problemGenerator';
 import { DEFAULT_REGROUP_OPTION, normalizeRegroupOption } from './utils/regroupOptions';
+import { normalizeRangeForMode } from './utils/generator/worksheetRules';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
 
@@ -44,19 +45,19 @@ export default function App() {
     localStorage.setItem(LANGUAGE_KEY, language);
   }, [language]);
 
-  const regenerate = (
-    r = range,
-    m = mode,
-    rg = regroup,
-    mtl = makeTenLeft,
-    but = bondUseType,
-    bn = bondNumber,
-    bt = isBlankTemplate,
-    lod = lowerOperandDigits
-  ) => {
-    if (!m) return;
-    const generated = generateProblems(r, m, rg, mtl, but, bn, bt, lod);
-    const requestedCount = getRequestedProblemCount(r, m, bn, bt);
+  const regenerate = () => {
+    if (!mode) return;
+    const generated = generateProblems(
+      range,
+      mode,
+      regroup,
+      makeTenLeft,
+      bondUseType,
+      bondNumber,
+      isBlankTemplate,
+      lowerOperandDigits,
+    );
+    const requestedCount = getRequestedProblemCount(range, mode, bondNumber, isBlankTemplate);
     setProblems(generated);
     setGenerationLimit(
       generated.length < requestedCount
@@ -68,18 +69,15 @@ export default function App() {
 
   useEffect(() => {
     if (mode) {
-      regenerate(range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits);
+      regenerate();
     }
   }, [range, mode, regroup, makeTenLeft, bondUseType, bondNumber, isBlankTemplate, lowerOperandDigits]);
 
-  const handleRegenerate = () => {
-    if (mode) regenerate();
-  };
-
   const handleRangeChange = (nextRange: Range) => {
-    setRange(nextRange);
+    const normalizedRange = mode ? normalizeRangeForMode(nextRange, mode) : nextRange;
+    setRange(normalizedRange);
     if (mode) {
-      setRegroup(normalizeRegroupOption(nextRange, mode, regroup, lowerOperandDigits));
+      setRegroup(normalizeRegroupOption(normalizedRange, mode, regroup, lowerOperandDigits));
     }
   };
 
@@ -88,9 +86,10 @@ export default function App() {
 
     setProblems([]);
     setGenerationLimit(null);
-    const nextRange = nextMode.startsWith('vertical-') && (range === '1-10' || (range === '1-20' && lowerOperandDigits === 'two'))
+    const adjustedRange = nextMode.startsWith('vertical-') && (range === '1-10' || (range === '1-20' && lowerOperandDigits === 'two'))
       ? (lowerOperandDigits === 'two' ? '1-30' : '1-20')
       : range;
+    const nextRange = normalizeRangeForMode(adjustedRange, nextMode);
     if (nextRange !== range) {
       setRange(nextRange);
     }
@@ -116,7 +115,7 @@ export default function App() {
     try {
       const worksheet = worksheetRef.current;
       const dataUrl = await toPng(worksheet, {
-        cacheBust: true,
+        cacheBust: false,
         pixelRatio: 2,
       });
 
@@ -154,31 +153,26 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex flex-col lg:flex-row font-sans relative">
-      {/* Abstract Background Decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-400/10 blur-[120px]"></div>
-        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-purple-400/10 blur-[120px]"></div>
-      </div>
+    <div className="min-h-screen bg-[#faf7f2] flex flex-col lg:flex-row font-sans relative">
 
       {/* Mobile Tab Switcher */}
-      <div className="no-print lg:hidden w-full bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-30 flex">
+      <div className="no-print lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-30 flex">
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex-1 py-4 text-center font-bold text-sm transition-all duration-200 ${
+          className={`flex-1 py-4 text-center font-bold text-sm transition-colors cursor-pointer ${
             activeTab === 'settings'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-              : 'text-gray-500 hover:text-gray-750'
+              ? 'text-amber-700 border-b-2 border-amber-700'
+              : 'text-stone-500 hover:text-stone-700'
           }`}
         >
           🛠️ {t.settings}
         </button>
         <button
           onClick={() => setActiveTab('preview')}
-          className={`flex-1 py-4 text-center font-bold text-sm transition-all duration-200 ${
+          className={`flex-1 py-4 text-center font-bold text-sm transition-colors cursor-pointer ${
             activeTab === 'preview'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-              : 'text-gray-500 hover:text-gray-750'
+              ? 'text-amber-700 border-b-2 border-amber-700'
+              : 'text-stone-500 hover:text-stone-700'
           }`}
         >
           📄 {t.preview}
@@ -200,7 +194,7 @@ export default function App() {
         language={language} setLanguage={setLanguage}
         isGeneratingPdf={isGeneratingPdf}
         hasWorksheet={hasWorksheet}
-        handleRegenerate={handleRegenerate}
+        regenerate={regenerate}
         handlePrint={handlePrint}
         handleDownloadPdf={handleDownloadPdf}
         activeTab={activeTab}
@@ -209,16 +203,16 @@ export default function App() {
 
       {/* Preview area */}
       <div
-        className={`flex-1 flex-col items-center py-6 px-4 lg:py-10 z-10 overflow-y-auto bg-slate-100/40 min-h-[calc(100vh-53px)] lg:min-h-screen print-preview-container ${
+        className={`flex-1 flex-col items-center py-6 px-4 lg:py-10 z-10 overflow-y-auto min-h-[calc(100vh-53px)] lg:min-h-screen print-preview-container ${
           activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
         }`}
       >
         {/* Floating action bar for Mobile Preview Tab */}
         <div className="lg:hidden w-full max-w-[400px] mb-4 flex gap-3 no-print">
           <button
-            onClick={handleRegenerate}
+            onClick={regenerate}
             disabled={!hasWorksheet}
-            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 bg-amber-700 text-white py-3 rounded-lg hover:bg-amber-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer transition-colors"
           >
             <Dices size={16} />
             {t.mobileRegenerate}
@@ -226,7 +220,7 @@ export default function App() {
           <button
             onClick={handlePrint}
             disabled={!hasWorksheet}
-            className="flex-1 flex items-center justify-center gap-1 bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-stone-300 text-stone-700 py-3 rounded-lg hover:bg-stone-50 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer transition-colors"
           >
             <Printer size={16} />
             {t.mobilePrint}
@@ -234,7 +228,7 @@ export default function App() {
           <button
             onClick={handleDownloadPdf}
             disabled={!hasWorksheet || isGeneratingPdf}
-            className="flex-1 flex items-center justify-center gap-1 bg-white border border-purple-200 text-purple-700 py-3 rounded-xl disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 bg-white border border-stone-300 text-stone-700 py-3 rounded-lg hover:bg-stone-50 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer transition-colors"
           >
             <Download size={16} />
             {isGeneratingPdf ? (language === 'zh' ? '生成中...' : '...') : t.mobileDownload}
@@ -263,14 +257,23 @@ export default function App() {
             />
           </>
         ) : (
-          <div className="flex flex-1 min-h-[60vh] w-full max-w-2xl items-center justify-center px-6 text-center">
-            <div className="flex flex-col items-center gap-4 text-slate-500 animate-fade-in-up">
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                <FileQuestion size={48} className="text-blue-400" aria-hidden="true" />
+          <div className="flex flex-1 min-h-[60vh] w-full max-w-2xl items-center justify-center px-6">
+            <div className="w-full max-w-[400px] border-2 border-dashed border-stone-300 rounded-lg bg-white/60 p-8 flex flex-col items-center gap-6 animate-fade-in-up">
+              <div className="w-full flex flex-col gap-3 opacity-30">
+                <div className="h-3 bg-stone-300 rounded w-1/3 mx-auto"></div>
+                <div className="h-2 bg-stone-200 rounded w-full"></div>
+                <div className="h-2 bg-stone-200 rounded w-full"></div>
+                <div className="h-2 bg-stone-200 rounded w-2/3"></div>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="h-8 border border-stone-200 rounded"></div>
+                  <div className="h-8 border border-stone-200 rounded"></div>
+                  <div className="h-8 border border-stone-200 rounded"></div>
+                  <div className="h-8 border border-stone-200 rounded"></div>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-700">{t.selectProblemType}</h2>
-                <p className="mt-2 text-sm text-slate-500">{t.selectProblemTypeHint}</p>
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-stone-600">{t.selectProblemType}</h2>
+                <p className="mt-2 text-sm text-stone-400">{t.selectProblemTypeHint}</p>
               </div>
             </div>
           </div>

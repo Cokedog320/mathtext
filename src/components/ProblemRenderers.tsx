@@ -97,22 +97,32 @@ const getHorizontalTypographyClass = (range: Range): string => range === '1-10'
     ? 'gap-1.5 text-xl'
     : 'gap-1 text-lg';
 
+const HorizontalEquationCard: React.FC<{
+  index: number;
+  range: Range;
+  children: React.ReactNode;
+}> = ({ index, range, children }) => (
+  <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
+    <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
+    <div className={`flex min-w-0 items-center justify-center ${getHorizontalTypographyClass(range)} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
+      {children}
+    </div>
+  </div>
+);
+
 export const HorizontalArithmetic: React.FC<{
   problem: Extract<Problem, { type: 'arithmetic' }>;
   index: number;
   range: Range;
 }> = ({ problem, index, range }) => {
   return (
-    <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
-      <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className={`flex min-w-0 items-center justify-center ${getHorizontalTypographyClass(range)} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
-        <span>{problem.num1}</span>
-        <span>{problem.operator}</span>
-        <span>{problem.num2}</span>
-        <span>=</span>
-        <span className="fill-box shrink-0" aria-label="answer" />
-      </div>
-    </div>
+    <HorizontalEquationCard index={index} range={range}>
+      <span>{problem.num1}</span>
+      <span>{problem.operator}</span>
+      <span>{problem.num2}</span>
+      <span>=</span>
+      <span className="fill-box shrink-0" aria-label="answer" />
+    </HorizontalEquationCard>
   );
 };
 
@@ -124,16 +134,13 @@ export const HorizontalFillArithmetic: React.FC<{
   const { num1, num2, result, operator, blankPosition } = problem;
 
   return (
-    <div className="relative w-[160px] h-full flex items-center justify-between px-1 border border-gray-100 rounded-sm">
-      <span className="absolute top-1 left-1 text-[10px] text-gray-400 font-mono">{index + 1}.</span>
-      <div className={`flex min-w-0 items-center justify-center ${getHorizontalTypographyClass(range)} w-full font-semibold text-gray-800 mt-2 select-none whitespace-nowrap`}>
-        {blankPosition === 1 ? <span className="fill-box shrink-0" aria-label="blank" /> : <span>{num1}</span>}
-        <span>{operator}</span>
-        {blankPosition === 2 ? <span className="fill-box shrink-0" aria-label="blank" /> : <span>{num2}</span>}
-        <span>=</span>
-        <span>{result}</span>
-      </div>
-    </div>
+    <HorizontalEquationCard index={index} range={range}>
+      {blankPosition === 1 ? <span className="fill-box shrink-0" aria-label="blank" /> : <span>{num1}</span>}
+      <span>{operator}</span>
+      {blankPosition === 2 ? <span className="fill-box shrink-0" aria-label="blank" /> : <span>{num2}</span>}
+      <span>=</span>
+      <span>{result}</span>
+    </HorizontalEquationCard>
   );
 };
 

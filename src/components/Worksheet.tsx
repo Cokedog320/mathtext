@@ -188,8 +188,8 @@ export const Worksheet: React.FC<WorksheetProps> = ({
           key={generateCount}
           style={problemGridStyle}
           className={`w-full py-2 relative z-10 animate-fade-in-up ${fillsPage
-              ? 'grid flex-1 min-h-0'
-              : `flex flex-wrap flex-1 min-h-0 items-center ${usesMixedBondLayout ? 'content-between' : 'content-center'} justify-center`
+            ? 'grid flex-1 min-h-0'
+            : `flex flex-wrap flex-1 min-h-0 items-center ${usesMixedBondLayout ? 'content-between' : 'content-center'} justify-center`
             }`}
         >
           {problems.map((problem, idx) => (

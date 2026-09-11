@@ -13,6 +13,15 @@ const targetFor = (candidate: ArithmeticCandidate): number =>
 const candidateKey = (candidate: ArithmeticCandidate): string =>
   `${candidate.num1}${candidate.operator}${candidate.num2}`;
 
+const toProblems = (candidates: ArithmeticCandidate[]): Problem[] =>
+  shuffle(candidates).map((candidate, id) => ({
+    id,
+    type: 'arithmetic',
+    num1: candidate.num1,
+    num2: candidate.num2,
+    operator: candidate.operator,
+  }));
+
 const generateExtendedVerticalArithmetic = (
   range: Range,
   mode: VerticalArithmeticMode,
@@ -71,13 +80,7 @@ const generateExtendedVerticalArithmetic = (
     if (selected.lowerDigits === 'one' && selected.num2 <= 5) smallOneDigitCount += 1;
   }
 
-  return shuffle(chosen).map((candidate, id) => ({
-    id,
-    type: 'arithmetic',
-    num1: candidate.num1,
-    num2: candidate.num2,
-    operator: candidate.operator,
-  }));
+  return toProblems(chosen);
 };
 
 export const generateVerticalArithmetic = (
@@ -160,26 +163,26 @@ export const generateVerticalArithmetic = (
         candidate.lowerDigits === desiredDigits,
       ...(lowerOperandDigits === 'mixed'
         ? [
-            (candidate: ArithmeticCandidate) => candidate.operator === desiredOperator &&
-              candidate.needsRegroup === desiredRegroup,
-            (candidate: ArithmeticCandidate) => candidate.operator === desiredOperator,
-          ]
+          (candidate: ArithmeticCandidate) => candidate.operator === desiredOperator &&
+            candidate.needsRegroup === desiredRegroup,
+          (candidate: ArithmeticCandidate) => candidate.operator === desiredOperator,
+        ]
         : []),
       ...(includeAdd && includeSub
         ? [
-            (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
-              candidate.lowerDigits === desiredDigits &&
-              candidate.needsRegroup === desiredRegroup,
-            (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
-              candidate.lowerDigits === desiredDigits,
-            ...(lowerOperandDigits === 'mixed'
-              ? [
-                  (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
-                    candidate.needsRegroup === desiredRegroup,
-                  (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator,
-                ]
-              : []),
-          ]
+          (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
+            candidate.lowerDigits === desiredDigits &&
+            candidate.needsRegroup === desiredRegroup,
+          (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
+            candidate.lowerDigits === desiredDigits,
+          ...(lowerOperandDigits === 'mixed'
+            ? [
+              (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator &&
+                candidate.needsRegroup === desiredRegroup,
+              (candidate: ArithmeticCandidate) => candidate.operator !== desiredOperator,
+            ]
+            : []),
+        ]
         : []),
     ];
 
@@ -216,11 +219,5 @@ export const generateVerticalArithmetic = (
     }
   }
 
-  return shuffle(chosen).map((candidate, id) => ({
-    id,
-    type: 'arithmetic',
-    num1: candidate.num1,
-    num2: candidate.num2,
-    operator: candidate.operator,
-  }));
+  return toProblems(chosen);
 };

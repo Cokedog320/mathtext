@@ -23,7 +23,7 @@ export const generateNumberBonds = (
     }));
   }
 
-  if (bondNumber === 'mixed' && !isBlankTemplate) {
+  if (bondNumber === 'mixed') {
     const includesTwo = Math.random() < 0.1;
     const standardTargets = [3, 4, 5, 6, 7, 8, 9, 10];
     const extraTargets = shuffle(standardTargets).slice(0, includesTwo ? 3 : 4);
@@ -49,8 +49,7 @@ export const generateNumberBonds = (
     return problems;
   }
 
-  const targetNumber = bondNumber;
-  if (typeof targetNumber !== 'number') return problems;
+  const targetNumber = bondNumber as number;
   const leftKnownByPair = new Map<number, boolean>();
 
   for (let k = 1; k < targetNumber; k++) {

@@ -11,13 +11,23 @@ type ChainedMode = Extract<Mode, 'horizontal-chain-add' | 'horizontal-chain-sub'
 type ChainedCandidate = {
   operands: [number, number, number];
   operators: [ArithmeticOperator, ArithmeticOperator];
-  intermediateResult: number;
   result: number;
   needsRegroup: boolean;
 };
 
 const calculate = (left: number, operator: ArithmeticOperator, right: number): number =>
   operator === '+' ? left + right : left - right;
+
+const compareScores = (left: number[], right: number[]): number => {
+  for (let index = 0; index < left.length; index++) {
+    if (left[index] !== right[index]) return left[index] - right[index];
+  }
+  return 0;
+};
+
+const increment = <K>(counts: Map<K, number>, key: K): void => {
+  counts.set(key, (counts.get(key) ?? 0) + 1);
+};
 
 const buildChainedCandidates = (
   range: Range,
@@ -32,9 +42,7 @@ const buildChainedCandidates = (
   };
   const addThenSubtract = operatorPairs['horizontal-chain-mixed'];
   const subtractThenAdd: [ArithmeticOperator, ArithmeticOperator] = ['-', '+'];
-  const retainedPerBalanceGroup = range === '1-10' ? Number.POSITIVE_INFINITY : 5;
-  type CandidateReservoir = { seen: number; candidates: ChainedCandidate[] };
-  const reservoirs = new Map<number, CandidateReservoir>();
+  const candidates: ChainedCandidate[] = [];
   const append = (
     first: number,
     second: number,
@@ -50,28 +58,12 @@ const buildChainedCandidates = (
       requiresRegroup(intermediateResult, operators[1], third);
     if (!matchesRegroup(needsRegroup, regroup)) return;
 
-    const pattern = operators[0] === '+' ? 0 : 1;
-    const key = (((pattern * 2 + Number(needsRegroup)) * 101 + first) * 101) + result;
-    const reservoir = reservoirs.get(key) ?? { seen: 0, candidates: [] };
-    reservoir.seen += 1;
-    const retainedIndex = reservoir.candidates.length < retainedPerBalanceGroup
-      ? reservoir.candidates.length
-      : Math.floor(Math.random() * reservoir.seen);
-    if (retainedIndex >= retainedPerBalanceGroup) return;
-
-    const candidate: ChainedCandidate = {
+    candidates.push({
       operands: [first, second, third],
       operators,
-      intermediateResult,
       result,
       needsRegroup,
-    };
-    if (reservoir.candidates.length < retainedPerBalanceGroup) {
-      reservoir.candidates.push(candidate);
-    } else {
-      reservoir.candidates[retainedIndex] = candidate;
-    }
-    reservoirs.set(key, reservoir);
+    });
   };
 
   if (mode === 'horizontal-chain-add') {
@@ -110,7 +102,7 @@ const buildChainedCandidates = (
     }
   }
 
-  return [...reservoirs.values()].flatMap(reservoir => reservoir.candidates);
+  return candidates;
 };
 
 const selectWithinTenChainedCandidates = (
@@ -124,15 +116,6 @@ const selectWithinTenChainedCandidates = (
   const operatorTarget = limit / operatorKinds.length;
   const primaryDistributionCap = 5;
   const laterOperandCap = 9;
-  const increment = <K>(counts: Map<K, number>, key: K): void => {
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  };
-  const compareScores = (left: number[], right: number[]): number => {
-    for (let index = 0; index < left.length; index++) {
-      if (left[index] !== right[index]) return left[index] - right[index];
-    }
-    return 0;
-  };
 
   for (let attempt = 0; attempt < 200; attempt++) {
     const ordered = shuffle(candidates);
@@ -166,21 +149,21 @@ const selectWithinTenChainedCandidates = (
         const score = [
           ((operators.get(kind) ?? 0) + 1) / operatorTarget,
           ((oneProblem ? oneProblems : selected.length - oneProblems) + 1) /
-            (oneProblem ? MAX_VALUE_ONE_OPERAND_PROBLEMS : limit - MAX_VALUE_ONE_OPERAND_PROBLEMS),
+          (oneProblem ? MAX_VALUE_ONE_OPERAND_PROBLEMS : limit - MAX_VALUE_ONE_OPERAND_PROBLEMS),
           Math.max(
             ((starts.get(first) ?? 0) + 1) / 4,
             ((results.get(candidate.result) ?? 0) + 1) / 4
           ),
           ((starts.get(first) ?? 0) + 1) / 4 +
-            ((results.get(candidate.result) ?? 0) + 1) / 4,
+          ((results.get(candidate.result) ?? 0) + 1) / 4,
           Math.max(
             ((seconds.get(second) ?? 0) + 1) / laterOperandCap,
             ((thirds.get(third) ?? 0) + 1) / laterOperandCap
           ),
           (starts.get(first) ?? 0) +
-            (results.get(candidate.result) ?? 0) +
-            (seconds.get(second) ?? 0) +
-            (thirds.get(third) ?? 0),
+          (results.get(candidate.result) ?? 0) +
+          (seconds.get(second) ?? 0) +
+          (thirds.get(third) ?? 0),
         ];
         const comparison = bestScore === null ? -1 : compareScores(score, bestScore);
         if (comparison < 0) {
@@ -291,31 +274,6 @@ const selectChainedCandidates = (
   const operatorTargets = new Map(
     operatorKinds.map(kind => [kind, limit / operatorKinds.length])
   );
-  const primaryCapacity = (group: ChainedCandidate[]): number => Math.min(
-    new Set(group.map(candidate => candidate.operands[0])).size * 3,
-    new Set(group.map(candidate => candidate.result)).size * 3
-  );
-  const regroupingCandidates = candidates.filter(candidate => candidate.needsRegroup);
-  const nonRegroupingCandidates = candidates.filter(candidate => !candidate.needsRegroup);
-  const regroupingTarget = regroup === 'mixed'
-    ? Math.max(
-        limit - primaryCapacity(nonRegroupingCandidates),
-        Math.min(limit / 2, primaryCapacity(regroupingCandidates))
-      )
-    : regroup === 'only' ? limit : 0;
-  const regroupTargets = new Map<boolean, number>([
-    [true, regroupingTarget],
-    [false, limit - regroupingTarget],
-  ]);
-  const increment = <K>(counts: Map<K, number>, key: K): void => {
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  };
-  const compareScores = (left: number[], right: number[]): number => {
-    for (let index = 0; index < left.length; index++) {
-      if (left[index] !== right[index]) return left[index] - right[index];
-    }
-    return 0;
-  };
 
   const isWithinTen = candidates.every(candidate =>
     candidate.operands[0] <= 10 && candidate.result <= 10
@@ -326,82 +284,6 @@ const selectChainedCandidates = (
 
   if (limit > 20) {
     return selectExpandedChainedCandidates(candidates, limit, regroup);
-  }
-
-  const primaryCaps = [3, 4];
-
-  for (const primaryCap of primaryCaps) {
-    for (let attempt = 0; attempt < 10; attempt++) {
-      const shuffled = shuffle(candidates);
-      const offset = shuffled.length === 0 ? 0 : (attempt * 97) % shuffled.length;
-      const ordered = [...shuffled.slice(offset), ...shuffled.slice(0, offset)];
-      const selected: ChainedCandidate[] = [];
-      const starts = new Map<number, number>();
-      const results = new Map<number, number>();
-      const seconds = new Map<number, number>();
-      const thirds = new Map<number, number>();
-      const operators = new Map<string, number>();
-      const regroupKinds = new Map<boolean, number>();
-      let simplePatterns = 0;
-
-      while (selected.length < limit) {
-        let bestScore: number[] | null = null;
-        let bestCandidates: ChainedCandidate[] = [];
-        for (const candidate of ordered) {
-          if (selected.includes(candidate)) continue;
-          const [first, second, third] = candidate.operands;
-          const kind = operatorKey(candidate);
-          const simplePattern = usesSimplePattern(candidate);
-          const operatorTarget = operatorTargets.get(kind) ?? 0;
-          const regroupTarget = regroupTargets.get(candidate.needsRegroup) ?? 0;
-          if ((starts.get(first) ?? 0) >= primaryCap) continue;
-          if ((results.get(candidate.result) ?? 0) >= primaryCap) continue;
-          if ((seconds.get(second) ?? 0) >= 4) continue;
-          if ((thirds.get(third) ?? 0) >= 4) continue;
-          if ((operators.get(kind) ?? 0) >= operatorTarget) continue;
-          if ((regroupKinds.get(candidate.needsRegroup) ?? 0) >= regroupTarget) continue;
-          if (simplePattern && simplePatterns >= 3) continue;
-
-          const quotaLoads = [
-            ((operators.get(kind) ?? 0) + 1) / operatorTarget,
-            ((regroupKinds.get(candidate.needsRegroup) ?? 0) + 1) / regroupTarget,
-          ];
-          const distributionLoads = [
-            ((starts.get(first) ?? 0) + 1) / primaryCap,
-            ((results.get(candidate.result) ?? 0) + 1) / primaryCap,
-            ((seconds.get(second) ?? 0) + 1) / 4,
-            ((thirds.get(third) ?? 0) + 1) / 4,
-          ];
-          const score = [
-            Math.max(...quotaLoads),
-            quotaLoads.reduce((sum, load) => sum + load, 0),
-            Math.max(...distributionLoads),
-            distributionLoads.reduce((sum, load) => sum + load, 0),
-          ];
-          const comparison = bestScore === null ? -1 : compareScores(score, bestScore);
-          if (comparison < 0) {
-            bestScore = score;
-            bestCandidates = [candidate];
-          } else if (comparison === 0) {
-            bestCandidates.push(candidate);
-          }
-        }
-        if (bestCandidates.length === 0) break;
-        const candidate = bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
-        const [first, second, third] = candidate.operands;
-        const kind = operatorKey(candidate);
-        const simplePattern = usesSimplePattern(candidate);
-        selected.push(candidate);
-        increment(starts, first);
-        increment(results, candidate.result);
-        increment(seconds, second);
-        increment(thirds, third);
-        increment(operators, kind);
-        increment(regroupKinds, candidate.needsRegroup);
-        if (simplePattern) simplePatterns += 1;
-      }
-      if (selected.length === limit) return shuffle(selected);
-    }
   }
 
   return [];

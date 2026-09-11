@@ -25,10 +25,8 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     handleResize();
-    window.addEventListener('resize', handleResize);
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -54,106 +52,77 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-// Layout configurations for different modes
-interface LayoutSettings {
+type BondProblem = Extract<Problem, { type: 'bond' }>;
+type MethodProblem = Extract<Problem, { type: 'method' }>;
+type VerticalProblem = Extract<Problem, { type: 'arithmetic' }>;
+type ChainProblem = Extract<Problem, { type: 'arithmetic-chain' }>;
+type FillProblem = Extract<Problem, { type: 'horizontal-fill' }>;
+
+type RendererProps = {
+  problem: Problem;
+  index: number;
   bondNumber: number | 'mixed';
   isBlankTemplate: boolean;
+  hideParts: boolean;
+  hideTen: boolean;
+  regroup: RegroupOption;
   range: Range;
-}
+};
 
-interface RenderConfig {
-  component: React.FC<{
-    problem: Problem;
-    index: number;
-    large?: boolean;
-    hideParts?: boolean;
-    hideTen?: boolean;
-    bondNumber?: number | 'mixed';
-    isBlankTemplate?: boolean;
-    regroup?: RegroupOption;
-    range?: Range;
-  }>;
-  getLayoutClass: (settings: LayoutSettings) => { colClass: string; heightClass: string };
-}
+type ProblemRenderer = (props: RendererProps) => React.ReactElement;
 
-const RENDER_REGISTRY: Record<Mode, RenderConfig> = {
-  'number-bonds': {
-    component: ({ problem, hideParts, bondNumber, isBlankTemplate }) => {
-      const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
-      return <NumberBond problem={problem as any} large={isLarge} hideParts={hideParts} />;
-    },
-    getLayoutClass: ({ bondNumber, isBlankTemplate }) => {
-      if (bondNumber === 'mixed' || isBlankTemplate) {
-        return { colClass: 'w-1/3', heightClass: 'h-[180px]' };
-      }
-      const effectiveNumber = isBlankTemplate ? 10 : bondNumber;
-      const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
-      return {
-        colClass: effectiveNumber === 2 ? 'w-full' : effectiveNumber === 3 ? 'w-1/2' : 'w-1/3',
-        heightClass: isLarge ? 'h-[320px]' : 'h-[230px]',
-      };
-    }
-  },
-  'make-ten': {
-    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem as any} index={index} hideTen={hideTen} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
-  },
-  'break-ten': {
-    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem as any} index={index} hideTen={hideTen} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
-  },
-  'flat-ten': {
-    component: ({ problem, index, hideTen }) => <MethodDiagram problem={problem as any} index={index} hideTen={hideTen} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[180px]' })
-  },
-  'vertical-add': {
-    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem as any} index={index} regroup={regroup} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
-  },
-  'vertical-sub': {
-    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem as any} index={index} regroup={regroup} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
-  },
-  'vertical-mixed': {
-    component: ({ problem, index, regroup = 'mixed' }) => <VerticalArithmetic problem={problem as any} index={index} regroup={regroup} />,
-    getLayoutClass: () => ({ colClass: 'w-1/4', heightClass: 'h-[185px]' })
-  },
-  'horizontal-add': {
-    component: ({ problem, index, range = '1-100' }) => <HorizontalArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
-  },
-  'horizontal-sub': {
-    component: ({ problem, index, range = '1-100' }) => <HorizontalArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
-  },
-  'horizontal-mixed': {
-    component: ({ problem, index, range = '1-100' }) => <HorizontalArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
-  },
-  'horizontal-chain-add': {
-    component: ({ problem, index, range = '1-100' }) => <ChainedArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
-  },
-  'horizontal-chain-sub': {
-    component: ({ problem, index, range = '1-100' }) => <ChainedArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
-  },
-  'horizontal-chain-mixed': {
-    component: ({ problem, index, range = '1-100' }) => <ChainedArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: () => ({ colClass: 'w-1/3', heightClass: 'h-[115px]' })
-  },
-  'horizontal-fill-add': {
-    component: ({ problem, index, range = '1-100' }) => <HorizontalFillArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
-  },
-  'horizontal-fill-sub': {
-    component: ({ problem, index, range = '1-100' }) => <HorizontalFillArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
-  },
-  'horizontal-fill-mixed': {
-    component: ({ problem, index, range = '1-100' }) => <HorizontalFillArithmetic problem={problem as any} index={index} range={range} />,
-    getLayoutClass: ({ range }) => ({ colClass: 'w-1/4', heightClass: range === '1-10' ? 'h-[150px]' : range === '1-20' ? 'h-[78px]' : 'h-[52px]' })
+const bondRenderer: ProblemRenderer = ({ problem, bondNumber, isBlankTemplate, hideParts }) => {
+  const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
+  return <NumberBond problem={problem as BondProblem} large={isLarge} hideParts={hideParts} />;
+};
+
+const methodRenderer: ProblemRenderer = ({ problem, hideTen }) =>
+  <MethodDiagram problem={problem as MethodProblem} hideTen={hideTen} />;
+
+const verticalRenderer: ProblemRenderer = ({ problem, index, regroup }) =>
+  <VerticalArithmetic problem={problem as VerticalProblem} index={index} regroup={regroup} />;
+
+const horizontalRenderer: ProblemRenderer = ({ problem, index, range }) =>
+  <HorizontalArithmetic problem={problem as VerticalProblem} index={index} range={range} />;
+
+const chainRenderer: ProblemRenderer = ({ problem, index, range }) =>
+  <ChainedArithmetic problem={problem as ChainProblem} index={index} range={range} />;
+
+const fillRenderer: ProblemRenderer = ({ problem, index, range }) =>
+  <HorizontalFillArithmetic problem={problem as FillProblem} index={index} range={range} />;
+
+const RENDERERS: Record<Mode, ProblemRenderer> = {
+  'number-bonds': bondRenderer,
+  'make-ten': methodRenderer,
+  'break-ten': methodRenderer,
+  'flat-ten': methodRenderer,
+  'vertical-add': verticalRenderer,
+  'vertical-sub': verticalRenderer,
+  'vertical-mixed': verticalRenderer,
+  'horizontal-add': horizontalRenderer,
+  'horizontal-sub': horizontalRenderer,
+  'horizontal-mixed': horizontalRenderer,
+  'horizontal-chain-add': chainRenderer,
+  'horizontal-chain-sub': chainRenderer,
+  'horizontal-chain-mixed': chainRenderer,
+  'horizontal-fill-add': fillRenderer,
+  'horizontal-fill-sub': fillRenderer,
+  'horizontal-fill-mixed': fillRenderer,
+};
+
+// 仅 number-bonds 走 flex-wrap 布局消费 col/height 类；其余模式 fillsPage 网格不使用
+const getBondLayout = ({ bondNumber, isBlankTemplate }: {
+  bondNumber: number | 'mixed';
+  isBlankTemplate: boolean;
+}): { colClass: string; heightClass: string } => {
+  if (bondNumber === 'mixed' || isBlankTemplate) {
+    return { colClass: 'w-1/3', heightClass: 'h-[180px]' };
   }
+  const isLarge = typeof bondNumber === 'number' && bondNumber <= 4;
+  const colClass = isLarge
+    ? (bondNumber === 2 ? 'w-full' : bondNumber === 3 ? 'w-1/2' : 'w-1/3')
+    : 'w-1/3';
+  return { colClass, heightClass: isLarge ? 'h-[320px]' : 'h-[230px]' };
 };
 
 interface WorksheetProps {
@@ -176,26 +145,24 @@ export const Worksheet: React.FC<WorksheetProps> = ({
   problems, generateCount, worksheetRef
 }) => {
   const t = translations[language];
-  const renderConfig = RENDER_REGISTRY[mode];
-
-  const { colClass, heightClass } = renderConfig.getLayoutClass({ bondNumber, isBlankTemplate, range });
-  const RendererComponent = renderConfig.component;
+  const RenderProblem = RENDERERS[mode];
+  const { colClass, heightClass } = getBondLayout({ bondNumber, isBlankTemplate });
   const fillsPage = mode !== 'number-bonds';
   const usesMixedBondLayout = mode === 'number-bonds' && (bondNumber === 'mixed' || isBlankTemplate);
   const columnCount = mode.startsWith('horizontal-chain-') ? 3 : 4;
   const rowCount = Math.max(1, Math.ceil(problems.length / columnCount));
   const problemGridStyle = fillsPage
     ? {
-        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
-      }
+      gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
+    }
     : undefined;
   const worksheetTitle = mode === 'number-bonds'
     ? (isBlankTemplate
-        ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
-        : bondNumber === 'mixed'
-          ? (language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition')
-          : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
+      ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
+      : bondNumber === 'mixed'
+        ? (language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition')
+        : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
     : getPrintTitle(mode, range, regroup, language, t);
 
   return (
@@ -219,18 +186,17 @@ export const Worksheet: React.FC<WorksheetProps> = ({
         <div
           key={generateCount}
           style={problemGridStyle}
-          className={`w-full py-2 relative z-10 animate-fade-in-up ${
-            fillsPage
+          className={`w-full py-2 relative z-10 animate-fade-in-up ${fillsPage
               ? 'grid flex-1 min-h-0'
               : `flex flex-wrap flex-1 min-h-0 items-center ${usesMixedBondLayout ? 'content-between' : 'content-center'} justify-center`
-          }`}
+            }`}
         >
           {problems.map((problem, idx) => (
             <div
               key={problem.id}
               className={`${fillsPage ? 'min-h-0' : `${colClass} ${heightClass}`} flex justify-center items-center break-inside-avoid`}
             >
-              <RendererComponent
+              <RenderProblem
                 problem={problem}
                 index={idx}
                 hideParts={hideBondParts}

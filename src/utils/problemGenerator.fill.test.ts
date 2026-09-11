@@ -125,7 +125,6 @@ describe('Horizontal Fill-in-the-Blank Arithmetic Generator', () => {
     const result = generateHorizontalFillProblems('1-10', 'horizontal-fill-add', 'mixed', 100);
     expect(result.problems.length).toBeLessThan(100);
     expect(result.truncated).toBe(true);
-    expect(result.availableCount).toBe(result.problems.length);
 
     const keys = result.problems.map((p) => `${p.num1}-${p.operator}-${p.num2}-${p.blankPosition}`);
     expect(new Set(keys).size).toBe(result.problems.length);
@@ -138,7 +137,6 @@ describe('Horizontal Fill-in-the-Blank Arithmetic Generator', () => {
 
     const resultTruncated = generateHorizontalFillProblems('1-10', 'horizontal-fill-add', 'mixed', 200);
     expect(resultTruncated.truncated).toBe(true);
-    expect(resultTruncated.availableCount).toBe(resultTruncated.problems.length);
   });
 
   it('keeps ordinary +1 and -1 equations available while de-prioritizing only 1 + 1 and 2 - 1', () => {

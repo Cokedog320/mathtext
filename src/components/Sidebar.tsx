@@ -109,9 +109,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div
-      className={`no-print w-full lg:w-[380px] lg:shrink-0 bg-white lg:border-r border-stone-200 lg:min-h-screen lg:sticky lg:top-0 z-20 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-53px)] lg:max-h-screen ${
-        activeTab === 'settings' ? 'flex' : 'hidden lg:flex'
-      }`}
+      className={`no-print w-full lg:w-[380px] lg:shrink-0 bg-white lg:border-r border-stone-200 lg:min-h-screen lg:sticky lg:top-0 z-20 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-53px)] lg:max-h-screen ${activeTab === 'settings' ? 'flex' : 'hidden lg:flex'
+        }`}
     >
       <div className="p-6 flex flex-col gap-6">
         <div className="flex items-center justify-between border-b border-stone-200 pb-4">
@@ -126,11 +125,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
-                className={`px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
-                  language === lang
+                className={`px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${language === lang
                     ? 'bg-amber-700 text-white'
                     : 'bg-white text-stone-500 hover:bg-stone-50'
-                }`}
+                  }`}
                 aria-label={lang === 'zh' ? '切换到中文' : 'Switch to English'}
               >
                 {lang === 'zh' ? '中' : 'EN'}
@@ -156,11 +154,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <button
                       key={m}
                       onClick={() => setMode(m)}
-                      className={`text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
-                        mode === m
+                      className={`text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${mode === m
                           ? 'bg-amber-100 text-amber-800 font-bold border border-amber-300'
                           : 'text-stone-600 hover:bg-stone-50 border border-transparent'
-                      }`}
+                        }`}
                     >
                       {t.modes[m]}
                     </button>
@@ -233,25 +230,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {mode === 'make-ten' && (
-            <div className="flex flex-col gap-4 animate-fade-in-up">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="makeTenLeft" className="text-sm font-bold text-stone-700">{t.makeTenLeft}</label>
-                <select
-                  id="makeTenLeft"
-                  value={makeTenLeft}
-                  onChange={(e) => setMakeTenLeft(e.target.value)}
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 font-medium text-stone-700 cursor-pointer"
-                >
-                  <option value="mixed">{t.makeTenLeftOptions.mixed}</option>
-                  <option value="9">{t.makeTenLeftOptions['9']}</option>
-                  <option value="8">{t.makeTenLeftOptions['8']}</option>
-                  <option value="7">{t.makeTenLeftOptions['7']}</option>
-                  <option value="6">{t.makeTenLeftOptions['6']}</option>
-                  <option value="5">{t.makeTenLeftOptions['5']}</option>
-                </select>
-              </div>
-
+          {['make-ten', 'break-ten', 'flat-ten'].includes(mode) && (
+            <div className={`animate-fade-in-up ${mode === 'make-ten' ? 'flex flex-col gap-4' : 'flex items-center gap-2'}`}>
+              {mode === 'make-ten' && (
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="makeTenLeft" className="text-sm font-bold text-stone-700">{t.makeTenLeft}</label>
+                  <select
+                    id="makeTenLeft"
+                    value={makeTenLeft}
+                    onChange={(e) => setMakeTenLeft(e.target.value)}
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 font-medium text-stone-700 cursor-pointer"
+                  >
+                    <option value="mixed">{language === 'zh' ? '随机' : 'Mixed'}</option>
+                    {[9, 8, 7, 6, 5].map(value => (
+                      <option key={value} value={value}>{value}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -262,19 +258,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
                 <label htmlFor="hideTen" className="text-sm font-medium text-stone-700 cursor-pointer select-none">{t.hideTen}</label>
               </div>
-            </div>
-          )}
-
-          {['break-ten', 'flat-ten'].includes(mode) && (
-            <div className="flex items-center gap-2 animate-fade-in-up">
-              <input
-                type="checkbox"
-                id="hideTen"
-                checked={hideTen}
-                onChange={(e) => setHideTen(e.target.checked)}
-                className="w-4 h-4 rounded border-stone-300 text-amber-700 focus:ring-amber-500/50 cursor-pointer accent-amber-700"
-              />
-              <label htmlFor="hideTen" className="text-sm font-medium text-stone-700 cursor-pointer select-none">{t.hideTen}</label>
             </div>
           )}
 
@@ -295,11 +278,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       key={r}
                       onClick={() => setRange(r)}
                       disabled={r === '1-20' && isVerticalMode && lowerOperandDigits === 'two'}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
-                        range === r
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${range === r
                           ? 'bg-amber-700 text-white'
                           : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                      }`}
+                        }`}
                     >
                       {language === 'zh' ? `${r.split('-')[1]}以内` : `≤${r.split('-')[1]}`}
                     </button>
@@ -315,11 +297,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <button
                         key={option}
                         onClick={() => setRegroup(option)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                          regroup === option
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${regroup === option
                             ? 'bg-amber-700 text-white'
                             : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                        }`}
+                          }`}
                       >
                         {t.regroupOptions[option]}
                       </button>
@@ -336,11 +317,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <button
                         key={d}
                         onClick={() => setLowerOperandDigits(d)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                          lowerOperandDigits === d
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${lowerOperandDigits === d
                             ? 'bg-amber-700 text-white'
                             : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                        }`}
+                          }`}
                       >
                         {t.lowerOperandDigitOptions[d]}
                       </button>

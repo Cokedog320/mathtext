@@ -7,7 +7,6 @@ export type FillMode = Extract<Mode, 'horizontal-fill-add' | 'horizontal-fill-su
 export type FillGenerationResult = {
   problems: HorizontalFillProblem[];
   requestedCount: number;
-  availableCount: number;
   truncated: boolean;
 };
 
@@ -42,22 +41,17 @@ export const generateHorizontalFillProblems = (
   requestedCount: number,
   randomFn?: () => number
 ): FillGenerationResult => {
-  let selectedCandidates: FillCandidate[] = [];
-  let availableCount = 0;
+  const ops: ('+' | '-')[] = mode.endsWith('add')
+    ? ['+']
+    : mode.endsWith('sub') ? ['-'] : ['+', '-'];
 
-  if (mode === 'horizontal-fill-add') {
-    const pool = shuffle(buildFillCandidates(range, '+', regroup), randomFn);
-    availableCount = pool.length;
-    selectedCandidates = selectCandidates(pool, requestedCount, randomFn);
-  } else if (mode === 'horizontal-fill-sub') {
-    const pool = shuffle(buildFillCandidates(range, '-', regroup), randomFn);
-    availableCount = pool.length;
+  let selectedCandidates: FillCandidate[] = [];
+  if (ops.length === 1) {
+    const pool = shuffle(buildFillCandidates(range, ops[0], regroup), randomFn);
     selectedCandidates = selectCandidates(pool, requestedCount, randomFn);
   } else {
-    // horizontal-fill-mixed
     const addPool = shuffle(buildFillCandidates(range, '+', regroup), randomFn);
     const subPool = shuffle(buildFillCandidates(range, '-', regroup), randomFn);
-    availableCount = addPool.length + subPool.length;
 
     const targetAdd = Math.ceil(requestedCount / 2);
     const targetSub = Math.floor(requestedCount / 2);
@@ -96,7 +90,6 @@ export const generateHorizontalFillProblems = (
   return {
     problems,
     requestedCount,
-    availableCount,
     truncated: problems.length < requestedCount,
   };
 };

@@ -3,15 +3,12 @@ import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { Dices, Printer, Download } from 'lucide-react';
 
-import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, pdfFileNames } from './types';
+import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, getPdfFileName } from './types';
 import { canRegenerateNumberBonds, generateProblems, getRequestedProblemCount } from './utils/problemGenerator';
 import { DEFAULT_REGROUP_OPTION, normalizeRegroupOption } from './utils/regroupOptions';
 import { normalizeRangeForMode } from './utils/generator/worksheetRules';
 import { Sidebar } from './components/Sidebar';
 import { Worksheet } from './components/Worksheet';
-
-export { generateProblems } from './utils/problemGenerator';
-export type { Problem } from './types';
 
 
 const LANGUAGE_KEY = 'math-language';
@@ -138,14 +135,13 @@ export default function App() {
       }
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      let fileName = pdfFileNames[language][mode];
-      if (mode === 'number-bonds') {
-        fileName = isBlankTemplate
+      const fileName = mode === 'number-bonds'
+        ? (isBlankTemplate
           ? (language === 'zh' ? '数字分解与组合模板.pdf' : 'decomposition-composition-template.pdf')
           : bondNumber === 'mixed'
             ? (language === 'zh' ? '混合数字的分解与组合.pdf' : 'mixed-decomposition-composition.pdf')
-            : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`);
-      }
+            : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`))
+        : getPdfFileName(language, mode);
       pdf.save(fileName);
     } catch (error) {
       console.error('PDF generation failed:', error);

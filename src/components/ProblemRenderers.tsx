@@ -1,45 +1,49 @@
 import React from 'react';
 import { Problem, Range, RegroupOption } from '../types';
 
+const BOND_STYLES = {
+  large: {
+    box: 'relative w-[220px] h-[260px]',
+    svg: { width: 220, height: 260, topY: 100, leftX: 50, rightX: 170, bottomY: 160, strokeWidth: 4 },
+    circle: 'w-[100px] h-[100px] border-4',
+    topOffset: 'left-[60px]',
+    text: 'text-4xl',
+  },
+  small: {
+    box: 'relative w-[160px] h-[180px]',
+    svg: { width: 160, height: 180, topY: 70, leftX: 35, rightX: 125, bottomY: 110, strokeWidth: 3 },
+    circle: 'w-[70px] h-[70px] border-[3px]',
+    topOffset: 'left-[45px]',
+    text: 'text-3xl',
+  },
+} as const;
+
+const bondCircleClass = `bg-white border-black rounded-full flex items-center justify-center font-bold text-black`;
+
 export const NumberBond: React.FC<{ problem: Extract<Problem, { type: 'bond' }>; large?: boolean; hideParts?: boolean }> = ({ problem, large = false, hideParts = false }) => {
-  if (large) {
-    return (
-      <div className="relative w-[220px] h-[260px]">
-        <svg className="absolute inset-0 z-0" width="220" height="260" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
-          <line x1="110" y1="100" x2="50" y2="160" stroke="black" strokeWidth="4" />
-          <line x1="110" y1="100" x2="170" y2="160" stroke="black" strokeWidth="4" />
-        </svg>
-        <div className="absolute top-0 left-[60px] z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
-          {problem.top}
-        </div>
-        <div className="absolute bottom-0 left-0 z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
-          {hideParts ? '' : problem.left}
-        </div>
-        <div className="absolute bottom-0 right-0 z-10 w-[100px] h-[100px] bg-white border-4 border-black rounded-full flex items-center justify-center text-4xl font-bold text-black">
-          {hideParts ? '' : problem.right}
-        </div>
-      </div>
-    );
-  }
+  const style = BOND_STYLES[large ? 'large' : 'small'];
+  const { svg, circle, topOffset, text } = style;
 
   return (
-    <div className="relative w-[160px] h-[180px]">
-      <svg className="absolute inset-0 z-0" width="160" height="180" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
-        <line x1="80" y1="70" x2="35" y2="110" stroke="black" strokeWidth="3" />
-        <line x1="80" y1="70" x2="125" y2="110" stroke="black" strokeWidth="3" />
+    <div className={style.box}>
+      <svg className="absolute inset-0 z-0" width={svg.width} height={svg.height} viewBox={`0 0 ${svg.width} ${svg.height}`} xmlns="http://www.w3.org/2000/svg">
+        <line x1={half(svg.width)} y1={svg.topY} x2={svg.leftX} y2={svg.bottomY} stroke="black" strokeWidth={svg.strokeWidth} />
+        <line x1={half(svg.width)} y1={svg.topY} x2={svg.rightX} y2={svg.bottomY} stroke="black" strokeWidth={svg.strokeWidth} />
       </svg>
-      <div className="absolute top-0 left-[45px] z-10 w-[70px] h-[70px] bg-white border-[3px] border-black rounded-full flex items-center justify-center text-3xl font-bold text-black">
+      <div className={`absolute top-0 ${topOffset} z-10 ${circle} ${bondCircleClass} ${text}`}>
         {problem.top}
       </div>
-      <div className="absolute bottom-0 left-0 z-10 w-[70px] h-[70px] bg-white border-[3px] border-black rounded-full flex items-center justify-center text-3xl font-bold text-black">
+      <div className={`absolute bottom-0 left-0 z-10 ${circle} ${bondCircleClass} ${text}`}>
         {hideParts ? '' : problem.left}
       </div>
-      <div className="absolute bottom-0 right-0 z-10 w-[70px] h-[70px] bg-white border-[3px] border-black rounded-full flex items-center justify-center text-3xl font-bold text-black">
+      <div className={`absolute bottom-0 right-0 z-10 ${circle} ${bondCircleClass} ${text}`}>
         {hideParts ? '' : problem.right}
       </div>
     </div>
   );
 };
+
+const half = (value: number): number => value / 2;
 
 export const VerticalArithmetic: React.FC<{
   problem: Extract<Problem, { type: 'arithmetic' }>;
@@ -165,7 +169,7 @@ export const ChainedArithmetic: React.FC<{
   );
 };
 
-export const MethodDiagram: React.FC<{ problem: Extract<Problem, { type: 'method' }>; index?: number; hideTen?: boolean }> = ({ problem, hideTen = false }) => {
+export const MethodDiagram: React.FC<{ problem: Extract<Problem, { type: 'method' }>; hideTen?: boolean }> = ({ problem, hideTen = false }) => {
   const { num1, num2, operator, method } = problem;
 
   return (

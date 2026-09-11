@@ -21,43 +21,21 @@ export type Problem =
   | { id: number; type: 'method'; num1: number; num2: number; operator: '+' | '-'; method: 'make-ten' | 'break-ten' | 'flat-ten' }
   | HorizontalFillProblem;
 
-export const pdfFileNames: Record<Language, Record<Mode, string>> = {
-  zh: {
-    'number-bonds': '数字组合.pdf',
-    'vertical-add': '竖排加法.pdf',
-    'vertical-sub': '竖排减法.pdf',
-    'vertical-mixed': '竖排混合.pdf',
-    'horizontal-add': '横排加法.pdf',
-    'horizontal-sub': '横排减法.pdf',
-    'horizontal-mixed': '横排混合.pdf',
-    'horizontal-chain-add': '连续加法.pdf',
-    'horizontal-chain-sub': '连续减法.pdf',
-    'horizontal-chain-mixed': '连续加减混合.pdf',
-    'horizontal-fill-add': '横式填空加法.pdf',
-    'horizontal-fill-sub': '横式填空减法.pdf',
-    'horizontal-fill-mixed': '横式填空加减混合.pdf',
-    'make-ten': '凑十法.pdf',
-    'break-ten': '破十法.pdf',
-    'flat-ten': '平十法.pdf',
-  },
-  en: {
-    'number-bonds': 'number-bonds.pdf',
-    'vertical-add': 'vertical-addition.pdf',
-    'vertical-sub': 'vertical-subtraction.pdf',
-    'vertical-mixed': 'vertical-arithmetic.pdf',
-    'horizontal-add': 'horizontal-addition.pdf',
-    'horizontal-sub': 'horizontal-subtraction.pdf',
-    'horizontal-mixed': 'horizontal-arithmetic.pdf',
-    'horizontal-chain-add': 'chained-addition.pdf',
-    'horizontal-chain-sub': 'chained-subtraction.pdf',
-    'horizontal-chain-mixed': 'chained-mixed-arithmetic.pdf',
-    'horizontal-fill-add': 'horizontal-fill-addition.pdf',
-    'horizontal-fill-sub': 'horizontal-fill-subtraction.pdf',
-    'horizontal-fill-mixed': 'horizontal-fill-mixed.pdf',
-    'make-ten': 'make-ten.pdf',
-    'break-ten': 'break-ten.pdf',
-    'flat-ten': 'flat-ten.pdf',
-  },
+// 打印标题与文件名的差异（中文仅 3 个填空模式，英文另有方法名后缀差异），其余文件名从标题推导
+const PDF_FILE_NAME_OVERRIDES: Partial<Record<Mode, Partial<Record<Language, string>>>> = {
+  'make-ten': { en: 'make-ten.pdf' },
+  'break-ten': { en: 'break-ten.pdf' },
+  'flat-ten': { en: 'flat-ten.pdf' },
+  'horizontal-fill-add': { zh: '横式填空加法.pdf', en: 'horizontal-fill-addition.pdf' },
+  'horizontal-fill-sub': { zh: '横式填空减法.pdf', en: 'horizontal-fill-subtraction.pdf' },
+  'horizontal-fill-mixed': { zh: '横式填空加减混合.pdf', en: 'horizontal-fill-mixed.pdf' },
+};
+
+export const getPdfFileName = (language: Language, mode: Mode): string => {
+  const override = PDF_FILE_NAME_OVERRIDES[mode]?.[language];
+  if (override) return override;
+  const title = translations[language].printTitles[mode];
+  return language === 'zh' ? `${title}.pdf` : `${title.toLowerCase().replace(/\s+/g, '-')}.pdf`;
 };
 
 export const translations = {
@@ -65,7 +43,6 @@ export const translations = {
     settings: '参数配置',
     preview: '打印预览',
     worksheetTitle: '习题定制',
-    mode: '题型',
     range: '练习区间',
     regroup: '进退位',
     lowerOperandDigits: '下方数位数',
@@ -110,14 +87,6 @@ export const translations = {
       one: '一位数',
       two: '两位数',
     },
-    makeTenLeftOptions: {
-      mixed: '随机',
-      '9': '9',
-      '8': '8',
-      '7': '7',
-      '6': '6',
-      '5': '5',
-    },
     printTitles: {
       'number-bonds': '数字组合',
       'vertical-add': '竖排加法',
@@ -152,7 +121,6 @@ export const translations = {
     settings: 'Settings',
     preview: 'Preview',
     worksheetTitle: 'Worksheet Settings',
-    mode: 'Mode',
     range: 'Practice Band',
     regroup: 'Regrouping',
     lowerOperandDigits: 'Lower Operand Digits',
@@ -196,14 +164,6 @@ export const translations = {
       mixed: 'Mixed One- and Two-Digit',
       one: 'One Digit',
       two: 'Two Digits',
-    },
-    makeTenLeftOptions: {
-      mixed: 'Mixed',
-      '9': '9',
-      '8': '8',
-      '7': '7',
-      '6': '6',
-      '5': '5',
     },
     printTitles: {
       'number-bonds': 'Number Bonds',

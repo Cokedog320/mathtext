@@ -262,43 +262,18 @@ const selectExpandedChainedCandidates = (
   return [];
 };
 
-const selectChainedCandidates = (
-  candidates: ChainedCandidate[],
-  limit: number,
-  regroup: RegroupOption
-): ChainedCandidate[] => {
-  const usesSimplePattern = (candidate: ChainedCandidate): boolean =>
-    [1, 10].includes(candidate.operands[1]) && [1, 10].includes(candidate.operands[2]);
-  const operatorKey = (candidate: ChainedCandidate): string => candidate.operators.join('');
-  const operatorKinds = [...new Set(candidates.map(operatorKey))];
-  const operatorTargets = new Map(
-    operatorKinds.map(kind => [kind, limit / operatorKinds.length])
-  );
-
-  const isWithinTen = candidates.every(candidate =>
-    candidate.operands[0] <= 10 && candidate.result <= 10
-  );
-  if (isWithinTen) {
-    return selectWithinTenChainedCandidates(candidates, limit);
-  }
-
-  if (limit > 20) {
-    return selectExpandedChainedCandidates(candidates, limit, regroup);
-  }
-
-  return [];
-};
-
 export const generateChainedArithmetic = (
   range: Range,
   mode: ChainedMode,
   regroup: RegroupOption
 ): Problem[] => {
-  const effectiveRegroup = range === '1-10'
-    ? 'mixed'
-    : regroup;
+  const effectiveRegroup = range === '1-10' ? 'mixed' : regroup;
   const candidates = buildChainedCandidates(range, mode, effectiveRegroup);
-  const selected = selectChainedCandidates(candidates, HORIZONTAL_PROBLEM_COUNTS[range], effectiveRegroup);
+  const limit = HORIZONTAL_PROBLEM_COUNTS[range];
+  // 1-10 的候选全部在十以内；其余区间结果必超十，直接走扩展选择器
+  const selected = range === '1-10'
+    ? selectWithinTenChainedCandidates(candidates, limit)
+    : selectExpandedChainedCandidates(candidates, limit, effectiveRegroup);
 
   return shuffle(selected).map((candidate, id) => ({
     id,

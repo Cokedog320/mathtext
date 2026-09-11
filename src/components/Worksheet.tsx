@@ -52,12 +52,6 @@ export const A4PreviewWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-type BondProblem = Extract<Problem, { type: 'bond' }>;
-type MethodProblem = Extract<Problem, { type: 'method' }>;
-type VerticalProblem = Extract<Problem, { type: 'arithmetic' }>;
-type ChainProblem = Extract<Problem, { type: 'arithmetic-chain' }>;
-type FillProblem = Extract<Problem, { type: 'horizontal-fill' }>;
-
 type RendererProps = {
   problem: Problem;
   index: number;
@@ -73,23 +67,23 @@ type ProblemRenderer = (props: RendererProps) => React.ReactElement;
 
 const bondRenderer: ProblemRenderer = ({ problem, bondNumber, isBlankTemplate, hideParts }) => {
   const isLarge = typeof bondNumber === 'number' && bondNumber <= 4 && !isBlankTemplate;
-  return <NumberBond problem={problem as BondProblem} large={isLarge} hideParts={hideParts} />;
+  return <NumberBond problem={problem as Extract<Problem, { type: 'bond' }>} large={isLarge} hideParts={hideParts} />;
 };
 
 const methodRenderer: ProblemRenderer = ({ problem, hideTen }) =>
-  <MethodDiagram problem={problem as MethodProblem} hideTen={hideTen} />;
+  <MethodDiagram problem={problem as Extract<Problem, { type: 'method' }>} hideTen={hideTen} />;
 
 const verticalRenderer: ProblemRenderer = ({ problem, index, regroup }) =>
-  <VerticalArithmetic problem={problem as VerticalProblem} index={index} regroup={regroup} />;
+  <VerticalArithmetic problem={problem as Extract<Problem, { type: 'arithmetic' }>} index={index} regroup={regroup} />;
 
 const horizontalRenderer: ProblemRenderer = ({ problem, index, range }) =>
-  <HorizontalArithmetic problem={problem as VerticalProblem} index={index} range={range} />;
+  <HorizontalArithmetic problem={problem as Extract<Problem, { type: 'arithmetic' }>} index={index} range={range} />;
 
 const chainRenderer: ProblemRenderer = ({ problem, index, range }) =>
-  <ChainedArithmetic problem={problem as ChainProblem} index={index} range={range} />;
+  <ChainedArithmetic problem={problem as Extract<Problem, { type: 'arithmetic-chain' }>} index={index} range={range} />;
 
 const fillRenderer: ProblemRenderer = ({ problem, index, range }) =>
-  <HorizontalFillArithmetic problem={problem as FillProblem} index={index} range={range} />;
+  <HorizontalFillArithmetic problem={problem as Extract<Problem, { type: 'horizontal-fill' }>} index={index} range={range} />;
 
 const RENDERERS: Record<Mode, ProblemRenderer> = {
   'number-bonds': bondRenderer,
@@ -125,6 +119,17 @@ const getBondLayout = ({ bondNumber, isBlankTemplate }: {
   return { colClass, heightClass: isLarge ? 'h-[320px]' : 'h-[230px]' };
 };
 
+// number-bonds 的练习卷标题（App 的 PDF 文件名也从这里推导）
+export const getBondWorksheetName = (
+  language: Language,
+  bondNumber: number | 'mixed',
+  isBlankTemplate: boolean,
+): string => {
+  if (isBlankTemplate) return language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition';
+  if (bondNumber === 'mixed') return language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition';
+  return language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`;
+};
+
 interface WorksheetProps {
   mode: Mode;
   range: Range;
@@ -158,11 +163,7 @@ export const Worksheet: React.FC<WorksheetProps> = ({
     }
     : undefined;
   const worksheetTitle = mode === 'number-bonds'
-    ? (isBlankTemplate
-      ? (language === 'zh' ? '数字的分解与组合' : 'Decomposition & Composition')
-      : bondNumber === 'mixed'
-        ? (language === 'zh' ? '混合数字的分解与组合' : 'Mixed Decomposition & Composition')
-        : (language === 'zh' ? `数字 ${bondNumber} 的分解与组合` : `Decomposition & Composition of ${bondNumber}`))
+    ? getBondWorksheetName(language, bondNumber, isBlankTemplate)
     : getPrintTitle(mode, range, regroup, language, t);
 
   return (

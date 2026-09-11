@@ -8,7 +8,7 @@ import { canRegenerateNumberBonds, generateProblems, getRequestedProblemCount } 
 import { DEFAULT_REGROUP_OPTION, normalizeRegroupOption } from './utils/regroupOptions';
 import { normalizeRangeForMode } from './utils/generator/worksheetRules';
 import { Sidebar } from './components/Sidebar';
-import { Worksheet } from './components/Worksheet';
+import { Worksheet, getBondWorksheetName } from './components/Worksheet';
 
 
 const LANGUAGE_KEY = 'math-language';
@@ -136,11 +136,7 @@ export default function App() {
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
       const fileName = mode === 'number-bonds'
-        ? (isBlankTemplate
-          ? (language === 'zh' ? '数字分解与组合模板.pdf' : 'decomposition-composition-template.pdf')
-          : bondNumber === 'mixed'
-            ? (language === 'zh' ? '混合数字的分解与组合.pdf' : 'mixed-decomposition-composition.pdf')
-            : (language === 'zh' ? `数字${bondNumber}的分解与组合.pdf` : `decomposition-composition-${bondNumber}.pdf`))
+        ? `${getBondWorksheetName(language, bondNumber, isBlankTemplate)}.pdf`
         : getPdfFileName(language, mode);
       pdf.save(fileName);
     } catch (error) {

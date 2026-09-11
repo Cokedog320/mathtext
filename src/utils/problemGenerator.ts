@@ -1,4 +1,5 @@
 export {
+  canRegenerateNumberBonds,
   generateProblems,
   getPrintTitle,
   getRequestedProblemCount,

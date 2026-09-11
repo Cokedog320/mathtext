@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Dices, Printer, Download } from 'lucide-react';
 
 import { Language, Range, Mode, RegroupOption, LowerOperandDigits, Problem, translations, pdfFileNames } from './types';
-import { generateProblems, getRequestedProblemCount } from './utils/problemGenerator';
+import { canRegenerateNumberBonds, generateProblems, getRequestedProblemCount } from './utils/problemGenerator';
 import { DEFAULT_REGROUP_OPTION, normalizeRegroupOption } from './utils/regroupOptions';
 import { normalizeRangeForMode } from './utils/generator/worksheetRules';
 import { Sidebar } from './components/Sidebar';
@@ -40,6 +40,9 @@ export default function App() {
 
   const t = translations[language];
   const hasWorksheet = mode !== null && problems.length > 0;
+  const canRegenerate = mode !== null && (
+    mode !== 'number-bonds' || canRegenerateNumberBonds(bondNumber, isBlankTemplate)
+  );
 
   useEffect(() => {
     localStorage.setItem(LANGUAGE_KEY, language);
@@ -159,21 +162,19 @@ export default function App() {
       <div className="no-print lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-30 flex">
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex-1 py-4 text-center font-bold text-sm transition-colors cursor-pointer ${
-            activeTab === 'settings'
-              ? 'text-amber-700 border-b-2 border-amber-700'
-              : 'text-stone-500 hover:text-stone-700'
-          }`}
+          className={`flex-1 py-4 text-center font-bold text-sm transition-colors cursor-pointer ${activeTab === 'settings'
+            ? 'text-amber-700 border-b-2 border-amber-700'
+            : 'text-stone-500 hover:text-stone-700'
+            }`}
         >
           🛠️ {t.settings}
         </button>
         <button
           onClick={() => setActiveTab('preview')}
-          className={`flex-1 py-4 text-center font-bold text-sm transition-colors cursor-pointer ${
-            activeTab === 'preview'
-              ? 'text-amber-700 border-b-2 border-amber-700'
-              : 'text-stone-500 hover:text-stone-700'
-          }`}
+          className={`flex-1 py-4 text-center font-bold text-sm transition-colors cursor-pointer ${activeTab === 'preview'
+            ? 'text-amber-700 border-b-2 border-amber-700'
+            : 'text-stone-500 hover:text-stone-700'
+            }`}
         >
           📄 {t.preview}
         </button>
@@ -194,6 +195,7 @@ export default function App() {
         language={language} setLanguage={setLanguage}
         isGeneratingPdf={isGeneratingPdf}
         hasWorksheet={hasWorksheet}
+        canRegenerate={canRegenerate}
         regenerate={regenerate}
         handlePrint={handlePrint}
         handleDownloadPdf={handleDownloadPdf}
@@ -203,15 +205,14 @@ export default function App() {
 
       {/* Preview area */}
       <div
-        className={`flex-1 flex-col items-center py-6 px-4 lg:py-10 z-10 overflow-y-auto min-h-[calc(100vh-53px)] lg:min-h-screen print-preview-container ${
-          activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
-        }`}
+        className={`flex-1 flex-col items-center py-6 px-4 lg:py-10 z-10 overflow-y-auto min-h-[calc(100vh-53px)] lg:min-h-screen print-preview-container ${activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
+          }`}
       >
         {/* Floating action bar for Mobile Preview Tab */}
         <div className="lg:hidden w-full max-w-[400px] mb-4 flex gap-3 no-print">
           <button
             onClick={regenerate}
-            disabled={!hasWorksheet}
+            disabled={!canRegenerate}
             className="flex-1 flex items-center justify-center gap-1 bg-amber-700 text-white py-3 rounded-lg hover:bg-amber-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold text-sm cursor-pointer transition-colors"
           >
             <Dices size={16} />

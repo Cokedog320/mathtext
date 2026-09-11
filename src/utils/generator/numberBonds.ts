@@ -1,6 +1,11 @@
 import { Problem } from '../../types';
 import { shuffle } from './random';
 
+export const canRegenerateNumberBonds = (
+  bondNumber: number | 'mixed',
+  isBlankTemplate: boolean,
+): boolean => bondNumber === 'mixed' && !isBlankTemplate;
+
 export const generateNumberBonds = (
   bondUseType: 'practice' | 'study',
   bondNumber: number | 'mixed',
@@ -46,6 +51,7 @@ export const generateNumberBonds = (
 
   const targetNumber = bondNumber;
   if (typeof targetNumber !== 'number') return problems;
+  const leftKnownByPair = new Map<number, boolean>();
 
   for (let k = 1; k < targetNumber; k++) {
     const leftVal = k;
@@ -53,7 +59,9 @@ export const generateNumberBonds = (
     let left: number | string = leftVal;
     let right: number | string = rightVal;
     if (bondUseType === 'practice') {
-      const isLeftKnown = Math.random() > 0.5;
+      const pairKey = Math.min(leftVal, rightVal);
+      const isLeftKnown = leftKnownByPair.get(pairKey) ?? Math.random() > 0.5;
+      leftKnownByPair.set(pairKey, isLeftKnown);
       left = isLeftKnown ? leftVal : '';
       right = isLeftKnown ? '' : rightVal;
     }

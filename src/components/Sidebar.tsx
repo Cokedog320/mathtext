@@ -29,6 +29,7 @@ interface SidebarProps {
   setLanguage: (lang: Language) => void;
   isGeneratingPdf: boolean;
   hasWorksheet: boolean;
+  canRegenerate: boolean;
   regenerate: () => void;
   handlePrint: () => void;
   handleDownloadPdf: () => void;
@@ -50,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   language, setLanguage,
   isGeneratingPdf,
   hasWorksheet,
+  canRegenerate,
   regenerate,
   handlePrint,
   handleDownloadPdf,
@@ -355,7 +357,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-6 border-t border-stone-200 flex flex-col gap-3">
         <button
           onClick={regenerate}
-          disabled={!hasWorksheet}
+          disabled={!canRegenerate}
           className="w-full flex items-center justify-center gap-2 bg-amber-700 text-white py-3 rounded-lg hover:bg-amber-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed font-semibold cursor-pointer transition-colors"
         >
           <Dices size={18} />

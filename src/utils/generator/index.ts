@@ -8,6 +8,7 @@ import { generateVerticalArithmetic } from './verticalArithmetic';
 import { getRequestedProblemCount, normalizeRangeForMode } from './worksheetRules';
 
 export { getPrintTitle } from './printTitle';
+export { canRegenerateNumberBonds } from './numberBonds';
 export { shuffle } from './random';
 export { requiresRegroup } from './regroup';
 export { getRequestedProblemCount } from './worksheetRules';

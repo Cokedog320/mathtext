@@ -1,7 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import { generateProblems } from "./problemGenerator";
+import {
+  canRegenerateNumberBonds,
+  generateProblems,
+} from "./problemGenerator";
 
 describe('generateProblems - Number Bonds (Single Number)', () => {
+  it('regenerates only mixed-target pages', () => {
+    for (let target = 2; target <= 10; target++) {
+      expect(canRegenerateNumberBonds(target, false)).toBe(false);
+    }
+
+    expect(canRegenerateNumberBonds('mixed', false)).toBe(true);
+    expect(canRegenerateNumberBonds('mixed', true)).toBe(false);
+  });
+
   it('should generate exactly N-1 problems for target number N', () => {
     for (let n = 2; n <= 10; n++) {
       const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', n);
@@ -42,6 +54,29 @@ describe('generateProblems - Number Bonds (Single Number)', () => {
         expect(leftIsHidden || rightIsHidden).toBe(true);
         expect(leftIsHidden && rightIsHidden).toBe(false);
       }
+    }
+  });
+
+  it('asks for each missing part once across mirrored fixed-target problems', () => {
+    let callCount = 0;
+    const random = vi.spyOn(Math, 'random').mockImplementation(() =>
+      callCount++ % 2 === 0 ? 0.25 : 0.75);
+
+    try {
+      for (const target of [3, 5]) {
+        const problems = generateProblems('1-20', 'number-bonds', 'mixed', 'mixed', 'practice', target);
+        const missingParts = problems.map(problem => {
+          if (problem.type !== 'bond' || typeof problem.top !== 'number') return NaN;
+          const knownPart = problem.left === '' ? problem.right : problem.left;
+          return problem.top - Number(knownPart);
+        });
+
+        expect(missingParts.sort((a, b) => a - b)).toEqual(
+          Array.from({ length: target - 1 }, (_, index) => index + 1),
+        );
+      }
+    } finally {
+      random.mockRestore();
     }
   });
 
